@@ -129,18 +129,39 @@ export default function MatchesPage() {
     if (!tableRef.current) return
     setActionMsg(t[lang].downloading)
     try {
+      // Use html-to-image to capture table as PNG
       const dataUrl = await toPng(tableRef.current, {
         backgroundColor: '#1a1a2e',
         pixelRatio: 2,
+        fontEmbedCSS: '',
       })
       const link = document.createElement('a')
       link.download = `match-schedule-${new Date().toISOString().split('T')[0]}.png`
       link.href = dataUrl
+      document.body.appendChild(link)
       link.click()
+      document.body.removeChild(link)
       setActionMsg(t[lang].downloadReady)
     } catch (err) {
       console.error('Download failed:', err)
-      setActionMsg(t[lang].error)
+      // Fallback: try with filter to skip problematic elements
+      try {
+        const dataUrl = await toPng(tableRef.current, {
+          backgroundColor: '#1a1a2e',
+          pixelRatio: 2,
+          filter: (node) => node.tagName !== 'svg' && node.tagName !== 'IMG',
+        })
+        const link = document.createElement('a')
+        link.download = `match-schedule-${new Date().toISOString().split('T')[0]}.png`
+        link.href = dataUrl
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        setActionMsg(t[lang].downloadReady)
+      } catch (fallbackErr) {
+        console.error('Fallback also failed:', fallbackErr)
+        setActionMsg(t[lang].error)
+      }
     }
     setTimeout(() => setActionMsg(''), 3000)
   }, [t, lang])
