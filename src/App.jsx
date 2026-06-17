@@ -6,6 +6,7 @@ import HomePage from './pages/public/HomePage'
 import TeamsPage from './pages/public/TeamsPage'
 import TeamDetailPage from './pages/public/TeamDetailPage'
 import MatchesPage from './pages/public/MatchesPage'
+import ScheduleEagleEyePage from './pages/public/ScheduleEagleEyePage'
 import StandingsPage from './pages/public/StandingsPage'
 import TopScorersPage from './pages/public/TopScorersPage'
 import LiveMatchPage from './pages/public/LiveMatchPage'
@@ -17,6 +18,7 @@ import DashboardPage from './pages/admin/DashboardPage'
 import TeamsAdminPage from './pages/admin/TeamsAdminPage'
 import DrawAdminPage from './pages/admin/DrawAdminPage'
 import MatchesAdminPage from './pages/admin/MatchesAdminPage'
+import ScheduleEagleEyeAdminPage from './pages/admin/ScheduleEagleEyePage'
 import { useAppStore } from './stores/useAppStore'
 
 function App() {
@@ -38,6 +40,7 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/matches" element={<MatchesPage />} />
+          <Route path="/schedule" element={<ScheduleEagleEyePage />} />
           <Route path="/matches/:id" element={<LiveMatchPage />} />
           <Route path="/standings" element={<StandingsPage />} />
           <Route path="/teams" element={<TeamsPage />} />
@@ -55,6 +58,7 @@ function App() {
           <Route path="/admin/teams" element={<TeamsAdminPage />} />
           <Route path="/admin/matches" element={<MatchesAdminPage />} />
           <Route path="/admin/draw" element={<DrawAdminPage />} />
+          <Route path="/admin/schedule" element={<ScheduleEagleEyeAdminPage />} />
         </Route>
       </Routes>
     </ErrorBoundary>

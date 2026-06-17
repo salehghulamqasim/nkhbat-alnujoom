@@ -167,7 +167,7 @@ export default function HomePage() {
       </div>
 
       {/* Premium Hero Section - Fullscreen */}
-      <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] h-[420px] sm:h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden select-none bg-black -mt-4 sm:-mt-6">
+      <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] h-[340px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden select-none bg-black -mt-4 sm:-mt-6">
         {/* Background Image */}
         <img
           src="/premium-trophy-bg.png"
@@ -177,25 +177,23 @@ export default function HomePage() {
 
         {/* Gradients overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/30 to-black/70 z-10" />
-        <div className={`absolute inset-0 z-10 ${isRtl ? 'bg-gradient-to-r from-black/90 via-black/60 to-black/30' : 'bg-gradient-to-l from-black/90 via-black/60 to-black/30'}`} />
+        <div className={`absolute inset-0 z-10 ${isRtl ? 'bg-gradient-to-l from-black/90 via-black/60 to-black/10' : 'bg-gradient-to-r from-black/90 via-black/60 to-black/10'}`} />
 
         {/* Hero Text Content */}
-        <div className="absolute inset-0 z-20 flex flex-col justify-end px-4 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
-          <div className={`flex flex-col items-start gap-3 sm:gap-4 md:gap-5 max-w-lg md:max-w-2xl text-start ${isRtl ? 'ms-auto' : 'me-auto'}`}>
+        <div className={`absolute inset-0 z-20 flex flex-col justify-center px-4 sm:px-6 md:px-8 ${isRtl ? 'items-end text-right' : 'items-start text-left'}`}>
+          <div className={`flex flex-col gap-3 sm:gap-4 md:gap-4 max-w-xl ${isRtl ? 'items-end' : 'items-start'}`}>
             {/* Subtitle badge */}
             <span className="hero-content opacity-100 text-accent-light text-xs sm:text-sm font-bold uppercase tracking-widest bg-accent/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-accent/20 whitespace-nowrap">
               {t[lang].subtitle}
             </span>
 
             {/* Main Title */}
-            <div className="w-full">
-              <h2 className="hero-content opacity-100 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-accent drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)] leading-tight text-start">
-                {t[lang].title}
-              </h2>
-            </div>
+            <h2 className="hero-content opacity-100 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-accent drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)] leading-tight">
+              {t[lang].title}
+            </h2>
 
             {/* Gold Stars */}
-            <div className="hero-content flex justify-start w-full text-accent text-lg sm:text-xl md:text-2xl gap-3 sm:gap-4">
+            <div className="hero-content flex text-accent text-lg sm:text-xl md:text-2xl gap-3 sm:gap-4">
               <span>★</span>
               <span>★</span>
               <span>★</span>

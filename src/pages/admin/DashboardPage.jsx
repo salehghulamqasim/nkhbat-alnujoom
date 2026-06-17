@@ -1,4 +1,4 @@
-import { Users, Calendar, Shuffle } from 'lucide-react'
+import { Users, Calendar, Shuffle, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import DarkCard from '../../components/common/DarkCard'
@@ -11,14 +11,23 @@ export default function DashboardPage() {
   const matches = useMatchesStore((state) => state.matches)
   const drawComplete = isDrawComplete(teams, drawLocked)
 
+  const completedMatches = matches.filter((m) => m.status === 'completed')
+  const scheduledMatches = matches.filter((m) => m.status === 'scheduled' || m.status === 'live')
+
   const stats = [
     { label: 'الفرق المسجلة', value: `${teams.length}/${MAX_TEAMS}`, icon: Users, color: 'text-accent' },
     { label: 'المباريات', value: String(matches.length), icon: Calendar, color: 'text-success' },
     {
-      label: 'حالة القرعة',
-      value: drawComplete ? 'مكتملة' : 'غير مكتملة',
+      label: 'المنتهية',
+      value: `${completedMatches.length}/${matches.length}`,
       icon: Shuffle,
-      color: drawComplete ? 'text-success' : 'text-warning',
+      color: 'text-warning',
+    },
+    {
+      label: 'المجدولة',
+      value: String(scheduledMatches.length),
+      icon: Clock,
+      color: 'text-info',
     },
   ]
 
@@ -40,7 +49,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map((stat, i) => {
           const Icon = stat.icon
           return (

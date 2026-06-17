@@ -31,7 +31,38 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     }
   }, [isOpen, team])
 
-  const handleLogoChange = (e) => {
+  const MAX_LOGO_SIZE = 700 * 1024 // 700KB → base64 ~950KB, safe for Firebase
+  const MAX_LOGO_DIM = 256
+
+  const resizeImage = (dataUrl, maxDim) =>
+    new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        let { width, height } = img
+        if (width <= maxDim && height <= maxDim) {
+          resolve(dataUrl)
+          return
+        }
+        if (width > height) {
+          height = Math.round((height / width) * maxDim)
+          width = maxDim
+        } else {
+          width = Math.round((width / height) * maxDim)
+          height = maxDim
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.imageSmoothingEnabled = true
+        ctx.imageSmoothingQuality = 'high'
+        ctx.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', 0.85))
+      }
+      img.src = dataUrl
+    })
+
+  const handleLogoChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -40,15 +71,20 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
       return
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, logo: 'حجم الصورة يجب أن لا يتجاوز 2 ميجابايت' }))
+    if (file.size > MAX_LOGO_SIZE) {
+      setErrors((prev) => ({ ...prev, logo: 'حجم الصورة يجب أن لا يتجاوز 700 كيلوبايت' }))
       return
     }
 
     const reader = new FileReader()
-    reader.onload = () => {
-      setForm((prev) => ({ ...prev, logo: reader.result }))
-      setErrors((prev) => ({ ...prev, logo: undefined }))
+    reader.onload = async () => {
+      try {
+        const resized = await resizeImage(reader.result, MAX_LOGO_DIM)
+        setForm((prev) => ({ ...prev, logo: resized }))
+        setErrors((prev) => ({ ...prev, logo: undefined }))
+      } catch {
+        setErrors((prev) => ({ ...prev, logo: 'فشل في معالجة الصورة' }))
+      }
     }
     reader.readAsDataURL(file)
   }

@@ -1,10 +1,11 @@
-import { Navigate, Outlet, Link, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { Trophy, LogOut, Home, Users, Calendar, Shuffle } from 'lucide-react'
+import { Trophy, LogOut, LayoutDashboard, Users, Calendar, Shuffle, RotateCcw } from 'lucide-react'
 import AdminDataSync from '../../components/providers/AdminDataSync'
 import LoadingState from '../../components/common/LoadingState'
 import ErrorState from '../../components/common/ErrorState'
 import AdminErrorBanner from '../../components/common/AdminErrorBanner'
+import AdminBottomNav from '../../components/layout/AdminBottomNav'
 import { useTeamsStore } from '../../stores/useTeamsStore'
 import { useMatchesStore } from '../../stores/useMatchesStore'
 
@@ -12,6 +13,7 @@ export default function AdminLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
   const location = useLocation()
+  const navigate = useNavigate()
   const teamsLoading = useTeamsStore((s) => s.loading && !s.initialized)
   const matchesLoading = useMatchesStore((s) => s.loading && !s.initialized)
   const teamsFetchError = useTeamsStore((s) => s.fetchError)
@@ -24,12 +26,10 @@ export default function AdminLayout() {
     return <Navigate to="/admin/login" replace />
   }
 
-  const navItems = [
-    { path: '/admin/dashboard', label: 'نظرة عامة', icon: Home },
-    { path: '/admin/teams', label: 'إدارة الفرق', icon: Users },
-    { path: '/admin/matches', label: 'المباريات', icon: Calendar },
-    { path: '/admin/draw', label: 'القرعة', icon: Shuffle },
-  ]
+  const handleLogout = () => {
+    logout()
+    navigate('/', { replace: true })
+  }
 
   return (
     <AdminDataSync>
@@ -51,7 +51,7 @@ export default function AdminLayout() {
 
           <button
             type="button"
-            onClick={logout}
+            onClick={handleLogout}
             className="flex items-center gap-2 text-sm text-text-secondary hover:text-danger transition-colors"
           >
             <span>خروج</span>
@@ -60,29 +60,39 @@ export default function AdminLayout() {
         </header>
 
         <div className="flex-1 flex flex-col md:flex-row w-full max-w-7xl mx-auto">
-          <nav className="fixed bottom-0 left-0 right-0 h-16 bg-bg-nav border-t border-border z-40 md:sticky md:top-16 md:w-64 md:h-[calc(100vh-4rem)] md:border-t-0 md:border-e md:border-border flex md:flex-col pb-safe md:pb-0 shrink-0">
-            <ul className="flex items-center justify-around h-full md:flex-col md:justify-start md:p-4 md:gap-2">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.path
-                const Icon = item.icon
-                return (
-                  <li key={item.path} className="flex-1 md:w-full md:flex-none">
-                    <Link
-                      to={item.path}
-                      className={`flex flex-col md:flex-row items-center justify-center md:justify-start h-full md:h-12 md:px-4 gap-1 md:gap-3 rounded-xl transition-colors ${
-                        isActive
-                          ? 'text-accent md:bg-bg-surface'
-                          : 'text-text-secondary hover:text-text-primary hover:bg-bg-surface'
-                      }`}
-                    >
-                      <Icon size={20} strokeWidth={isActive ? 2.5 : 1.75} />
-                      <span className="text-[10px] md:text-sm font-medium">{item.label}</span>
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </nav>
+          <AdminBottomNav />
+
+          <aside className="hidden md:block md:w-56 md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] md:border-e md:border-border md:pb-4 shrink-0">
+            <nav className="md:pt-6 md:px-3" dir="rtl">
+              <ul className="flex flex-col gap-0.5">
+                {[
+                  { path: '/admin/dashboard', label: 'نظرة عامة', icon: LayoutDashboard },
+                  { path: '/admin/teams', label: 'إدارة الفرق', icon: Users },
+                  { path: '/admin/matches', label: 'المباريات', icon: Calendar },
+                  { path: '/admin/draw', label: 'القرعة', icon: Shuffle },
+                  { path: '/admin/schedule', label: 'نظرة النسر', icon: RotateCcw },
+                ].map((item) => {
+                  const isActive = location.pathname === item.path
+                  const Icon = item.icon
+                  return (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={`flex items-center gap-3 h-11 px-3 rounded-xl transition-all duration-200 ${
+                          isActive
+                            ? 'bg-accent/10 text-accent border border-accent/20'
+                            : 'text-text-secondary hover:text-text-primary hover:bg-bg-surface'
+                        }`}
+                      >
+                        <Icon size={20} strokeWidth={isActive ? 2.5 : 1.75} />
+                        <span className="text-sm font-medium">{item.label}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </nav>
+          </aside>
 
           <main className="flex-1 p-4 pb-24 md:pb-8 overflow-y-auto">
             {teamsLoading || matchesLoading ? (
