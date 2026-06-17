@@ -114,8 +114,6 @@ export default function HomePage() {
 
   const topScorers = useMemo(() => calculateTopScorers(teams, matches).slice(0, 5), [teams, matches])
   const totalGoals = useMemo(() => getTotalGoals(matches), [matches])
-  
-  const tournamentPhase = settings?.tournamentPhase || (lang === 'ar' ? 'مرحلة المجموعات' : 'Group Stage')
 
   if (isLoading) return <LoadingState message={lang === 'ar' ? 'جاري تحميل البطولة...' : 'Loading tournament...'} />
   
@@ -167,41 +165,36 @@ export default function HomePage() {
       </div>
 
       {/* Premium Hero Section - Fullscreen */}
-      <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] h-[340px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden select-none bg-black -mt-4 sm:-mt-6">
+      <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] h-[320px] sm:h-[380px] md:h-[480px] overflow-hidden select-none bg-black -mt-4 sm:-mt-6">
         {/* Background Image */}
         <img
           src="/premium-trophy-bg.png"
           alt="Premium Trophy"
-          className="absolute inset-0 w-full h-full object-cover object-left z-0 scale-x-[-1]"
+          className={`absolute inset-0 w-full h-full object-cover z-0 ${isRtl ? 'object-right' : 'object-left'} ${isRtl ? '' : 'scale-x-[-1]'}`}
         />
 
         {/* Gradients overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/30 to-black/70 z-10" />
-        <div className={`absolute inset-0 z-10 ${isRtl ? 'bg-gradient-to-l from-black/90 via-black/60 to-black/10' : 'bg-gradient-to-r from-black/90 via-black/60 to-black/10'}`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/40 to-transparent z-10" />
+        <div className={`absolute inset-0 z-10 ${isRtl ? 'bg-gradient-to-l from-bg-primary/95 via-bg-primary/70 to-transparent' : 'bg-gradient-to-r from-bg-primary/95 via-bg-primary/70 to-transparent'}`} />
 
         {/* Hero Text Content */}
-        <div className={`absolute inset-0 z-20 flex flex-col justify-center px-4 sm:px-6 md:px-8 ${isRtl ? 'items-end text-right' : 'items-start text-left'}`}>
-          <div className={`flex flex-col gap-3 sm:gap-4 md:gap-4 max-w-xl ${isRtl ? 'items-end' : 'items-start'}`}>
+        <div className={`absolute inset-0 z-20 flex flex-col justify-center px-6 sm:px-8 md:px-12 ${isRtl ? 'items-start pr-8 sm:pr-12' : 'items-start pl-8 sm:pl-12'}`}>
+          <div className={`flex flex-col gap-3 sm:gap-4 max-w-lg ${isRtl ? 'items-start text-right' : 'items-start text-left'}`}>
             {/* Subtitle badge */}
             <span className="hero-content opacity-100 text-accent-light text-xs sm:text-sm font-bold uppercase tracking-widest bg-accent/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-accent/20 whitespace-nowrap">
               {t[lang].subtitle}
             </span>
 
             {/* Main Title */}
-            <h2 className="hero-content opacity-100 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-accent drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)] leading-tight">
+            <h2 className="hero-content opacity-100 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-accent drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)] leading-tight">
               {t[lang].title}
             </h2>
 
             {/* Gold Stars */}
-            <div className="hero-content flex text-accent text-lg sm:text-xl md:text-2xl gap-3 sm:gap-4">
+            <div className="hero-content flex text-accent text-lg sm:text-xl gap-3">
               <span>★</span>
               <span>★</span>
               <span>★</span>
-            </div>
-
-            {/* Tournament Phase badge */}
-            <div className="hero-content inline-block px-4 sm:px-5 py-1.5 sm:py-2 rounded-full border border-accent/30 bg-black/70 text-accent text-xs sm:text-sm md:text-base font-bold shadow-[0_4px_12px_rgba(0,0,0,0.7)] backdrop-blur-sm">
-              {tournamentPhase}
             </div>
           </div>
         </div>
