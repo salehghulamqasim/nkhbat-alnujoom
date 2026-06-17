@@ -70,6 +70,15 @@ export default function ScheduleEagleEyeView({
     })
   }, [filteredMatches])
 
+  // Sort ALL matches globally by date then time to get stable numbering
+  const globalSortedMatches = useMemo(() => {
+    return [...matches].sort((a, b) => {
+      const dateCmp = (a.date || '').localeCompare(b.date || '')
+      if (dateCmp !== 0) return dateCmp
+      return (a.time || '').localeCompare(b.time || '')
+    })
+  }, [matches])
+
   const getMatchStatus = useCallback((match) => {
     if (!match) return 'scheduled'
     if (match.status === 'live') return 'live'
@@ -287,7 +296,7 @@ export default function ScheduleEagleEyeView({
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-full end-0 mb-2 w-40 bg-zinc-900 border border-zinc-700 rounded-xl py-1.5 shadow-xl z-20"
+                className="absolute bottom-full ltr:right-0 rtl:left-0 ltr:left-auto rtl:right-auto mb-2 w-40 bg-zinc-900 border border-zinc-700 rounded-xl py-1.5 shadow-xl z-20"
               >
                 <button
                   onClick={() => { captureAndDownload('png'); setShowDownloadMenu(false) }}
@@ -382,7 +391,9 @@ export default function ScheduleEagleEyeView({
                       onClick={() => setSelectedMatch(match)}
                       className="border-b border-zinc-800/40 hover:bg-zinc-800/30 cursor-pointer transition-colors"
                     >
-                      <td className="px-3 py-3 text-center text-xs text-zinc-500">{idx + 1}</td>
+                      <td className="px-3 py-3 text-center text-xs text-zinc-500">
+                        {globalSortedMatches.findIndex((m) => m.id === match.id) + 1}
+                      </td>
                       <td className="px-3 py-3 text-center text-xs text-zinc-300 whitespace-nowrap">
                         {match.date || '—'}
                       </td>
@@ -395,7 +406,7 @@ export default function ScheduleEagleEyeView({
                         </span>
                       </td>
                       <td className="px-3 py-3">
-                        <div className="flex items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center gap-2 justify-end" dir={isAr ? 'rtl' : 'ltr'}>
                           {!isAr && tA?.logo ? (
                             <img src={tA.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
                           ) : null}
@@ -417,7 +428,7 @@ export default function ScheduleEagleEyeView({
                         )}
                       </td>
                       <td className="px-3 py-3">
-                        <div className="flex items-center gap-2 justify-end" dir={isAr ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
                           {isAr && tB?.logo ? (
                             <img src={tB.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
                           ) : null}

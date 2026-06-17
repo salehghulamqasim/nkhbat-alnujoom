@@ -84,9 +84,9 @@ export default function TeamsPage() {
           className="bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary appearance-none"
         >
           <option value="all">{t[lang].all}</option>
-          <option value="A">{t[lang].group} A</option>
-          <option value="B">{t[lang].group} B</option>
-          <option value="C">{t[lang].group} C</option>
+          <option value="A">{lang === 'ar' ? 'المجموعة أ' : 'Group A'}</option>
+          <option value="B">{lang === 'ar' ? 'المجموعة ب' : 'Group B'}</option>
+          <option value="C">{lang === 'ar' ? 'المجموعة ج' : 'Group C'}</option>
         </select>
       </div>
 
@@ -113,7 +113,7 @@ export default function TeamsPage() {
                   <div className="text-center">
                     <h3 className="font-bold text-text-primary">{team.name}</h3>
                     <span className="text-[10px] text-text-secondary">
-                      {team.group ? `${t[lang].group} ${team.group}` : t[lang].awaitingDraw}
+                      {team.group ? (lang === 'ar' ? `المجموعة ${team.group === 'A' ? 'أ' : team.group === 'B' ? 'ب' : team.group === 'C' ? 'ج' : team.group}` : `Group ${team.group}`) : t[lang].awaitingDraw}
                     </span>
                   </div>
                 </DarkCard>

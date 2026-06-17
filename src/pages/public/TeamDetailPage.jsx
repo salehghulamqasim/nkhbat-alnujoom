@@ -92,7 +92,7 @@ export default function TeamDetailPage() {
           <div className="flex items-center gap-2 text-sm text-text-secondary flex-wrap justify-center">
             {team.group && (
               <span className="bg-bg-surface px-2 py-0.5 rounded">
-                المجموعة {team.group}
+                المجموعة {team.group === 'A' ? 'أ' : team.group === 'B' ? 'ب' : team.group === 'C' ? 'ج' : team.group}
                 {rank && ` — المركز ${rank}`}
               </span>
             )}

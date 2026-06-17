@@ -200,28 +200,32 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Stats Cards floating over the Hero bottom */}
+       {/* Stats Cards floating over the Hero bottom */}
       <div className="relative z-30 -mt-14 sm:-mt-16 md:-mt-20 px-4 sm:px-6 max-w-2xl mx-auto">
         <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           <StatCard
+            key={`teams-${lang}-${teams.length}`}
             value={teams.length}
             label={t[lang].team}
             delay={0}
             className="backdrop-blur-md shadow-md py-3 sm:py-4"
           />
           <StatCard
+            key={`matches-${lang}-${matches.length}`}
             value={matches.length}
             label={t[lang].match}
             delay={0.1}
             className="backdrop-blur-md shadow-md py-3 sm:py-4"
           />
           <StatCard
+            key={`goals-${lang}-${totalGoals}`}
             value={totalGoals}
             label={t[lang].goal}
             delay={0.2}
             className="backdrop-blur-md shadow-md py-3 sm:py-4"
           />
           <StatCard
+            key={`limit-${lang}-${MAX_TEAMS}`}
             value={MAX_TEAMS}
             label={t[lang].limit}
             delay={0.3}
