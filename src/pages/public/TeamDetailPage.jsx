@@ -96,7 +96,7 @@ export default function TeamDetailPage() {
                 {rank && ` — المركز ${rank}`}
               </span>
             )}
-            <span>مدرب: {team.manager}</span>
+            <span>مدرب: {team.manager || <span className="text-text-secondary/50">غير محدد</span>}</span>
           </div>
 
           {standingsStats && (

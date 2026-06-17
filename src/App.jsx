@@ -3,13 +3,14 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import AdminLayout from './pages/admin/AdminLayout'
 import HomePage from './pages/public/HomePage'
-import MatchesPage from './pages/public/MatchesPage'
-import LiveMatchPage from './pages/public/LiveMatchPage'
-import StandingsPage from './pages/public/StandingsPage'
 import TeamsPage from './pages/public/TeamsPage'
 import TeamDetailPage from './pages/public/TeamDetailPage'
+import MatchesPage from './pages/public/MatchesPage'
+import StandingsPage from './pages/public/StandingsPage'
 import TopScorersPage from './pages/public/TopScorersPage'
+import LiveMatchPage from './pages/public/LiveMatchPage'
 import MorePage from './pages/public/MorePage'
+import NotFoundPage from './pages/public/NotFoundPage'
 import LoginPage from './pages/admin/LoginPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import TeamsAdminPage from './pages/admin/TeamsAdminPage'
@@ -41,6 +42,7 @@ function App() {
         <Route path="/teams/:id" element={<TeamDetailPage />} />
         <Route path="/top-scorers" element={<TopScorersPage />} />
         <Route path="/more" element={<MorePage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
 
       <Route path="/admin/login" element={<LoginPage />} />

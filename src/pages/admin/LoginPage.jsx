@@ -1,23 +1,33 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { Lock, ShieldAlert, ArrowRight } from 'lucide-react'
+import { Lock, ShieldAlert, ArrowRight, Loader2 } from 'lucide-react'
 import DarkCard from '../../components/common/DarkCard'
 import GoldButton from '../../components/common/GoldButton'
 
 export default function LoginPage() {
   const [pin, setPin] = useState('')
   const [error, setError] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const login = useAuthStore((state) => state.login)
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    if (submitting) return
+
+    setSubmitting(true)
+    setError(false)
+
+    // Small delay to show loading state
+    await new Promise((r) => setTimeout(r, 300))
+
     if (login(pin)) {
       navigate('/admin/dashboard')
     } else {
       setError(true)
       setPin('')
+      setSubmitting(false)
     }
   }
 
@@ -51,23 +61,35 @@ export default function LoginPage() {
               value={pin}
               onChange={(e) => {
                 setPin(e.target.value)
-                setError(false)
+                if (error) setError(false)
               }}
               placeholder="••••"
-              className="w-full text-center tracking-[1em] text-2xl bg-bg-surface border border-border rounded-xl py-4 focus:outline-none focus:border-accent transition-colors"
+              className={`w-full text-center tracking-[1em] text-2xl bg-bg-surface border rounded-xl py-4 focus:outline-none transition-colors ${
+                error
+                  ? 'border-danger/60 focus:border-danger'
+                  : 'border-border focus:border-accent'
+              }`}
               dir="ltr"
               autoFocus
+              disabled={submitting}
             />
             {error && (
-              <div className="flex items-center gap-1.5 text-danger text-xs mt-2 justify-center">
+              <div className="flex items-center gap-1.5 text-danger text-xs mt-2 justify-center animate-pulse">
                 <ShieldAlert size={14} />
-                <span>رمز الدخول غير صحيح</span>
+                <span>رمز الدخول غير صحيح. حاول مرة أخرى</span>
               </div>
             )}
           </div>
 
-          <GoldButton type="submit" className="w-full mt-2">
-            دخول
+          <GoldButton type="submit" className="w-full mt-2" disabled={submitting}>
+            {submitting ? (
+              <span className="flex items-center gap-2 justify-center">
+                <Loader2 size={16} className="animate-spin" />
+                جاري التحقق...
+              </span>
+            ) : (
+              'دخول'
+            )}
           </GoldButton>
         </form>
       </DarkCard>
