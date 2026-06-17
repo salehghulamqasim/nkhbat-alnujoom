@@ -1,7 +1,6 @@
 import { useState, useMemo, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { toPng } from 'html-to-image'
 import LoadingState from '../../components/common/LoadingState'
 import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
@@ -129,12 +128,67 @@ export default function MatchesPage() {
     if (!tableRef.current) return
     setActionMsg(t[lang].downloading)
     try {
-      // Use html-to-image to capture table as PNG
-      const dataUrl = await toPng(tableRef.current, {
-        backgroundColor: '#1a1a2e',
-        pixelRatio: 2,
-        fontEmbedCSS: '',
-      })
+      const table = tableRef.current
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      const scale = 2
+
+      // Compute required dimensions
+      const rect = table.getBoundingClientRect()
+      canvas.width = rect.width * scale
+      canvas.height = rect.height * scale
+
+      // Dark background
+      ctx.scale(scale, scale)
+      ctx.fillStyle = '#1a1a2e'
+      ctx.fillRect(0, 0, rect.width, rect.height)
+
+      // Draw each visible child manually using the DOM's computed styles
+      const drawNode = (node, offsetX, offsetY) => {
+        const style = window.getComputedStyle(node)
+        const display = style.display
+        if (display === 'none' || node.offsetParent === null) return
+
+        const nodeRect = node.getBoundingClientRect()
+        const x = nodeRect.left - rect.left + offsetX
+        const y = nodeRect.top - rect.top + offsetY
+        const w = nodeRect.width
+        const h = nodeRect.height
+
+        // Background color
+        const bg = style.backgroundColor
+        if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+          ctx.fillStyle = bg
+          ctx.fillRect(x, y, w, h)
+        }
+
+        // Text content
+        if (node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          ctx.fillStyle = style.color
+          ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+          ctx.textAlign = style.textAlign === 'right' ? 'right' : style.textAlign === 'left' ? 'left' : 'center'
+          ctx.textBaseline = 'middle'
+          const text = node.textContent.trim()
+          ctx.fillText(text, x + w / 2, y + h / 2)
+        }
+
+        // Border
+        const borderColor = style.borderColor
+        if (borderColor && borderColor !== 'rgba(0, 0, 0, 0)' && style.borderWidth !== '0px') {
+          ctx.strokeStyle = borderColor
+          ctx.lineWidth = 1
+          ctx.strokeRect(x, y, w, h)
+        }
+
+        // Recurse children
+        for (const child of node.children) {
+          drawNode(child, offsetX, offsetY)
+        }
+      }
+
+      drawNode(table, 0, 0)
+
+      const dataUrl = canvas.toDataURL('image/png')
       const link = document.createElement('a')
       link.download = `match-schedule-${new Date().toISOString().split('T')[0]}.png`
       link.href = dataUrl
@@ -144,22 +198,11 @@ export default function MatchesPage() {
       setActionMsg(t[lang].downloadReady)
     } catch (err) {
       console.error('Download failed:', err)
-      // Fallback: try with filter to skip problematic elements
+      // Last-resort fallback: window print
       try {
-        const dataUrl = await toPng(tableRef.current, {
-          backgroundColor: '#1a1a2e',
-          pixelRatio: 2,
-          filter: (node) => node.tagName !== 'svg' && node.tagName !== 'IMG',
-        })
-        const link = document.createElement('a')
-        link.download = `match-schedule-${new Date().toISOString().split('T')[0]}.png`
-        link.href = dataUrl
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+        window.print()
         setActionMsg(t[lang].downloadReady)
-      } catch (fallbackErr) {
-        console.error('Fallback also failed:', fallbackErr)
+      } catch {
         setActionMsg(t[lang].error)
       }
     }
@@ -200,23 +243,23 @@ export default function MatchesPage() {
 
   return (
     <div className="px-4 py-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-center sm:text-right">{t[lang].title}</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={handleDownload}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-black text-sm font-bold transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            {t[lang].download}
-          </button>
+      {/* Header with title and actions */}
+      <div className="flex flex-col gap-3">
+        <h1 className="text-2xl font-bold text-center">{t[lang].title}</h1>
+        <div className="flex gap-2 justify-center">
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-bg-surface border border-border text-text-secondary hover:text-accent hover:border-accent/30 text-sm font-bold transition-colors"
+            className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-bg-surface border border-border text-text-secondary hover:text-accent hover:border-accent/30 text-sm font-bold transition-all flex-1 max-w-[140px] justify-center"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             {t[lang].share}
+          </button>
+          <button
+            onClick={handleDownload}
+            className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-black text-sm font-bold transition-all flex-1 max-w-[140px] justify-center"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            {t[lang].download}
           </button>
         </div>
       </div>
@@ -249,66 +292,62 @@ export default function MatchesPage() {
         <EmptyState title={t[lang].noMatches} message={t[lang].noMatchesDesc} />
       ) : (
         <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+          <table className="w-full text-sm border-collapse" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
             <thead>
-              <tr className="bg-bg-surface border-b border-border">
-                <th className="p-3 text-xs font-bold text-text-secondary text-center">#</th>
-                <th className="p-3 text-xs font-bold text-text-secondary text-center">{t[lang].date}</th>
-                <th className="p-3 text-xs font-bold text-text-secondary text-center">{t[lang].time}</th>
-                <th className="p-3 text-xs font-bold text-text-secondary text-center">{t[lang].group}</th>
-                <th className="p-3 text-xs font-bold text-text-secondary text-center">{t[lang].home}</th>
-                <th className="p-3 text-xs font-bold text-accent text-center">{t[lang].score}</th>
-                <th className="p-3 text-xs font-bold text-text-secondary text-center">{t[lang].away}</th>
-                <th className="p-3 text-xs font-bold text-text-secondary text-center">{t[lang].venue}</th>
+              <tr className="bg-bg-surface">
+                <th className="p-3 text-[11px] font-bold text-text-secondary text-center uppercase tracking-wider">#</th>
+                <th className="p-3 text-[11px] font-bold text-text-secondary text-center uppercase tracking-wider">{t[lang].date}</th>
+                <th className="p-3 text-[11px] font-bold text-text-secondary text-center uppercase tracking-wider">{t[lang].time}</th>
+                <th className="p-3 text-[11px] font-bold text-text-secondary text-center uppercase tracking-wider">{t[lang].group}</th>
+                <th className="p-3 text-[11px] font-bold text-text-secondary text-center uppercase tracking-wider">{t[lang].home}</th>
+                <th className="p-3 text-[11px] font-bold text-accent text-center uppercase tracking-wider">{t[lang].score}</th>
+                <th className="p-3 text-[11px] font-bold text-text-secondary text-center uppercase tracking-wider">{t[lang].away}</th>
+                <th className="p-3 text-[11px] font-bold text-text-secondary text-center uppercase tracking-wider">{t[lang].venue}</th>
               </tr>
             </thead>
             <tbody>
-              {flatRows.map((r) => {
+              {flatRows.map((r, idx) => {
                 const match = r.match
                 const status = getMatchDisplayStatus(match)
                 const isLive = status === 'live'
+                const isEvenRow = idx % 2 === 0
                 return (
                   <motion.tr
                     key={match.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
+                    transition={{ delay: idx * 0.02 }}
                     onClick={() => navigate(`/matches/${match.id}`)}
-                    className={`border-b border-border/50 transition-colors ${isLive ? 'bg-live/5' : 'hover:bg-bg-surface/50'} cursor-pointer`}
+                    className={`border-b border-border/30 transition-colors cursor-pointer ${
+                      isLive ? 'bg-live/5' : isEvenRow ? 'bg-bg-primary' : 'bg-bg-surface/30'
+                    } hover:bg-bg-surface/80`}
                   >
-                    <td className="p-3 text-center text-text-secondary">{r.rowNum}</td>
-                    <td className="p-3 text-center whitespace-nowrap">{r.date === 'unknown' ? t[lang].unknownDate : r.date}</td>
-                    <td className="p-3 text-center whitespace-nowrap">{match.time || '--:--'}</td>
-                    <td className="p-3 text-center">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-bg-surface border border-border">
+                    <td className="p-2.5 text-center text-text-secondary text-xs font-mono">{r.rowNum}</td>
+                    <td className="p-2.5 text-center whitespace-nowrap text-xs">{r.date === 'unknown' ? t[lang].unknownDate : r.date}</td>
+                    <td className="p-2.5 text-center whitespace-nowrap text-xs">{match.time || '--:--'}</td>
+                    <td className="p-2.5 text-center">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-bg-surface border border-border font-medium">
                         {t[lang].groupLabel} {match.group}
                       </span>
                     </td>
-                    <td className="p-3 text-center font-bold">
-                      <div className="flex items-center justify-center gap-2">
-                        {lang === 'ar' ? null : <TeamLogo logo={match.homeLogo} name={match.home} size="sm" />}
-                        <span className={isLive ? 'text-live' : ''}>{match.home}</span>
-                        {lang === 'ar' ? <TeamLogo logo={match.homeLogo} name={match.home} size="sm" /> : null}
-                      </div>
+                    <td className="p-2.5 text-center font-semibold text-sm">
+                      <span className={isLive ? 'text-live' : ''}>{match.home}</span>
                     </td>
-                    <td className="p-3 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className={`text-lg font-bold tracking-wider ${isLive ? 'text-live' : 'text-accent'}`} dir="ltr">
+                    <td className="p-2.5 text-center">
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className={`text-base font-bold tracking-wider ${isLive ? 'text-live' : 'text-accent'}`} dir="ltr">
                           {match.result ? `${match.result.scoreA} – ${match.result.scoreB}` : match.time || '--:--'}
                         </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${statusClass(status)}`}>
-                          {status === 'live' ? <span className="inline-block w-1.5 h-1.5 rounded-full bg-live animate-pulse ml-1" /> : null}
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${statusClass(status)}`}>
+                          {status === 'live' ? <span className="inline-block w-1 h-1 rounded-full bg-live animate-pulse ml-0.5" /> : null}
                           {getStatusLabel(status)}
                         </span>
                       </div>
                     </td>
-                    <td className="p-3 text-center font-bold">
-                      <div className="flex items-center justify-center gap-2">
-                        {lang === 'ar' ? null : <TeamLogo logo={match.awayLogo} name={match.away} size="sm" />}
-                        <span className={isLive ? 'text-live' : ''}>{match.away}</span>
-                        {lang === 'ar' ? <TeamLogo logo={match.awayLogo} name={match.away} size="sm" /> : null}
-                      </div>
+                    <td className="p-2.5 text-center font-semibold text-sm">
+                      <span className={isLive ? 'text-live' : ''}>{match.away}</span>
                     </td>
-                    <td className="p-3 text-center text-text-secondary text-xs">
+                    <td className="p-2.5 text-center text-text-secondary text-[11px] max-w-[80px] truncate" title={match.venue || t[lang].noVenue}>
                       {match.venue || t[lang].noVenue}
                     </td>
                   </motion.tr>
