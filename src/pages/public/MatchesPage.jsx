@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 import LoadingState from '../../components/common/LoadingState'
 import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
@@ -129,17 +129,17 @@ export default function MatchesPage() {
     if (!tableRef.current) return
     setActionMsg(t[lang].downloading)
     try {
-      const canvas = await html2canvas(tableRef.current, {
+      const dataUrl = await toPng(tableRef.current, {
         backgroundColor: '#1a1a2e',
-        scale: 2,
-        useCORS: true,
+        pixelRatio: 2,
       })
       const link = document.createElement('a')
       link.download = `match-schedule-${new Date().toISOString().split('T')[0]}.png`
-      link.href = canvas.toDataURL()
+      link.href = dataUrl
       link.click()
       setActionMsg(t[lang].downloadReady)
-    } catch {
+    } catch (err) {
+      console.error('Download failed:', err)
       setActionMsg(t[lang].error)
     }
     setTimeout(() => setActionMsg(''), 3000)
