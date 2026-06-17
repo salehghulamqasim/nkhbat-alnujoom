@@ -12,6 +12,7 @@ import {
   ChevronDown,
   FileText,
   X,
+  ExternalLink,
 } from 'lucide-react'
 import DarkCard from './DarkCard'
 import { useTeamsStore } from '../../stores/useTeamsStore'
@@ -22,38 +23,20 @@ const GROUPS = ['A', 'B', 'C']
 const GROUP_LABELS = { A: 'المجموعة أ', B: 'المجموعة ب', C: 'المجموعة ج' }
 const GROUP_LABELS_EN = { A: 'Group A', B: 'Group B', C: 'Group C' }
 
-const STATUS_STYLES = {
-  scheduled: {
-    bg: 'bg-zinc-800/30',
-    text: 'text-zinc-400',
-    border: 'border-zinc-700/40',
-    dot: 'bg-zinc-500',
-    label: 'مجدولة',
-    labelEn: 'Scheduled',
-  },
-  live: {
-    bg: 'bg-amber-500/10',
-    text: 'text-amber-400',
-    border: 'border-amber-500/30',
-    dot: 'bg-amber-500',
-    label: 'مباشر',
-    labelEn: 'Live',
-    pulse: true,
-  },
-  completed: {
-    bg: 'bg-emerald-500/10',
-    text: 'text-emerald-400',
-    border: 'border-emerald-500/30',
-    dot: 'bg-emerald-500',
-    label: 'منتهية',
-    labelEn: 'Finished',
-  },
+const STATUS_BADGE = {
+  scheduled: { bg: 'bg-zinc-800/60', text: 'text-zinc-400', label: 'مجدولة', labelEn: 'Scheduled' },
+  live: { bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'مباشر', labelEn: 'Live' },
+  completed: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'منتهية', labelEn: 'Finished' },
 }
 
-export default function ScheduleEagleEyeView({ className = '' }) {
+export default function ScheduleEagleEyeView({
+  className = '',
+  teamsOverride,
+  matchesOverride,
+}) {
   const lang = useAppStore((s) => s.language)
-  const teams = useTeamsStore((s) => s.teams)
-  const matches = useMatchesStore((s) => s.matches)
+  const storeTeams = useTeamsStore((s) => s.teams)
+  const storeMatches = useMatchesStore((s) => s.matches)
   const containerRef = useRef(null)
   const [capturing, setCapturing] = useState(false)
   const [showDownloadMenu, setShowDownloadMenu] = useState(false)
@@ -62,6 +45,10 @@ export default function ScheduleEagleEyeView({ className = '' }) {
   const [filterGroup, setFilterGroup] = useState('all')
 
   const isAr = lang === 'ar'
+
+  // Use override props if provided, otherwise fall back to Zustand stores
+  const teams = teamsOverride || storeTeams
+  const matches = matchesOverride || storeMatches
 
   const teamsById = useMemo(() => {
     const map = {}
@@ -74,21 +61,14 @@ export default function ScheduleEagleEyeView({ className = '' }) {
     return matches.filter((m) => m.group === filterGroup)
   }, [matches, filterGroup])
 
-  const matchesByGroup = useMemo(() => {
-    const grouped = {}
-    GROUPS.forEach((g) => {
-      grouped[g] = filteredMatches.filter((m) => m.group === g)
+  // Sort matches by date then time
+  const sortedMatches = useMemo(() => {
+    return [...filteredMatches].sort((a, b) => {
+      const dateCmp = (a.date || '').localeCompare(b.date || '')
+      if (dateCmp !== 0) return dateCmp
+      return (a.time || '').localeCompare(b.time || '')
     })
-    return grouped
   }, [filteredMatches])
-
-  const teamsByGroup = useMemo(() => {
-    const grouped = {}
-    GROUPS.forEach((g) => {
-      grouped[g] = teams.filter((t) => t.group === g)
-    })
-    return grouped
-  }, [teams])
 
   const getMatchStatus = useCallback((match) => {
     if (!match) return 'scheduled'
@@ -102,11 +82,6 @@ export default function ScheduleEagleEyeView({ className = '' }) {
     return `${match.result.scoreA || 0} - ${match.result.scoreB || 0}`
   }, [])
 
-  const buildPairings = useCallback((groupMatches) => {
-    // Show all matches in the group
-    return [...groupMatches]
-  }, [])
-
   const filterOptions = [
     { key: 'all', labelAr: 'الكل', labelEn: 'All' },
     { key: 'A', labelAr: 'المجموعة أ', labelEn: 'Group A' },
@@ -118,29 +93,59 @@ export default function ScheduleEagleEyeView({ className = '' }) {
     if (!containerRef.current) return
     setCapturing(true)
     try {
-      const html2canvas = (await import('html2canvas')).default
+      const { toPng, toSvg } = await import('html-to-image')
       const target = containerRef.current
 
-      // First capture full content at a reasonable width
-      const fullCanvas = await html2canvas(target, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#0e0e0e',
-        width: 1200,
-        height: Math.min(target.scrollHeight, 1200 * 9 / 16),
-        onclone: (doc) => {
-          doc.querySelectorAll('[class*="max-h-"], [class*="overflow"]').forEach((el) => {
-            el.style.maxHeight = 'none'
-            el.style.overflow = 'visible'
-          })
-          // Ensure full width for capture
-          const container = doc.querySelector('[class*="space-y"]')
-          if (container) container.style.width = '1200px'
-        },
+      // Save original inline styles and apply flat colors
+      // This overrides Tailwind v4's oklab color-mix which libraries can't parse
+      const allElements = target.querySelectorAll('*')
+      const savedStyles = []
+      allElements.forEach((el) => {
+        const cs = getComputedStyle(el)
+        savedStyles.push({
+          el,
+          bg: el.style.backgroundColor,
+          color: el.style.color,
+          borderColor: el.style.borderColor,
+        })
+        if (cs.backgroundColor && cs.backgroundColor.includes('oklab')) {
+          el.style.backgroundColor = 'transparent'
+        }
+        if (cs.color && cs.color.includes('oklab')) {
+          el.style.color = '#a0a0a0'
+        }
+        if (cs.borderColor && cs.borderColor.includes('oklab')) {
+          el.style.borderColor = '#2a2a2a'
+        }
       })
 
-      // Create 16:9 output canvas
+      let dataUrl
+      try {
+        dataUrl = await toSvg(target, {
+          quality: 1.0,
+          pixelRatio: 2,
+          backgroundColor: '#0e0e0e',
+          width: 1200,
+          height: Math.min(target.scrollHeight, 2000),
+          cacheBust: true,
+        })
+      } catch (svgErr) {
+        console.warn('toSvg failed:', svgErr)
+        dataUrl = await toPng(target, {
+          quality: 1.0,
+          pixelRatio: 2,
+          backgroundColor: '#0e0e0e',
+          cacheBust: true,
+        })
+      }
+
+      // Restore styles
+      savedStyles.forEach(({ el, bg, color, borderColor }) => {
+        el.style.backgroundColor = bg
+        el.style.color = color
+        el.style.borderColor = borderColor
+      })
+
       const OUTPUT_W = 1920
       const OUTPUT_H = 1080
       const outCanvas = document.createElement('canvas')
@@ -148,24 +153,27 @@ export default function ScheduleEagleEyeView({ className = '' }) {
       outCanvas.height = OUTPUT_H
       const ctx = outCanvas.getContext('2d')
 
-      // Dark background
       ctx.fillStyle = '#0e0e0e'
       ctx.fillRect(0, 0, OUTPUT_W, OUTPUT_H)
 
-      // Draw the captured content centered, scaled to fit
-      const scaleX = OUTPUT_W / fullCanvas.width
-      const scaleY = OUTPUT_H / fullCanvas.height
+      const img = new Image()
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+        img.src = dataUrl
+      })
+
+      const scaleX = OUTPUT_W / img.width
+      const scaleY = OUTPUT_H / img.height
       const scale = Math.min(scaleX, scaleY) * 0.9
-      const dw = fullCanvas.width * scale
-      const dh = fullCanvas.height * scale
+      const dw = img.width * scale
+      const dh = img.height * scale
       const dx = (OUTPUT_W - dw) / 2
       const dy = (OUTPUT_H - dh) / 2
 
-      // Add subtle border
       ctx.fillStyle = '#1a1a2e'
       ctx.fillRect(dx - 4, dy - 4, dw + 8, dh + 8)
-
-      ctx.drawImage(fullCanvas, dx, dy, dw, dh)
+      ctx.drawImage(img, dx, dy, dw, dh)
 
       if (format === 'png') {
         const link = document.createElement('a')
@@ -184,8 +192,8 @@ export default function ScheduleEagleEyeView({ className = '' }) {
         pdf.save(`nkhbat-alnujoom-${new Date().toISOString().split('T')[0]}.pdf`)
       }
     } catch (err) {
-      console.error('Download failed:', err)
-      alert(isAr ? 'فشل التحميل' : 'Download failed')
+      console.error('All capture methods failed:', err)
+      alert(isAr ? 'فشل التحميل - استخدم لقطة الشاشة' : 'Download failed - use screenshot')
     } finally {
       setCapturing(false)
     }
@@ -195,15 +203,55 @@ export default function ScheduleEagleEyeView({ className = '' }) {
     if (!containerRef.current) return
     setCapturing(true)
     try {
-      const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(containerRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#0e0e0e',
+      const { toSvg, toPng } = await import('html-to-image')
+      const target = containerRef.current
+
+      const allElements = target.querySelectorAll('*')
+      const savedStyles = []
+      allElements.forEach((el) => {
+        const cs = getComputedStyle(el)
+        savedStyles.push({
+          el,
+          bg: el.style.backgroundColor,
+          color: el.style.color,
+          borderColor: el.style.borderColor,
+        })
+        if (cs.backgroundColor && cs.backgroundColor.includes('oklab')) {
+          el.style.backgroundColor = 'transparent'
+        }
+        if (cs.color && cs.color.includes('oklab')) {
+          el.style.color = '#a0a0a0'
+        }
+        if (cs.borderColor && cs.borderColor.includes('oklab')) {
+          el.style.borderColor = '#2a2a2a'
+        }
       })
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
-      if (!blob) throw new Error('No blob')
+
+      let dataUrl
+      try {
+        dataUrl = await toSvg(containerRef.current, {
+          quality: 1.0,
+          pixelRatio: 2,
+          backgroundColor: '#0e0e0e',
+          cacheBust: true,
+        })
+      } catch (svgErr) {
+        console.warn('toSvg for share failed:', svgErr)
+        dataUrl = await toPng(containerRef.current, {
+          quality: 1.0,
+          pixelRatio: 2,
+          backgroundColor: '#0e0e0e',
+          cacheBust: true,
+        })
+      }
+
+      savedStyles.forEach(({ el, bg, color, borderColor }) => {
+        el.style.backgroundColor = bg
+        el.style.color = color
+        el.style.borderColor = borderColor
+      })
+
+      const blob = await (await fetch(dataUrl)).blob()
       const file = new File([blob], `schedule-${Date.now()}.png`, { type: 'image/png' })
       const shareData = {
         title: isAr ? 'جدول نخبة النجوم' : 'Nkhbat Alnujoom Schedule',
@@ -215,7 +263,7 @@ export default function ScheduleEagleEyeView({ className = '' }) {
       } else {
         const link = document.createElement('a')
         link.download = `schedule-${Date.now()}.png`
-        link.href = canvas.toDataURL('image/png')
+        link.href = dataUrl
         link.click()
       }
     } catch (err) {
@@ -233,7 +281,7 @@ export default function ScheduleEagleEyeView({ className = '' }) {
   }
 
   return (
-    <div className={`space-y-5 ${className}`}>
+    <div className={`space-y-4 ${className}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold flex items-center gap-2">
@@ -263,7 +311,7 @@ export default function ScheduleEagleEyeView({ className = '' }) {
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-full right-0 mb-2 w-40 bg-zinc-900 border border-zinc-700 rounded-xl py-1.5 shadow-xl z-20"
+                className="absolute bottom-full end-0 mb-2 w-40 bg-zinc-900 border border-zinc-700 rounded-xl py-1.5 shadow-xl z-20"
               >
                 <button
                   onClick={() => { captureAndDownload('png'); setShowDownloadMenu(false) }}
@@ -284,7 +332,7 @@ export default function ScheduleEagleEyeView({ className = '' }) {
       </div>
 
       {/* Filter chips */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none" dir="ltr">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none" dir={isAr ? 'rtl' : 'ltr'}>
         {filterOptions.map((opt) => (
           <button
             key={opt.key}
@@ -300,128 +348,131 @@ export default function ScheduleEagleEyeView({ className = '' }) {
         ))}
       </div>
 
-      {/* Groups Grid */}
-      <div ref={containerRef} className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {GROUPS.map((group) => {
-          const groupTeams = teamsByGroup[group] || []
-          const groupMatches = matchesByGroup[group] || []
+      {/* Schedule Table */}
+      <div ref={containerRef} className="overflow-x-auto rounded-xl border border-zinc-800/60">
+        <table className="w-full text-sm" dir={isAr ? 'rtl' : 'ltr'}>
+          <thead>
+            <tr className="bg-zinc-900/80 border-b border-zinc-800">
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-10">#</th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
+                {isAr ? 'التاريخ' : 'Date'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
+                {isAr ? 'الوقت' : 'Time'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
+                {isAr ? 'المجموعة' : 'Group'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center">
+                {isAr ? 'الفريق' : 'Home'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-20">
+                {isAr ? 'النتيجة' : 'Score'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center">
+                {isAr ? 'الضيف' : 'Away'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
+                {isAr ? 'الملعب' : 'Venue'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-14">
+                {isAr ? 'الحالة' : 'Status'}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedMatches.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="px-4 py-12 text-center text-zinc-500 text-sm">
+                  {isAr ? 'لا توجد مباريات' : 'No matches found'}
+                </td>
+              </tr>
+            ) : (
+              sortedMatches.map((match, idx) => {
+                const tA = teamsById[match.teamA]
+                const tB = teamsById[match.teamB]
+                const status = getMatchStatus(match)
+                const score = getScore(match)
+                const badge = STATUS_BADGE[status]
+                const isLive = status === 'live'
 
-          return (
-            <div key={group} className="flex flex-col">
-              {/* Group header */}
-              <div className="sticky top-0 z-10 pb-2 bg-bg-primary">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-accent/15 border border-accent/20 flex items-center justify-center text-accent font-bold text-xs">
-                    {group}
-                  </div>
-                  <div>
-                    <h2 className="text-sm font-bold">
-                      {isAr ? GROUP_LABELS[group] : GROUP_LABELS_EN[group]}
-                    </h2>
-                    <p className="text-[10px] text-zinc-500">
-                      {groupTeams.length} {isAr ? 'فرق' : 'teams'} · {groupMatches.length} {isAr ? 'مباراة' : 'matches'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                return (
+                  <motion.tr
+                    key={match.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: idx * 0.02 }}
+                    onClick={() => setSelectedMatch(match)}
+                    className="border-b border-zinc-800/40 hover:bg-zinc-800/30 cursor-pointer transition-colors"
+                  >
+                    <td className="px-3 py-3 text-center text-xs text-zinc-500">{idx + 1}</td>
+                    <td className="px-3 py-3 text-center text-xs text-zinc-300 whitespace-nowrap">
+                      {match.date || '—'}
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs text-zinc-300 whitespace-nowrap">
+                      {match.time || '—'}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-accent/10 text-accent text-[10px] font-bold border border-accent/20">
+                        {match.group}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
+                        {!isAr && tA?.logo ? (
+                          <img src={tA.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
+                        ) : null}
+                        <span className="text-xs font-medium truncate max-w-[100px]">
+                          {tA?.name || match.teamA || '—'}
+                        </span>
+                        {isAr && tA?.logo ? (
+                          <img src={tA.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      {score ? (
+                        <span className={`text-sm font-bold ${isLive ? 'text-amber-400' : 'text-accent'}`}>
+                          {score}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-zinc-600 uppercase font-semibold tracking-wider">VS</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2 justify-end" dir={isAr ? 'rtl' : 'ltr'}>
+                        {isAr && tB?.logo ? (
+                          <img src={tB.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
+                        ) : null}
+                        <span className="text-xs font-medium truncate max-w-[100px]">
+                          {tB?.name || match.teamB || '—'}
+                        </span>
+                        {!isAr && tB?.logo ? (
+                          <img src={tB.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs text-zinc-400 truncate max-w-[100px]">
+                      {match.venue || '—'}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${badge.bg} ${badge.text}`}>
+                        {isLive && <Zap size={8} className="animate-pulse" />}
+                        {isAr ? badge.label : badge.labelEn}
+                      </span>
+                    </td>
+                  </motion.tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
-              {/* Match cards */}
-              <div className="flex flex-col gap-2">
-                {groupMatches.length === 0 ? (
-                  <div className="py-8 text-center text-zinc-500 text-xs">
-                    {isAr ? 'لا توجد مباريات في هذه المجموعة' : 'No matches in this group'}
-                  </div>
-                ) : (
-                  groupMatches.map((match) => {
-                    const tA = teamsById[match.teamA]
-                    const tB = teamsById[match.teamB]
-                    const status = getMatchStatus(match)
-                    const style = STATUS_STYLES[status]
-                    const score = getScore(match)
-                    const isLive = status === 'live'
-
-                    return (
-                      <motion.div
-                        key={match.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <DarkCard
-                          className={`p-3 ${style.bg} border ${style.border} transition-all duration-200 cursor-pointer hover:brightness-110`}
-                          hover={false}
-                          onClick={() => setSelectedMatch(match)}
-                        >
-                          <div className="flex items-center gap-2">
-                            {/* Status dot */}
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${style.dot} ${isLive ? 'animate-pulse' : ''}`} />
-
-                            {/* Team A */}
-                            <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                              {tA?.logo ? (
-                                <img src={tA.logo} alt="" className="w-6 h-6 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700/50 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-[9px] font-bold text-zinc-500">{tA?.name?.charAt(0) || '?'}</span>
-                                </div>
-                              )}
-                              <span className="truncate text-xs font-medium">{tA?.name || match.teamA}</span>
-                            </div>
-
-                            {/* Score / VS */}
-                            <div className="flex-shrink-0 text-center min-w-[2.5rem]">
-                              {score ? (
-                                <span className="text-sm font-bold text-accent">{score}</span>
-                              ) : (
-                                <span className="text-[10px] text-zinc-500 uppercase font-medium">VS</span>
-                              )}
-                            </div>
-
-                            {/* Team B */}
-                            <div className="flex-1 min-w-0 flex items-center justify-end gap-1.5">
-                              <span className="truncate text-xs font-medium">{tB?.name || match.teamB}</span>
-                              {tB?.logo ? (
-                                <img src={tB.logo} alt="" className="w-6 h-6 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
-                              ) : (
-                                <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700/50 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-[9px] font-bold text-zinc-500">{tB?.name?.charAt(0) || '?'}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Match meta */}
-                          {(match.date || match.time || match.venue) && (
-                            <div className="mt-2 pt-2 border-t border-zinc-800/50 flex flex-wrap gap-3 text-[10px] text-zinc-500">
-                              {match.date && (
-                                <span className="flex items-center gap-1">
-                                  <Calendar size={9} />
-                                  {match.date}
-                                </span>
-                              )}
-                              {match.time && (
-                                <span className="flex items-center gap-1">
-                                  <Clock size={9} />
-                                  {match.time}
-                                </span>
-                              )}
-                              {match.venue && (
-                                <span className="flex items-center gap-1 truncate">
-                                  <MapPin size={9} />
-                                  {match.venue}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </DarkCard>
-                      </motion.div>
-                    )
-                  })
-                )}
-              </div>
-            </div>
-          )
-        })}
+      {/* Match count */}
+      <div className="text-[11px] text-zinc-500 text-center">
+        {sortedMatches.length} {isAr ? 'مباراة' : 'matches'}
+        {filterGroup !== 'all' ? ` — ${isAr ? GROUP_LABELS[filterGroup] : GROUP_LABELS_EN[filterGroup]}` : ''}
       </div>
 
       {/* Match Detail Modal */}
@@ -450,7 +501,7 @@ export default function ScheduleEagleEyeView({ className = '' }) {
                 const tB = teamsById[m.teamB]
                 const s = getMatchStatus(m)
                 const sc = getScore(m)
-                const st = STATUS_STYLES[s]
+                const st = STATUS_BADGE[s]
                 const isL = s === 'live'
                 return (
                   <>
@@ -467,7 +518,7 @@ export default function ScheduleEagleEyeView({ className = '' }) {
                         ) : (
                           <span className="text-xs text-zinc-500 uppercase font-medium">VS</span>
                         )}
-                        <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.bg} ${st.text} ${st.border}`}>
+                        <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.bg} ${st.text}`}>
                           {isL && <Zap size={10} className="animate-pulse" />}
                           {isAr ? st.label : st.labelEn}
                         </div>
@@ -482,6 +533,7 @@ export default function ScheduleEagleEyeView({ className = '' }) {
                     <div className="space-y-2 text-xs text-zinc-400 border-t border-zinc-800 pt-4 mt-2">
                       {m.date && <div className="flex items-center gap-2"><Calendar size={12} className="text-zinc-500" /><span>{m.date}{m.time ? ` | ${m.time}` : ''}</span></div>}
                       {m.venue && <div className="flex items-center gap-2"><MapPin size={12} className="text-zinc-500" /><span>{m.venue}</span></div>}
+                      {m.group && <div className="flex items-center gap-2"><span className="w-5 h-5 rounded bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center">{m.group}</span><span>{isAr ? GROUP_LABELS[m.group] : GROUP_LABELS_EN[m.group]}</span></div>}
                     </div>
                   </>
                 )
@@ -505,16 +557,18 @@ export default function ScheduleEagleEyeView({ className = '' }) {
               initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.92 }}
-              className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-5"
+              className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-5 shadow-2xl text-center"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-sm font-bold mb-3">{isAr ? 'مشاركة' : 'Share'}</h3>
-              <div className="flex gap-2">
-                <input type="text" readOnly value={window.location.href} className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-xs text-zinc-300" />
-                <button onClick={async () => { await navigator.clipboard.writeText(window.location.href); setShareModal(false) }} className="px-4 py-2.5 bg-accent text-black font-semibold rounded-xl hover:bg-accent-hover transition-colors text-xs">
-                  {isAr ? 'نسخ' : 'Copy'}
-                </button>
-              </div>
+              <ExternalLink size={24} className="mx-auto text-accent mb-3" />
+              <p className="text-sm font-medium mb-1">{isAr ? 'رابط المشاركة' : 'Share Link'}</p>
+              <p className="text-xs text-zinc-500 mb-4 break-all">{window.location.href}</p>
+              <button
+                onClick={() => { navigator.clipboard.writeText(window.location.href).then(() => setShareModal(false)) }}
+                className="px-4 py-2 bg-accent text-black rounded-xl text-sm font-semibold"
+              >
+                {isAr ? 'نسخ الرابط' : 'Copy Link'}
+              </button>
             </motion.div>
           </motion.div>
         )}
