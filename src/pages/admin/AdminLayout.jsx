@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { Trophy, LogOut, LayoutDashboard, Users, Calendar, Shuffle, RotateCcw } from 'lucide-react'
@@ -12,6 +13,7 @@ import { useMatchesStore } from '../../stores/useMatchesStore'
 export default function AdminLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const teamsLoading = useTeamsStore((s) => s.loading && !s.initialized)
@@ -22,13 +24,14 @@ export default function AdminLayout() {
   const fetchMatches = useMatchesStore((s) => s.fetchAll)
   const initFailed = !teamsLoading && !matchesLoading && (teamsFetchError || matchesFetchError)
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isLoggingOut) {
     return <Navigate to="/admin/login" replace />
   }
 
   const handleLogout = () => {
-    logout()
+    setIsLoggingOut(true)
     navigate('/', { replace: true })
+    logout()
   }
 
   return (
