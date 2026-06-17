@@ -1,16 +1,124 @@
-# React + Vite
+# نخبة النجوم — Star Elite Cup
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-featured tournament management app built with **React + Vite + Firebase**. Manage teams, groups, matches, live scores, standings, and share schedule views — all in a dark-themed, RTL-first UI.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Dependency | Version |
+|------------|---------|
+| React | ^18.3 |
+| React Router DOM | ^6.26 |
+| Vite | ^8.0 |
+| Tailwind CSS | ^4.0 |
+| Zustand (state) | ^4.5 |
+| Firebase (auth, firestore, rtdb, hosting) | ^10.12 |
+| Framer Motion (animations) | ^11.0 |
+| Lucide React (icons) | ^0.400 |
+| html2canvas (export) | ^1.4 |
+| jsPDF (PDF export) | ^4.2 |
+| date-fns (date utils) | ^4.0 |
+| react-big-calendar (calendar view) | ^1.17 |
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Tournament Management** — Create up to 12 teams with logos, coaches, and players
+- **Group Draw** — Randomly assign teams into 3 groups (A, B, C) with round-robin scheduling
+- **Live Match Scoring** — Track scores, scorers, yellow/red cards in real-time
+- **Standings** — Auto-calculated group standings with points, GD, head-to-head
+- **Eagle-Eye Schedule View** — Full tournament overview with filter, download (PNG/PDF), and share
+- **Admin Panel** — Password-protected dashboard for managing teams, matches, groups
+- **RTL Support** — Full Arabic/English bilingual UI with `dir="rtl"` handling
+- **Dark Theme** — Muted dark interface with gold accent palette
 
-## Expanding the ESLint configuration
+## What We Fixed & Built
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Layout & Navigation
+- Fixed RTL navigation: `grid-cols-4` with conditional `dir` for correct tab order (Home leftmost in English, rightmost in Arabic)
+- Redesigned bottom nav with raised FAB for Eagle-Eye access
+- Added `pb-safe` for mobile safe-area-inset-bottom
+
+### Schedule Page
+- Replaced react-big-calendar with a clean custom schedule view after the calendar library caused issues
+- Eagle-Eye view: 3-group grid with match cards, status colors (live/complete/scheduled), and match detail modal
+- Group filter chips for quick navigation
+- Viewport-preserved scroll on group toggle
+
+### Download & Share
+- `html2canvas` capture at 2x for crisp PNG/PDF exports
+- Native Web Share API with image file attachment (WhatsApp, AirDrop, etc.)
+- Clipboard fallback + modal fallback for desktop
+
+### Data Layer
+- All data migrated to Firebase Realtime Database + Firestore (no localStorage)
+- Firebase rules opened for public read/write (tournament data)
+- ErrorBoundary wrapping to prevent full-page crashes
+- React Query hooks for public pages, zustand stores for admin
+
+### Hero Section
+- Arabic title now right-aligned (`text-right` when `isAr`)
+- Title centered vertically on cup background image
+- Raised position with responsive padding
+
+## Getting Started
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start dev server
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Deploy to Firebase
+firebase deploy
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+VITE_ADMIN_PIN=your_admin_password
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+# ... other Firebase config
+```
+
+## Deployment
+
+The app is deployed via Firebase Hosting at:
+
+**https://nkhbat-alnujoom.web.app**
+
+```bash
+firebase deploy --only hosting
+```
+
+## Project Structure
+
+```
+src/
+├── App.jsx                    # Root routing
+├── index.css                  # Tailwind + theme tokens + animations
+├── components/
+│   ├── common/                # DarkCard, TeamLogo, ErrorBoundary, ScheduleEagleEyeView, etc.
+│   ├── layout/                # AppLayout, BottomNav, AdminBottomNav, Header
+│   └── providers/             # AdminDataSync, React Query providers
+├── pages/
+│   ├── public/                # Home, Matches, Standings, Teams, ScheduleEagleEye, etc.
+│   └── admin/                 # Dashboard, TeamsAdmin, MatchesAdmin, DrawAdmin, Login, etc.
+├── stores/                    # Zustand stores (useAppStore, useAuthStore, useTeamsStore, useMatchesStore)
+├── hooks/                     # React Query hooks (useQueries)
+├── services/                  # Firebase CRUD services
+├── utils/                     # scheduleGenerator, matchHelpers, standings
+├── config/                    # Firebase config
+└── styles/                    # Calendar overrides
+```
+
+## Known Issues
+
+- Firebase tokens in `.git-credentials` may expire — push via SSH (`git@github.com`) instead
+- `pnpm install` may error on `core-js` build scripts; use `node node_modules/vite/bin/vite.js build` directly if needed
