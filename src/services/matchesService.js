@@ -8,12 +8,52 @@ import {
   writeBatch,
 } from 'firebase/firestore'
 import { db } from '../config/firebase'
+import {
+  lsGet,
+  lsSet,
+  lsAddToList,
+  lsUpdateList,
+  lsRemoveFromList,
+} from './storage'
 
 const COLLECTION = 'matches'
+const LS_KEY = COLLECTION
 
-export async function fetchMatches() {
+// ----- helpers -----
+
+function docRef(id) {
+  return doc(db, COLLECTION, id)
+}
+
+async function firebaseFetch() {
   const snapshot = await getDocs(collection(db, COLLECTION))
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+async function firebaseSet(id, data) {
+  await setDoc(docRef(id), data)
+}
+
+async function firebaseUpdate(id, updates) {
+  await updateDoc(docRef(id), updates)
+}
+
+async function firebaseDelete(id) {
+  await deleteDoc(docRef(id))
+}
+
+// ----- exported -----
+
+export async function fetchMatches() {
+  try {
+    const data = await firebaseFetch()
+    lsSet(LS_KEY, data) // cache
+    return data
+  } catch {
+    const cached = lsGet(LS_KEY)
+    if (cached) return cached
+    return [] // empty, not error — allows the app to work fresh
+  }
 }
 
 export async function createMatch({ group, teamA, teamB, date, time, venue }) {
@@ -29,12 +69,22 @@ export async function createMatch({ group, teamA, teamB, date, time, venue }) {
     status: 'scheduled',
     result: null,
   }
-  await setDoc(doc(db, COLLECTION, id), match)
+  try {
+    await firebaseSet(id, match)
+  } catch {
+    // Firebase write failed — silently fall through
+  }
+  lsAddToList(LS_KEY, match)
   return match
 }
 
 export async function updateMatchDoc(id, updates) {
-  await updateDoc(doc(db, COLLECTION, id), updates)
+  try {
+    await firebaseUpdate(id, updates)
+  } catch {
+    // fallback only
+  }
+  lsUpdateList(LS_KEY, id, (existing) => ({ ...existing, ...updates }))
 }
 
 export async function bulkCreateMatches(matchesList) {
@@ -60,16 +110,29 @@ export async function bulkCreateMatches(matchesList) {
     created.push(match)
   })
 
-  await batch.commit()
+  try {
+    await batch.commit()
+  } catch {
+    // fallback only
+  }
+
+  // Always persist to localStorage
+  const existing = lsGet(LS_KEY) || []
+  lsSet(LS_KEY, [...existing, ...created])
   return created
 }
 
 export async function deleteMatchDoc(id) {
-  await deleteDoc(doc(db, COLLECTION, id))
+  try {
+    await firebaseDelete(id)
+  } catch {
+    // fallback only
+  }
+  lsRemoveFromList(LS_KEY, id)
 }
 
 export async function saveMatchResult(id, result, status = 'completed') {
-  await updateDoc(doc(db, COLLECTION, id), {
+  const update = {
     status,
     result: {
       scoreA: Number(result.scoreA) || 0,
@@ -78,5 +141,11 @@ export async function saveMatchResult(id, result, status = 'completed') {
       yellowCards: result.yellowCards || [],
       redCards: result.redCards || [],
     },
-  })
+  }
+  try {
+    await firebaseUpdate(id, update)
+  } catch {
+    // fallback only
+  }
+  lsUpdateList(LS_KEY, id, (existing) => ({ ...existing, ...update }))
 }
