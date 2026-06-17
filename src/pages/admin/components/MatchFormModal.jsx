@@ -1,0 +1,189 @@
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X } from 'lucide-react'
+import { useTeamsStore } from '../../../stores/useTeamsStore'
+
+const GROUPS = ['A', 'B', 'C']
+
+export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
+  const teams = useTeamsStore((state) => state.teams)
+
+  const [form, setForm] = useState({
+    group: 'A',
+    teamA: '',
+    teamB: '',
+    date: '',
+    time: '',
+    venue: '',
+  })
+  const [errors, setErrors] = useState({})
+
+  const groupTeams = teams.filter((t) => t.group === form.group)
+
+  useEffect(() => {
+    if (isOpen) {
+      setForm({ group: 'A', teamA: '', teamB: '', date: '', time: '', venue: '' })
+      setErrors({})
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    setForm((prev) => ({ ...prev, teamA: '', teamB: '' }))
+  }, [form.group])
+
+  const validate = () => {
+    const nextErrors = {}
+    if (!form.teamA) nextErrors.teamA = 'اختر الفريق الأول'
+    if (!form.teamB) nextErrors.teamB = 'اختر الفريق الثاني'
+    if (form.teamA && form.teamA === form.teamB) nextErrors.teamB = 'لا يمكن اختيار نفس الفريق'
+    if (!form.date) nextErrors.date = 'التاريخ مطلوب'
+    if (!form.time) nextErrors.time = 'الوقت مطلوب'
+    if (!form.venue.trim()) nextErrors.venue = 'الملعب مطلوب'
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!validate()) return
+    onSubmit(form)
+    onClose()
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={onClose}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto glass-card rounded-t-2xl md:rounded-2xl shadow-2xl"
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-bg-card/95 backdrop-blur-md">
+              <h2 className="text-lg font-bold">إضافة مباراة</h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-bg-surface flex items-center justify-center hover:bg-bg-primary transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-4 space-y-4 pb-8">
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">المجموعة</label>
+                <select
+                  value={form.group}
+                  onChange={(e) => setForm((prev) => ({ ...prev, group: e.target.value }))}
+                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                >
+                  {GROUPS.map((g) => (
+                    <option key={g} value={g}>
+                      مجموعة {g}
+                    </option>
+                  ))}
+                </select>
+                {groupTeams.length < 2 && (
+                  <p className="text-xs text-warning mt-1">
+                    يجب إجراء القرعة أولاً — لا توجد فرق كافية في هذه المجموعة
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">الفريق الأول</label>
+                <select
+                  value={form.teamA}
+                  onChange={(e) => setForm((prev) => ({ ...prev, teamA: e.target.value }))}
+                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                >
+                  <option value="">— اختر —</option>
+                  {groupTeams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.teamA && <p className="text-xs text-danger mt-1">{errors.teamA}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">الفريق الثاني</label>
+                <select
+                  value={form.teamB}
+                  onChange={(e) => setForm((prev) => ({ ...prev, teamB: e.target.value }))}
+                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                >
+                  <option value="">— اختر —</option>
+                  {groupTeams
+                    .filter((t) => t.id !== form.teamA)
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                </select>
+                {errors.teamB && <p className="text-xs text-danger mt-1">{errors.teamB}</p>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm text-text-secondary mb-2">التاريخ</label>
+                  <input
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => setForm((prev) => ({ ...prev, date: e.target.value }))}
+                    className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                    dir="ltr"
+                  />
+                  {errors.date && <p className="text-xs text-danger mt-1">{errors.date}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm text-text-secondary mb-2">الوقت</label>
+                  <input
+                    type="time"
+                    value={form.time}
+                    onChange={(e) => setForm((prev) => ({ ...prev, time: e.target.value }))}
+                    className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                    dir="ltr"
+                  />
+                  {errors.time && <p className="text-xs text-danger mt-1">{errors.time}</p>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">الملعب</label>
+                <input
+                  type="text"
+                  value={form.venue}
+                  onChange={(e) => setForm((prev) => ({ ...prev, venue: e.target.value }))}
+                  placeholder="مثال: ملعب النجوم"
+                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                />
+                {errors.venue && <p className="text-xs text-danger mt-1">{errors.venue}</p>}
+              </div>
+
+              <button
+                type="submit"
+                disabled={groupTeams.length < 2}
+                className="w-full bg-accent hover:bg-accent-hover text-black font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                إضافة المباراة
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  )
+}

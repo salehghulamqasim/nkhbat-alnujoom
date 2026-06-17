@@ -1,0 +1,59 @@
+import { useEffect } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import AppLayout from './components/layout/AppLayout'
+import AdminLayout from './pages/admin/AdminLayout'
+import HomePage from './pages/public/HomePage'
+import MatchesPage from './pages/public/MatchesPage'
+import LiveMatchPage from './pages/public/LiveMatchPage'
+import StandingsPage from './pages/public/StandingsPage'
+import TeamsPage from './pages/public/TeamsPage'
+import TeamDetailPage from './pages/public/TeamDetailPage'
+import TopScorersPage from './pages/public/TopScorersPage'
+import MorePage from './pages/public/MorePage'
+import LoginPage from './pages/admin/LoginPage'
+import DashboardPage from './pages/admin/DashboardPage'
+import TeamsAdminPage from './pages/admin/TeamsAdminPage'
+import DrawAdminPage from './pages/admin/DrawAdminPage'
+import MatchesAdminPage from './pages/admin/MatchesAdminPage'
+import { useAppStore } from './stores/useAppStore'
+
+function App() {
+  const { theme, language } = useAppStore()
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+    root.dir = language === 'ar' ? 'rtl' : 'ltr'
+  }, [theme, language])
+
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/matches" element={<MatchesPage />} />
+        <Route path="/matches/:id" element={<LiveMatchPage />} />
+        <Route path="/standings" element={<StandingsPage />} />
+        <Route path="/teams" element={<TeamsPage />} />
+        <Route path="/teams/:id" element={<TeamDetailPage />} />
+        <Route path="/top-scorers" element={<TopScorersPage />} />
+        <Route path="/more" element={<MorePage />} />
+      </Route>
+
+      <Route path="/admin/login" element={<LoginPage />} />
+
+      <Route element={<AdminLayout />}>
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<DashboardPage />} />
+        <Route path="/admin/teams" element={<TeamsAdminPage />} />
+        <Route path="/admin/matches" element={<MatchesAdminPage />} />
+        <Route path="/admin/draw" element={<DrawAdminPage />} />
+      </Route>
+    </Routes>
+  )
+}
+
+export default App

@@ -1,0 +1,228 @@
+import { useRef, useState, useCallback } from 'react'
+import { Link } from 'react-router-dom'
+import gsap from 'gsap'
+import { Shuffle, Lock, Users, AlertCircle } from 'lucide-react'
+import {
+  useTeamsStore,
+  MAX_TEAMS,
+  isDrawComplete,
+} from '../../stores/useTeamsStore'
+
+const GROUPS = ['A', 'B', 'C']
+
+function shuffleTeams(teams) {
+  const shuffled = [...teams].sort(() => Math.random() - 0.5)
+  return {
+    A: shuffled.slice(0, 4).map((t) => t.id),
+    B: shuffled.slice(4, 8).map((t) => t.id),
+    C: shuffled.slice(8, 12).map((t) => t.id),
+  }
+}
+
+function GroupCard({ group, teamIds, teams, innerRef, hidden = false }) {
+  const groupTeams = teamIds.map((id) => teams.find((t) => t.id === id)).filter(Boolean)
+
+  return (
+    <div
+      ref={innerRef}
+      className={`glass-card p-5 ${hidden ? 'opacity-0 translate-y-8' : ''}`}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-accent">المجموعة {group}</h3>
+        <span className="text-xs text-text-secondary bg-bg-surface px-2 py-1 rounded-lg border border-border">
+          {groupTeams.length} فرق
+        </span>
+      </div>
+
+      <ul className="space-y-3">
+        {groupTeams.map((team) => (
+          <li
+            key={team.id}
+            className="flex items-center gap-3 p-2 rounded-xl bg-bg-surface border border-border"
+          >
+            <div className="w-10 h-10 rounded-full bg-bg-card border border-border flex items-center justify-center overflow-hidden shrink-0">
+              {team.logo ? (
+                <img src={team.logo} alt={team.name} className="w-full h-full object-cover" />
+              ) : (
+                <Users size={16} className="text-text-secondary" />
+              )}
+            </div>
+            <span className="font-medium">{team.name}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+export default function DrawAdminPage() {
+  const teams = useTeamsStore((state) => state.teams)
+  const drawLocked = useTeamsStore((state) => state.drawLocked)
+  const assignGroups = useTeamsStore((state) => state.assignGroups)
+
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [previewGroups, setPreviewGroups] = useState(null)
+
+  const groupRefs = useRef({ A: null, B: null, C: null })
+  const containerRef = useRef(null)
+
+  const teamCount = teams.length
+  const drawComplete = isDrawComplete(teams, drawLocked)
+  const canDraw = teamCount === MAX_TEAMS && !drawComplete && !isDrawing
+
+  const getGroupTeamIds = (group) => {
+    if (previewGroups) return previewGroups[group]
+    return teams.filter((t) => t.group === group).map((t) => t.id)
+  }
+
+  const animateReveal = useCallback(
+    (groups) => {
+      const tl = gsap.timeline({
+        onComplete: () => {
+          assignGroups(groups)
+          setPreviewGroups(null)
+          setIsDrawing(false)
+        },
+      })
+
+      GROUPS.forEach((group, index) => {
+        const el = groupRefs.current[group]
+        if (!el) return
+
+        tl.fromTo(
+          el,
+          { opacity: 0, y: 60, scale: 0.85, rotateX: -15 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            rotateX: 0,
+            duration: 0.7,
+            ease: 'back.out(1.4)',
+          },
+          index * 0.6
+        )
+
+        tl.fromTo(
+          el.querySelectorAll('li'),
+          { opacity: 0, x: 30 },
+          { opacity: 1, x: 0, duration: 0.4, stagger: 0.08, ease: 'power2.out' },
+          index * 0.6 + 0.3
+        )
+      })
+
+      return tl
+    },
+    [assignGroups]
+  )
+
+  const handleDraw = () => {
+    if (!canDraw) return
+
+    const groups = shuffleTeams(teams)
+    setPreviewGroups(groups)
+    setIsDrawing(true)
+
+    requestAnimationFrame(() => {
+      gsap.set(Object.values(groupRefs.current).filter(Boolean), {
+        opacity: 0,
+        y: 60,
+        scale: 0.85,
+      })
+      animateReveal(groups)
+    })
+  }
+
+  if (teamCount < MAX_TEAMS) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">سحب القرعة</h1>
+          <p className="text-sm text-text-secondary mt-1">توزيع الفرق على المجموعات الثلاث</p>
+        </div>
+
+        <div className="glass-card p-8 flex flex-col items-center text-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-warning/10 border border-warning/30 flex items-center justify-center">
+            <AlertCircle size={32} className="text-warning" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold mb-2">يجب تسجيل 12 فريق أولاً</h2>
+            <p className="text-sm text-text-secondary">
+              الفرق المسجلة حالياً:{' '}
+              <span className="text-accent font-bold">{teamCount}/{MAX_TEAMS}</span>
+            </p>
+          </div>
+          <Link
+            to="/admin/teams"
+            className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-black font-bold py-3 px-6 rounded-xl transition-colors"
+          >
+            <Users size={18} />
+            <span>إدارة الفرق</span>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div ref={containerRef} className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">سحب القرعة</h1>
+          <p className="text-sm text-text-secondary mt-1">توزيع 12 فريق على 3 مجموعات (4 فرق لكل مجموعة)</p>
+        </div>
+
+        {drawComplete && (
+          <div className="flex items-center gap-2 text-sm text-accent bg-accent/10 border border-accent/30 px-4 py-2 rounded-xl">
+            <Lock size={16} />
+            <span>القرعة مكتملة — لا يمكن إعادتها</span>
+          </div>
+        )}
+      </div>
+
+      {canDraw && (
+        <div className="glass-card p-8 flex flex-col items-center text-center gap-6">
+          <div className="w-20 h-20 rounded-full bg-accent/15 border-2 border-accent/40 flex items-center justify-center shadow-[0_0_30px_rgba(245,197,24,0.25)]">
+            <Shuffle size={36} className="text-accent-light" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2">جاهز لسحب القرعة</h2>
+            <p className="text-sm text-text-secondary">
+              تم تسجيل {MAX_TEAMS} فريق — اضغط الزر لتوزيعهم عشوائياً
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleDraw}
+            className="w-full max-w-xs bg-accent hover:bg-accent-hover text-black font-bold text-lg py-4 px-8 rounded-2xl transition-all shadow-[0_4px_25px_rgba(245,197,24,0.4)] hover:shadow-[0_6px_35px_rgba(245,197,24,0.5)] hover:scale-[1.02] active:scale-[0.98]"
+          >
+            إجراء القرعة
+          </button>
+        </div>
+      )}
+
+      {isDrawing && (
+        <div className="text-center py-4">
+          <p className="text-accent font-bold animate-pulse">جاري سحب القرعة...</p>
+        </div>
+      )}
+
+      {(drawComplete || previewGroups) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {GROUPS.map((group) => (
+            <GroupCard
+              key={group}
+              group={group}
+              teamIds={getGroupTeamIds(group)}
+              teams={teams}
+              innerRef={(el) => {
+                groupRefs.current[group] = el
+              }}
+              hidden={Boolean(previewGroups)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

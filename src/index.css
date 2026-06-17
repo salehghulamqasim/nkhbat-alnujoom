@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@import "@fontsource/cairo/400.css";
+@import "@fontsource/cairo/700.css";
+
+@theme {
+  --font-sans: 'Cairo', sans-serif;
+
+  /* Semantic color tokens — resolve via CSS vars */
+  --color-bg-primary: var(--theme-bg-primary);
+  --color-bg-card: var(--theme-bg-card);
+  --color-bg-surface: var(--theme-bg-surface);
+  --color-bg-nav: var(--theme-bg-nav);
+
+  /* Muted, premium gold palette */
+  --color-accent: #B89B5E;
+  --color-accent-light: #D4B96A;
+  --color-accent-hover: #A68B4B;
+
+  --color-text-primary: var(--theme-text-primary);
+  --color-text-secondary: var(--theme-text-secondary);
+
+  --color-border: var(--theme-border);
+
+  --color-success: #34A853;
+  --color-danger: #EA4335;
+  --color-warning: #FBBC04;
+  --color-live: #EA4335;
+}
+
+@layer base {
+  :root {
+    /* ─── Light Mode: Clean warm ivory ─── */
+    --theme-bg-primary:        #FAF8F4;
+    --theme-bg-card:           #FFFFFF;
+    --theme-bg-surface:        #F3EDE4;
+    --theme-bg-nav:            #FFFFFF;
+    --theme-text-primary:      #1C1712;
+    --theme-text-secondary:    #6B5E50;
+    --theme-border:            #E5DDD2;
+    color-scheme: light;
+  }
+
+  :root.dark {
+    /* ─── Dark Mode ─── */
+    --theme-bg-primary:        #0E0E0E;
+    --theme-bg-card:           #1A1A1A;
+    --theme-bg-surface:        #242424;
+    --theme-bg-nav:            #111111;
+    --theme-text-primary:      #E8EAED;
+    --theme-text-secondary:    #9AA0A6;
+    --theme-border:            #2D2D2D;
+    color-scheme: dark;
+  }
+
+  /* ─── Targeted theme transitions for UI components ─── */
+  body,
+  header,
+  nav,
+  main,
+  button,
+  input,
+  select,
+  a,
+  .glass,
+  .glass-card,
+  h1, h2, h3, h4, p, span, td, th {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow, opacity;
+    transition-duration: 350ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Exempt transforms/positional animations so they stay instant */
+  [style*="transform"],
+  .no-theme-transition {
+    transition-property: none;
+  }
+
+  html, body {
+    @apply bg-bg-primary text-text-primary font-sans antialiased min-h-screen selection:bg-accent/20;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-bg-surface rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent/40;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-bg-nav/95 backdrop-blur-xl border-b border-border;
+  }
+
+  .glass-card {
+    @apply bg-bg-card border border-border rounded-2xl shadow-sm;
+  }
+
+  :root:not(.dark) .glass-card {
+    box-shadow: 0 1px 2px rgba(28, 23, 18, 0.04), 0 4px 16px rgba(28, 23, 18, 0.06);
+  }
+
+  :root:not(.dark) .glass {
+    box-shadow: 0 1px 8px rgba(28, 23, 18, 0.05);
+  }
+}

@@ -1,0 +1,257 @@
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Plus, Trash2, ImagePlus } from 'lucide-react'
+import { MAX_PLAYERS } from '../../../stores/useTeamsStore'
+
+const emptyForm = {
+  name: '',
+  manager: '',
+  players: [''],
+  logo: null,
+}
+
+export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeamsReached }) {
+  const [form, setForm] = useState(emptyForm)
+  const [errors, setErrors] = useState({})
+  const isEditing = Boolean(team)
+
+  useEffect(() => {
+    if (isOpen) {
+      if (team) {
+        setForm({
+          name: team.name,
+          manager: team.manager,
+          players: team.players.length > 0 ? team.players.map((p) => p.name) : [''],
+          logo: team.logo,
+        })
+      } else {
+        setForm(emptyForm)
+      }
+      setErrors({})
+    }
+  }, [isOpen, team])
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setErrors((prev) => ({ ...prev, logo: 'يرجى اختيار ملف صورة' }))
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, logo: 'حجم الصورة يجب أن لا يتجاوز 2 ميجابايت' }))
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setForm((prev) => ({ ...prev, logo: reader.result }))
+      setErrors((prev) => ({ ...prev, logo: undefined }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const addPlayerField = () => {
+    if (form.players.length >= MAX_PLAYERS) return
+    setForm((prev) => ({ ...prev, players: [...prev.players, ''] }))
+  }
+
+  const removePlayerField = (index) => {
+    if (form.players.length <= 1) return
+    setForm((prev) => ({
+      ...prev,
+      players: prev.players.filter((_, i) => i !== index),
+    }))
+  }
+
+  const updatePlayer = (index, value) => {
+    setForm((prev) => ({
+      ...prev,
+      players: prev.players.map((p, i) => (i === index ? value : p)),
+    }))
+  }
+
+  const validate = () => {
+    const nextErrors = {}
+
+    if (!form.name.trim()) nextErrors.name = 'اسم الفريق مطلوب'
+    if (!form.manager.trim()) nextErrors.manager = 'اسم المدرب مطلوب'
+
+    const filledPlayers = form.players.filter((p) => p.trim())
+    if (filledPlayers.length === 0) {
+      nextErrors.players = 'أضف لاعباً واحداً على الأقل'
+    }
+
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!isEditing && maxTeamsReached) return
+    if (!validate()) return
+
+    onSubmit({
+      name: form.name,
+      manager: form.manager,
+      players: form.players,
+      logo: form.logo,
+    })
+    onClose()
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={onClose}
+          />
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto glass-card rounded-t-2xl md:rounded-2xl border border-border shadow-2xl"
+          >
+            <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-bg-card/95 backdrop-blur-md">
+              <h2 className="text-lg font-bold">
+                {isEditing ? 'تعديل الفريق' : 'إضافة فريق جديد'}
+              </h2>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-bg-surface flex items-center justify-center hover:bg-bg-primary transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-4 space-y-5 pb-8">
+              {/* Logo upload */}
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">شعار الفريق</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0">
+                    {form.logo ? (
+                      <img src={form.logo} alt="شعار الفريق" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImagePlus size={28} className="text-text-secondary" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-bg-surface border border-border text-sm cursor-pointer hover:bg-bg-primary transition-colors">
+                      <ImagePlus size={16} className="text-accent" />
+                      <span>اختر صورة</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        className="hidden"
+                      />
+                    </label>
+                    {form.logo && (
+                      <button
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, logo: null }))}
+                        className="block mt-2 text-xs text-danger hover:underline"
+                      >
+                        إزالة الشعار
+                      </button>
+                    )}
+                    {errors.logo && (
+                      <p className="text-xs text-danger mt-1">{errors.logo}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Team name */}
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">اسم الفريق</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="مثال: النجوم"
+                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                />
+                {errors.name && <p className="text-xs text-danger mt-1">{errors.name}</p>}
+              </div>
+
+              {/* Manager name */}
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">اسم المدرب</label>
+                <input
+                  type="text"
+                  value={form.manager}
+                  onChange={(e) => setForm((prev) => ({ ...prev, manager: e.target.value }))}
+                  placeholder="مثال: أحمد محمد"
+                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                />
+                {errors.manager && <p className="text-xs text-danger mt-1">{errors.manager}</p>}
+              </div>
+
+              {/* Players */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm text-text-secondary">
+                    اللاعبون ({form.players.filter((p) => p.trim()).length}/{MAX_PLAYERS})
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addPlayerField}
+                    disabled={form.players.length >= MAX_PLAYERS}
+                    className="flex items-center gap-1 text-xs text-accent hover:text-accent-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus size={14} />
+                    <span>إضافة لاعب</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {form.players.map((player, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={player}
+                        onChange={(e) => updatePlayer(index, e.target.value)}
+                        placeholder={`اللاعب ${index + 1}`}
+                        className="flex-1 bg-bg-surface border border-border rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                      />
+                      {form.players.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removePlayerField(index)}
+                          className="w-10 h-10 rounded-xl bg-bg-surface border border-border flex items-center justify-center text-danger hover:bg-danger/10 transition-colors shrink-0"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {errors.players && <p className="text-xs text-danger mt-1">{errors.players}</p>}
+              </div>
+
+              <button
+                type="submit"
+                disabled={!isEditing && maxTeamsReached}
+                className="w-full bg-accent text-black font-bold py-3.5 rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isEditing ? 'حفظ التعديلات' : 'إضافة الفريق'}
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  )
+}

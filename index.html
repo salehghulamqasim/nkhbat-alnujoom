@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>نخبة النجوم</title>
+    <!--
+      FOUC Prevention: This blocking script MUST run before any CSS or module
+      scripts are evaluated. It reads the persisted theme/language from
+      localStorage and applies the correct class/direction to <html>
+      synchronously, so the browser's first paint already has the right theme.
+    -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('nkhbat-app-settings');
+          if (raw) {
+            var state = JSON.parse(raw).state || {};
+            // Apply dark mode class
+            if (state.theme === 'dark') {
+              document.documentElement.classList.add('dark');
+            }
+            // Apply language direction
+            if (state.language === 'en') {
+              document.documentElement.lang = 'en';
+              document.documentElement.dir = 'ltr';
+            }
+          } else {
+            // Default: dark theme (matches store default in useAppStore.js)
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          // If localStorage is unavailable or JSON is corrupt, fail silently.
+          // The React app will still initialize correctly via useAppStore.
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
