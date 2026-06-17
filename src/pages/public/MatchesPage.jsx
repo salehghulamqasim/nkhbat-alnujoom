@@ -84,6 +84,11 @@ export default function MatchesPage() {
     )
   }
 
+  const isAr = lang === 'ar'
+  const indicatorStyle = isAr
+    ? { right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)` }
+    : { left: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)` }
+
   return (
     <div className="px-4 py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
@@ -103,7 +108,7 @@ export default function MatchesPage() {
           className="absolute top-1 bottom-1 bg-accent rounded-lg transition-all duration-300 -z-10"
           style={{
             width: `calc(25% - 0.5rem)`,
-            right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`,
+            ...indicatorStyle,
           }}
         />
       </div>
