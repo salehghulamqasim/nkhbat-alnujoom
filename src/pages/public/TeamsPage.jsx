@@ -8,8 +8,39 @@ import LoadingState from '../../components/common/LoadingState'
 import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery } from '../../hooks/useQueries'
+import { useAppStore } from '../../stores/useAppStore'
+
+const t = {
+  ar: {
+    title: 'الفرق المشاركة',
+    search: 'بحث عن فريق...',
+    all: 'الكل',
+    group: 'المجموعة',
+    awaitingDraw: 'بانتظار القرعة',
+    emptyTitle: 'لا توجد فرق مسجلة',
+    emptyMsg: 'سيتم عرض الفرق المشاركة هنا بعد تسجيلها',
+    noResultsTitle: 'لم يتم العثور على نتائج',
+    noResultsMsg: 'جرب تغيير معايير البحث أو التصفية',
+    loading: 'جاري تحميل الفرق...',
+    error: 'تعذر تحميل الفرق',
+  },
+  en: {
+    title: 'Participating Teams',
+    search: 'Search for a team...',
+    all: 'All',
+    group: 'Group',
+    awaitingDraw: 'Awaiting Draw',
+    emptyTitle: 'No teams registered',
+    emptyMsg: 'Participating teams will appear here after registration',
+    noResultsTitle: 'No results found',
+    noResultsMsg: 'Try changing your search or filter criteria',
+    loading: 'Loading teams...',
+    error: 'Failed to load teams',
+  },
+}
 
 export default function TeamsPage() {
+  const lang = useAppStore((s) => s.language)
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const { data: teams = [], isLoading, isError, refetch } = useTeamsQuery()
@@ -22,24 +53,24 @@ export default function TeamsPage() {
     })
   }, [teams, filter, searchQuery])
 
-  if (isLoading) return <LoadingState message="جاري تحميل الفرق..." />
+  if (isLoading) return <LoadingState message={t[lang].loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
-        <ErrorState message="تعذر تحميل الفرق" onRetry={refetch} />
+        <ErrorState message={t[lang].error} onRetry={refetch} />
       </div>
     )
   }
 
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">الفرق المشاركة</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
 
       <div className="flex gap-2">
         <div className="relative flex-1">
           <input
             type="text"
-            placeholder="بحث عن فريق..."
+            placeholder={t[lang].search}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-bg-surface border border-border rounded-xl py-3 pr-10 pl-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary placeholder:text-text-secondary"
@@ -52,17 +83,17 @@ export default function TeamsPage() {
           onChange={(e) => setFilter(e.target.value)}
           className="bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary appearance-none"
         >
-          <option value="all">الكل</option>
-          <option value="A">مجموعة A</option>
-          <option value="B">مجموعة B</option>
-          <option value="C">مجموعة C</option>
+          <option value="all">{t[lang].all}</option>
+          <option value="A">{t[lang].group} A</option>
+          <option value="B">{t[lang].group} B</option>
+          <option value="C">{t[lang].group} C</option>
         </select>
       </div>
 
       {teams.length === 0 ? (
-        <EmptyState title="لا توجد فرق مسجلة" message="سيتم عرض الفرق المشاركة هنا بعد تسجيلها" />
+        <EmptyState title={t[lang].emptyTitle} message={t[lang].emptyMsg} />
       ) : filteredTeams.length === 0 ? (
-        <EmptyState title="لم يتم العثور على نتائج" message="جرب تغيير معايير البحث أو التصفية" />
+        <EmptyState title={t[lang].noResultsTitle} message={t[lang].noResultsMsg} />
       ) : (
         <motion.div
           className="grid grid-cols-2 gap-4"
@@ -82,7 +113,7 @@ export default function TeamsPage() {
                   <div className="text-center">
                     <h3 className="font-bold text-text-primary">{team.name}</h3>
                     <span className="text-[10px] text-text-secondary">
-                      {team.group ? `المجموعة ${team.group}` : 'بانتظار القرعة'}
+                      {team.group ? `${t[lang].group} ${team.group}` : t[lang].awaitingDraw}
                     </span>
                   </div>
                 </DarkCard>

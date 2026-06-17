@@ -7,18 +7,47 @@ import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { enrichMatch, getMatchDisplayStatus, groupMatchesByDate } from '../../utils/matchHelpers'
+import { useAppStore } from '../../stores/useAppStore'
+
+const t = {
+  ar: {
+    title: 'المباريات',
+    all: 'الكل',
+    upcoming: 'القادمة',
+    live: 'مباشر',
+    completed: 'منتهية',
+    loading: 'جاري تحميل المباريات...',
+    error: 'تعذر تحميل المباريات',
+    noMatches: 'لا توجد مباريات',
+    noMatchesDesc: 'لا توجد مباريات في هذا التصنيف',
+    unknownDate: 'غير محدد',
+  },
+  en: {
+    title: 'Matches',
+    all: 'All',
+    upcoming: 'Upcoming',
+    live: 'Live',
+    completed: 'Finished',
+    loading: 'Loading matches...',
+    error: 'Failed to load matches',
+    noMatches: 'No matches found',
+    noMatchesDesc: 'No matches in this category',
+    unknownDate: 'Unknown',
+  },
+}
 
 export default function MatchesPage() {
   const navigate = useNavigate()
+  const lang = useAppStore((s) => s.language)
   const [filter, setFilter] = useState('all')
   const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
   const { data: matches = [], isLoading: matchesLoading, isError: matchesError, refetch: refetchMatches } = useMatchesQuery()
 
   const filters = [
-    { id: 'all', label: 'الكل' },
-    { id: 'upcoming', label: 'القادمة' },
-    { id: 'live', label: 'مباشر' },
-    { id: 'completed', label: 'منتهية' },
+    { id: 'all', label: t[lang].all },
+    { id: 'upcoming', label: t[lang].upcoming },
+    { id: 'live', label: t[lang].live },
+    { id: 'completed', label: t[lang].completed },
   ]
 
   const enrichedMatches = useMemo(
@@ -40,12 +69,12 @@ export default function MatchesPage() {
   const isLoading = teamsLoading || matchesLoading
   const isError = teamsError || matchesError
 
-  if (isLoading) return <LoadingState message="جاري تحميل المباريات..." />
+  if (isLoading) return <LoadingState message={t[lang].loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
         <ErrorState
-          message="تعذر تحميل المباريات"
+          message={t[lang].error}
           onRetry={() => {
             refetchTeams()
             refetchMatches()
@@ -57,7 +86,7 @@ export default function MatchesPage() {
 
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">المباريات</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
 
       <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative z-0">
         {filters.map((f) => (
@@ -80,7 +109,7 @@ export default function MatchesPage() {
       </div>
 
       {filteredMatches.length === 0 ? (
-        <EmptyState title="لا توجد مباريات" message="لا توجد مباريات في هذا التصنيف" />
+        <EmptyState title={t[lang].noMatches} message={t[lang].noMatchesDesc} />
       ) : (
         <motion.div
           className="space-y-6"
@@ -91,7 +120,7 @@ export default function MatchesPage() {
           {grouped.map(([date, dateMatches]) => (
             <div key={date}>
               <h3 className="text-sm font-bold text-accent mb-3 px-1">
-                {date === 'unknown' ? 'غير محدد' : date}
+                {date === 'unknown' ? t[lang].unknownDate : date}
               </h3>
               <div className="space-y-3">
                 {dateMatches.map((match) => (
