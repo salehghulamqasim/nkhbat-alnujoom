@@ -170,7 +170,7 @@ export default function HomePage() {
         <img
           src="/premium-trophy-bg.png"
           alt="Premium Trophy"
-          className={`absolute inset-0 w-full h-full object-cover z-0 ${isRtl ? 'object-right' : 'object-left'} ${isRtl ? '' : 'scale-x-[-1]'}`}
+          className={`absolute inset-0 w-full h-full object-cover z-0 ${isRtl ? 'object-left scale-x-[-1]' : 'object-right'}`}
         />
 
         {/* Gradients overlay */}

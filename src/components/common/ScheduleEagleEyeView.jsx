@@ -120,35 +120,67 @@ export default function ScheduleEagleEyeView({ className = '' }) {
     try {
       const html2canvas = (await import('html2canvas')).default
       const target = containerRef.current
-      const canvas = await html2canvas(target, {
+
+      // First capture full content at a reasonable width
+      const fullCanvas = await html2canvas(target, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#0e0e0e',
-        width: target.scrollWidth,
-        height: target.scrollHeight,
+        width: 1200,
+        height: Math.min(target.scrollHeight, 1200 * 9 / 16),
         onclone: (doc) => {
           doc.querySelectorAll('[class*="max-h-"], [class*="overflow"]').forEach((el) => {
             el.style.maxHeight = 'none'
             el.style.overflow = 'visible'
           })
+          // Ensure full width for capture
+          const container = doc.querySelector('[class*="space-y"]')
+          if (container) container.style.width = '1200px'
         },
       })
+
+      // Create 16:9 output canvas
+      const OUTPUT_W = 1920
+      const OUTPUT_H = 1080
+      const outCanvas = document.createElement('canvas')
+      outCanvas.width = OUTPUT_W
+      outCanvas.height = OUTPUT_H
+      const ctx = outCanvas.getContext('2d')
+
+      // Dark background
+      ctx.fillStyle = '#0e0e0e'
+      ctx.fillRect(0, 0, OUTPUT_W, OUTPUT_H)
+
+      // Draw the captured content centered, scaled to fit
+      const scaleX = OUTPUT_W / fullCanvas.width
+      const scaleY = OUTPUT_H / fullCanvas.height
+      const scale = Math.min(scaleX, scaleY) * 0.9
+      const dw = fullCanvas.width * scale
+      const dh = fullCanvas.height * scale
+      const dx = (OUTPUT_W - dw) / 2
+      const dy = (OUTPUT_H - dh) / 2
+
+      // Add subtle border
+      ctx.fillStyle = '#1a1a2e'
+      ctx.fillRect(dx - 4, dy - 4, dw + 8, dh + 8)
+
+      ctx.drawImage(fullCanvas, dx, dy, dw, dh)
 
       if (format === 'png') {
         const link = document.createElement('a')
         link.download = `nkhbat-alnujoom-${new Date().toISOString().split('T')[0]}.png`
-        link.href = canvas.toDataURL('image/png')
+        link.href = outCanvas.toDataURL('image/png')
         link.click()
       } else {
         const { jsPDF } = await import('jspdf')
-        const imgData = canvas.toDataURL('image/jpeg', 1.0)
+        const imgData = outCanvas.toDataURL('image/jpeg', 1.0)
         const pdf = new jsPDF({
-          orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+          orientation: 'landscape',
           unit: 'px',
-          format: [canvas.width, canvas.height],
+          format: [OUTPUT_W, OUTPUT_H],
         })
-        pdf.addImage(imgData, 'JPEG', 0, 0, canvas.width, canvas.height)
+        pdf.addImage(imgData, 'JPEG', 0, 0, OUTPUT_W, OUTPUT_H)
         pdf.save(`nkhbat-alnujoom-${new Date().toISOString().split('T')[0]}.pdf`)
       }
     } catch (err) {
