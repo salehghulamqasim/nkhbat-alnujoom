@@ -21,14 +21,9 @@ import ResultFormModal from './components/ResultFormModal'
 import LiveScoreModal from './components/LiveScoreModal'
 import DeleteConfirmModal from './components/DeleteConfirmModal'
 import { getExpectedMatchCount } from '../../utils/scheduleGenerator'
+import { useI18n } from '../../i18n/useI18n'
 
 const GROUPS = ['A', 'B', 'C']
-
-const statusLabels = {
-  scheduled: { text: 'مجدولة', className: 'text-text-secondary bg-bg-surface' },
-  live: { text: 'مباشر', className: 'text-live bg-live/10' },
-  completed: { text: 'منتهية', className: 'text-success bg-success/10' },
-}
 
 function AdminMatchCard({
   match,
@@ -40,11 +35,17 @@ function AdminMatchCard({
   onStartLive,
   onUpdateLive,
   onDelete,
+  t,
 }) {
+  const statusLabels = {
+    scheduled: { text: t('matches.status.scheduled'), className: 'text-text-secondary bg-bg-surface' },
+    live: { text: t('matches.status.live'), className: 'text-live bg-live/10' },
+    completed: { text: t('matches.status.completed'), className: 'text-success bg-success/10' },
+  }
   const status = statusLabels[match.status] || statusLabels.scheduled
 
   return (
-    <div className="glass-card p-4 space-y-3">
+    <div className="glass-card p-3 md:p-4 space-y-3">
       <div className="flex items-center justify-between text-xs">
         <span className={`px-2 py-0.5 rounded-lg font-medium ${status.className}`}>
           {match.status === 'live' && (
@@ -52,30 +53,30 @@ function AdminMatchCard({
           )}
           {status.text}
         </span>
-        <span className="text-text-secondary">مجموعة {match.group}</span>
+        <span className="text-text-secondary">{t('matches.group')} {match.group}</span>
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <div className="flex-1 text-center">
+        <div className="flex-1 text-center min-w-0">
           <p className="font-bold text-sm truncate">{teamA?.name || '—'}</p>
         </div>
 
         <div className="flex flex-col items-center shrink-0 px-2">
           {match.status === 'live' || (match.status === 'completed' && match.result) ? (
-            <span className="text-2xl font-bold text-accent" dir="ltr">
+            <span className="text-xl md:text-2xl font-bold text-accent" dir="ltr">
               {match.result?.scoreA ?? 0} - {match.result?.scoreB ?? 0}
             </span>
           ) : (
-            <span className="text-lg font-bold text-text-secondary">VS</span>
+            <span className="text-lg font-bold text-text-secondary">{t('matches.vs')}</span>
           )}
         </div>
 
-        <div className="flex-1 text-center">
+        <div className="flex-1 text-center min-w-0">
           <p className="font-bold text-sm truncate">{teamB?.name || '—'}</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 text-xs text-text-secondary pt-2 border-t border-border">
+      <div className="flex flex-wrap gap-2 md:gap-3 text-xs text-text-secondary pt-2 border-t border-border">
         <span className="flex items-center gap-1">
           <Calendar size={12} />
           {match.date}
@@ -102,32 +103,33 @@ function AdminMatchCard({
         </div>
       )}
 
-      <div className="flex gap-2 pt-1">
+      {/* Action buttons — responsive grid */}
+      <div className="grid grid-cols-2 gap-2 pt-1">
         {match.status === 'scheduled' && (
           <>
             <button
               type="button"
               onClick={() => onEditDate(match)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-bg-surface border border-border text-sm font-bold hover:border-accent/30 hover:text-accent transition-colors"
+              className="flex items-center justify-center gap-1 py-2 px-2 rounded-xl bg-bg-surface border border-border text-xs md:text-sm font-bold hover:border-accent/30 hover:text-accent transition-colors"
             >
-              <CalendarClock size={15} />
-              <span>تعديل الموعد</span>
+              <CalendarClock size={14} />
+              <span className="truncate">{t('matches.editDate')}</span>
             </button>
             <button
               type="button"
               onClick={() => onStartLive(match)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-live/10 border border-live/30 text-live text-sm font-bold hover:bg-live/20 transition-colors"
+              className="flex items-center justify-center gap-1 py-2 px-2 rounded-xl bg-live/10 border border-live/30 text-live text-xs md:text-sm font-bold hover:bg-live/20 transition-colors"
             >
-              <Radio size={15} />
-              <span>بدء مباشر</span>
+              <Radio size={14} />
+              <span className="truncate">{t('matches.startLive')}</span>
             </button>
             <button
               type="button"
               onClick={() => onRecordResult(match)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-accent hover:bg-accent-hover text-black text-sm font-bold transition-colors"
+              className="col-span-2 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-black text-sm font-bold transition-colors"
             >
               <Trophy size={15} />
-              <span>تسجيل النتيجة</span>
+              <span>{t('matches.recordResult')}</span>
             </button>
           </>
         )}
@@ -137,18 +139,18 @@ function AdminMatchCard({
             <button
               type="button"
               onClick={() => onUpdateLive(match)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-live/10 border border-live/30 text-live text-sm font-bold hover:bg-live/20 transition-colors"
+              className="flex items-center justify-center gap-1 py-2 px-2 rounded-xl bg-live/10 border border-live/30 text-live text-xs md:text-sm font-bold hover:bg-live/20 transition-colors"
             >
-              <Radio size={15} />
-              <span>تحديث مباشر</span>
+              <Radio size={14} />
+              <span className="truncate">{t('matches.updateLive')}</span>
             </button>
             <button
               type="button"
               onClick={() => onEditResult(match)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-accent hover:bg-accent-hover text-black text-sm font-bold transition-colors"
+              className="flex items-center justify-center gap-1 py-2 px-2 rounded-xl bg-accent hover:bg-accent-hover text-black text-xs md:text-sm font-bold transition-colors"
             >
-              <Trophy size={15} />
-              <span>إنهاء المباراة</span>
+              <Trophy size={14} />
+              <span className="truncate">{t('matches.endMatch')}</span>
             </button>
           </>
         )}
@@ -157,19 +159,20 @@ function AdminMatchCard({
           <button
             type="button"
             onClick={() => onEditResult(match)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-bg-surface border border-border text-sm hover:border-accent/30 hover:text-accent transition-colors"
+            className="col-span-2 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-bg-surface border border-border text-sm hover:border-accent/30 hover:text-accent transition-colors"
           >
             <Pencil size={15} />
-            <span>تعديل النتيجة</span>
+            <span>{t('matches.editResult')}</span>
           </button>
         )}
 
         <button
           type="button"
           onClick={() => onDelete(match)}
-          className="w-10 h-10 rounded-xl bg-bg-surface border border-border flex items-center justify-center text-danger hover:bg-danger/10 hover:border-danger/30 transition-colors shrink-0"
+          className="absolute top-2 end-2 w-8 h-8 rounded-lg bg-bg-surface/80 border border-border flex items-center justify-center text-danger hover:bg-danger/10 hover:border-danger/30 transition-colors"
+          aria-label={t('common.delete')}
         >
-          <Trash2 size={15} />
+          <Trash2 size={14} />
         </button>
       </div>
     </div>
@@ -187,6 +190,7 @@ export default function MatchesAdminPage() {
   const setMatchLive = useMatchesStore((state) => state.setMatchLive)
   const updateLiveScore = useMatchesStore((state) => state.updateLiveScore)
   const deleteMatch = useMatchesStore((state) => state.deleteMatch)
+  const { t, isAr } = useI18n()
 
   const [formOpen, setFormOpen] = useState(false)
   const [resultMatch, setResultMatch] = useState(null)
@@ -210,8 +214,8 @@ export default function MatchesAdminPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">إدارة المباريات</h1>
-          <p className="text-sm text-text-secondary mt-1">جدولة المباريات وتسجيل النتائج</p>
+          <h1 className="text-2xl font-bold">{t('matches.title')}</h1>
+          <p className="text-sm text-text-secondary mt-1">{t('matches.subtitle')}</p>
         </div>
 
         <div className="flex flex-wrap gap-2 shrink-0">
@@ -224,20 +228,20 @@ export default function MatchesAdminPage() {
                 await generateSchedule(teams)
                 setGenerating(false)
               }}
-              className="flex items-center justify-center gap-2 bg-bg-surface border border-accent/40 hover:border-accent text-accent font-bold py-3 px-5 rounded-xl transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 bg-bg-surface border border-accent/40 hover:border-accent text-accent font-bold py-2.5 px-4 rounded-xl transition-colors disabled:opacity-50 text-sm"
             >
-              <Wand2 size={20} />
-              <span>{generating ? 'جاري الإنشاء...' : 'إنشاء الجدول تلقائياً'}</span>
+              <Wand2 size={18} />
+              <span>{generating ? t('matches.generating') : t('matches.autoGenerate')}</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={() => setFormOpen(true)}
-            className="flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-black font-bold py-3 px-5 rounded-xl transition-colors"
+            className="flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-black font-bold py-2.5 px-4 rounded-xl transition-colors text-sm"
           >
-            <Plus size={20} />
-            <span>إضافة مباراة</span>
+            <Plus size={18} />
+            <span>{t('matches.addMatch')}</span>
           </button>
         </div>
       </div>
@@ -246,9 +250,9 @@ export default function MatchesAdminPage() {
         <div className="glass-card p-4 flex items-start gap-3 border border-accent/20">
           <Wand2 size={20} className="text-accent shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-text-primary">القرعة مكتملة — جاهز لإنشاء الجدول</p>
+            <p className="text-sm font-bold text-text-primary">{t('matches.drawCompleteReady')}</p>
             <p className="text-xs text-text-secondary mt-1">
-              سيتم إنشاء {getExpectedMatchCount()} مباراة (6 لكل مجموعة). يمكنك تعديل تاريخ ووقت كل مباراة بعد الإنشاء.
+              {t('matches.drawCompleteDesc').replace('{count}', String(getExpectedMatchCount()))}
             </p>
           </div>
         </div>
@@ -256,8 +260,8 @@ export default function MatchesAdminPage() {
 
       {matches.length === 0 ? (
         <EmptyState
-          title="لا توجد مباريات"
-          message="ابدأ بإضافة مباريات للبطولة"
+          title={t('matches.noMatches')}
+          message={t('matches.noMatchesMsg')}
           icon={Calendar}
           action={
             <button
@@ -266,7 +270,7 @@ export default function MatchesAdminPage() {
               className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-black font-bold py-2.5 px-5 rounded-xl transition-colors"
             >
               <Plus size={18} />
-              <span>إضافة أول مباراة</span>
+              <span>{t('matches.addFirstMatch')}</span>
             </button>
           }
         />
@@ -278,9 +282,9 @@ export default function MatchesAdminPage() {
                 <span className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/30 flex items-center justify-center text-sm">
                   {group}
                 </span>
-                المجموعة {group}
+                {t('matches.group')} {group}
                 <span className="text-xs text-text-secondary font-normal">
-                  ({groupMatches.length} مباراة)
+                  ({groupMatches.length} {t('matches.matchCount')})
                 </span>
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -290,6 +294,7 @@ export default function MatchesAdminPage() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.04 }}
+                    className="relative"
                   >
                     <AdminMatchCard
                       match={match}
@@ -303,6 +308,7 @@ export default function MatchesAdminPage() {
                       }}
                       onUpdateLive={setLiveMatch}
                       onDelete={setDeletingMatch}
+                      t={t}
                     />
                   </motion.div>
                 ))}
@@ -360,8 +366,10 @@ export default function MatchesAdminPage() {
         onConfirm={async () => {
           await deleteMatch(deletingMatch.id)
         }}
-        title="حذف المباراة"
-        message={`هل أنت متأكد من حذف مباراة ${getTeam(deletingMatch?.teamA)?.name} vs ${getTeam(deletingMatch?.teamB)?.name}؟ لا يمكن التراجع عن هذا الإجراء.`}
+        title={t('matches.deleteMatchTitle')}
+        message={t('matches.deleteMatchMsg')
+          .replace('{teamA}', getTeam(deletingMatch?.teamA)?.name || '')
+          .replace('{teamB}', getTeam(deletingMatch?.teamB)?.name || '')}
       />
     </div>
   )

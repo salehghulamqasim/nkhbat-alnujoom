@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus, Trash2 } from 'lucide-react'
 import { emptyResult } from '../../../stores/useMatchesStore'
+import { useI18n } from '../../../i18n/useI18n'
 
 const emptyCard = { player: '', minute: '', teamId: '' }
 
-function CardEventsSection({ title, items, onChange, teamA, teamB, accentClass }) {
+function CardEventsSection({ title, items, onChange, teamA, teamB, accentClass, addLabel, noEventsLabel, playerLabel, teamLabel, minutePlaceholder }) {
   const addItem = () => onChange([...items, { ...emptyCard }])
   const removeItem = (index) => onChange(items.filter((_, i) => i !== index))
   const updateItem = (index, field, value) =>
@@ -26,13 +27,13 @@ function CardEventsSection({ title, items, onChange, teamA, teamB, accentClass }
           className="flex items-center gap-1 text-xs text-accent hover:text-accent-light transition-colors"
         >
           <Plus size={14} />
-          <span>إضافة</span>
+          <span>{addLabel}</span>
         </button>
       </div>
 
       {items.length === 0 ? (
         <p className="text-xs text-text-secondary bg-bg-surface rounded-xl p-3 border border-border">
-          لا توجد أحداث — اضغط إضافة
+          {noEventsLabel}
         </p>
       ) : (
         <div className="space-y-2">
@@ -41,9 +42,9 @@ function CardEventsSection({ title, items, onChange, teamA, teamB, accentClass }
               <select
                 value={item.teamId}
                 onChange={(e) => updateItem(index, 'teamId', e.target.value)}
-                className="w-1/3 bg-bg-surface border border-border rounded-xl py-2 px-2 text-xs focus:outline-none focus:border-accent"
+                className="w-28 bg-bg-surface border border-border rounded-xl py-2 px-2 text-xs focus:outline-none focus:border-accent"
               >
-                <option value="">الفريق</option>
+                <option value="">{teamLabel}</option>
                 {teamA && <option value={teamA.id}>{teamA.name}</option>}
                 {teamB && <option value={teamB.id}>{teamB.name}</option>}
               </select>
@@ -53,7 +54,7 @@ function CardEventsSection({ title, items, onChange, teamA, teamB, accentClass }
                 disabled={!item.teamId}
                 className="flex-1 bg-bg-surface border border-border rounded-xl py-2 px-2 text-xs focus:outline-none focus:border-accent disabled:opacity-40"
               >
-                <option value="">اللاعب</option>
+                <option value="">{playerLabel}</option>
                 {getTeamPlayers(item.teamId).map((p) => (
                   <option key={p.id} value={p.name}>
                     {p.name}
@@ -66,8 +67,8 @@ function CardEventsSection({ title, items, onChange, teamA, teamB, accentClass }
                 max="120"
                 value={item.minute}
                 onChange={(e) => updateItem(index, 'minute', e.target.value)}
-                placeholder="د'"
-                className="w-14 bg-bg-surface border border-border rounded-xl py-2 px-2 text-xs text-center focus:outline-none focus:border-accent"
+                placeholder={minutePlaceholder}
+                className="w-12 bg-bg-surface border border-border rounded-xl py-2 px-1 text-xs text-center focus:outline-none focus:border-accent"
                 dir="ltr"
               />
               <button
@@ -88,6 +89,7 @@ function CardEventsSection({ title, items, onChange, teamA, teamB, accentClass }
 export default function ResultFormModal({ isOpen, onClose, onSubmit, match, teamA, teamB }) {
   const [form, setForm] = useState(emptyResult)
   const [errors, setErrors] = useState({})
+  const { t, isAr } = useI18n()
 
   const mapEvents = (items = []) =>
     items.map((item) => ({
@@ -114,8 +116,8 @@ export default function ResultFormModal({ isOpen, onClose, onSubmit, match, team
 
   const validate = () => {
     const nextErrors = {}
-    if (form.scoreA === '' || form.scoreA < 0) nextErrors.scoreA = 'مطلوب'
-    if (form.scoreB === '' || form.scoreB < 0) nextErrors.scoreB = 'مطلوب'
+    if (form.scoreA === '' || form.scoreA < 0) nextErrors.scoreA = t('common.required')
+    if (form.scoreB === '' || form.scoreB < 0) nextErrors.scoreB = t('common.required')
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -145,6 +147,8 @@ export default function ResultFormModal({ isOpen, onClose, onSubmit, match, team
 
   if (!match) return null
 
+  const minutePh = isAr ? "د'" : "'"
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -167,10 +171,10 @@ export default function ResultFormModal({ isOpen, onClose, onSubmit, match, team
               <div>
                 <h2 className="text-lg font-bold">
                   {match.status === 'live'
-                    ? 'إنهاء المباراة'
+                    ? t('matches.endMatch')
                     : match.status === 'completed'
-                      ? 'تعديل النتيجة'
-                      : 'تسجيل النتيجة'}
+                      ? t('matches.editResult')
+                      : t('matches.recordResult')}
                 </h2>
                 <p className="text-xs text-text-secondary mt-0.5">
                   {teamA?.name} vs {teamB?.name}
@@ -186,7 +190,7 @@ export default function ResultFormModal({ isOpen, onClose, onSubmit, match, team
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 space-y-5 pb-8">
-              <div className="flex items-center justify-center gap-6 py-4">
+              <div className="flex items-center justify-center gap-4 md:gap-6 py-4">
                 <div className="text-center flex-1">
                   <p className="text-sm font-bold mb-2 truncate">{teamA?.name}</p>
                   <input
@@ -194,7 +198,7 @@ export default function ResultFormModal({ isOpen, onClose, onSubmit, match, team
                     min="0"
                     value={form.scoreA}
                     onChange={(e) => setForm((prev) => ({ ...prev, scoreA: e.target.value }))}
-                    className="w-20 h-16 text-3xl font-bold text-center bg-bg-surface border border-border rounded-xl focus:outline-none focus:border-accent"
+                    className="w-16 md:w-20 h-14 md:h-16 text-2xl md:text-3xl font-bold text-center bg-bg-surface border border-border rounded-xl focus:outline-none focus:border-accent"
                     dir="ltr"
                   />
                   {errors.scoreA && <p className="text-xs text-danger mt-1">{errors.scoreA}</p>}
@@ -207,7 +211,7 @@ export default function ResultFormModal({ isOpen, onClose, onSubmit, match, team
                     min="0"
                     value={form.scoreB}
                     onChange={(e) => setForm((prev) => ({ ...prev, scoreB: e.target.value }))}
-                    className="w-20 h-16 text-3xl font-bold text-center bg-bg-surface border border-border rounded-xl focus:outline-none focus:border-accent"
+                    className="w-16 md:w-20 h-14 md:h-16 text-2xl md:text-3xl font-bold text-center bg-bg-surface border border-border rounded-xl focus:outline-none focus:border-accent"
                     dir="ltr"
                   />
                   {errors.scoreB && <p className="text-xs text-danger mt-1">{errors.scoreB}</p>}
@@ -215,30 +219,45 @@ export default function ResultFormModal({ isOpen, onClose, onSubmit, match, team
               </div>
 
               <CardEventsSection
-                title="⚽ الهدافون"
+                title="⚽"
                 items={form.scorers}
                 onChange={(scorers) => setForm((prev) => ({ ...prev, scorers }))}
                 teamA={teamA}
                 teamB={teamB}
                 accentClass="text-accent"
+                addLabel={t('matches.add')}
+                noEventsLabel={t('matches.noEvents')}
+                playerLabel={t('matches.player')}
+                teamLabel={t('matches.team')}
+                minutePlaceholder={minutePh}
               />
 
               <CardEventsSection
-                title="🟨 البطاقات الصفراء"
+                title="🟨"
                 items={form.yellowCards}
                 onChange={(yellowCards) => setForm((prev) => ({ ...prev, yellowCards }))}
                 teamA={teamA}
                 teamB={teamB}
                 accentClass="text-warning"
+                addLabel={t('matches.add')}
+                noEventsLabel={t('matches.noEvents')}
+                playerLabel={t('matches.player')}
+                teamLabel={t('matches.team')}
+                minutePlaceholder={minutePh}
               />
 
               <CardEventsSection
-                title="🟥 البطاقات الحمراء"
+                title="🟥"
                 items={form.redCards}
                 onChange={(redCards) => setForm((prev) => ({ ...prev, redCards }))}
                 teamA={teamA}
                 teamB={teamB}
                 accentClass="text-danger"
+                addLabel={t('matches.add')}
+                noEventsLabel={t('matches.noEvents')}
+                playerLabel={t('matches.player')}
+                teamLabel={t('matches.team')}
+                minutePlaceholder={minutePh}
               />
 
               <button
@@ -246,10 +265,10 @@ export default function ResultFormModal({ isOpen, onClose, onSubmit, match, team
                 className="w-full bg-accent hover:bg-accent-hover text-black font-bold py-3.5 rounded-xl transition-colors"
               >
                 {match.status === 'live'
-                  ? 'إنهاء المباراة وحفظ النتيجة'
+                  ? t('matches.endMatchSave')
                   : match.status === 'completed'
-                    ? 'حفظ التعديلات'
-                    : 'حفظ النتيجة'}
+                    ? t('common.save')
+                    : t('matches.saveResult')}
               </button>
             </form>
           </motion.div>

@@ -7,6 +7,7 @@ import {
   MAX_TEAMS,
   isDrawComplete,
 } from '../../stores/useTeamsStore'
+import { useI18n } from '../../i18n/useI18n'
 
 const GROUPS = ['A', 'B', 'C']
 
@@ -19,18 +20,18 @@ function shuffleTeams(teams) {
   }
 }
 
-function GroupCard({ group, teamIds, teams, innerRef, hidden = false }) {
+function GroupCard({ group, teamIds, teams, innerRef, hidden = false, itemLabel }) {
   const groupTeams = teamIds.map((id) => teams.find((t) => t.id === id)).filter(Boolean)
 
   return (
     <div
       ref={innerRef}
-      className={`glass-card p-5 ${hidden ? 'opacity-0 translate-y-8' : ''}`}
+      className={`glass-card p-4 md:p-5 ${hidden ? 'opacity-0 translate-y-8' : ''}`}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-accent">المجموعة {group}</h3>
+        <h3 className="text-xl font-bold text-accent">Group {group}</h3>
         <span className="text-xs text-text-secondary bg-bg-surface px-2 py-1 rounded-lg border border-border">
-          {groupTeams.length} فرق
+          {groupTeams.length} {itemLabel}
         </span>
       </div>
 
@@ -59,6 +60,7 @@ export default function DrawAdminPage() {
   const teams = useTeamsStore((state) => state.teams)
   const drawLocked = useTeamsStore((state) => state.drawLocked)
   const assignGroups = useTeamsStore((state) => state.assignGroups)
+  const { t, isAr } = useI18n()
 
   const [isDrawing, setIsDrawing] = useState(false)
   const [previewGroups, setPreviewGroups] = useState(null)
@@ -137,18 +139,18 @@ export default function DrawAdminPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">سحب القرعة</h1>
-          <p className="text-sm text-text-secondary mt-1">توزيع الفرق على المجموعات الثلاث</p>
+          <h1 className="text-2xl font-bold">{t('draw.title')}</h1>
+          <p className="text-sm text-text-secondary mt-1">{t('draw.subtitleShort')}</p>
         </div>
 
-        <div className="glass-card p-8 flex flex-col items-center text-center gap-4">
+        <div className="glass-card p-6 md:p-8 flex flex-col items-center text-center gap-4">
           <div className="w-16 h-16 rounded-full bg-warning/10 border border-warning/30 flex items-center justify-center">
             <AlertCircle size={32} className="text-warning" />
           </div>
           <div>
-            <h2 className="text-lg font-bold mb-2">يجب تسجيل 12 فريق أولاً</h2>
+            <h2 className="text-lg font-bold mb-2">{t('draw.needTeams')}</h2>
             <p className="text-sm text-text-secondary">
-              الفرق المسجلة حالياً:{' '}
+              {t('draw.currentTeams')}:{' '}
               <span className="text-accent font-bold">{teamCount}/{MAX_TEAMS}</span>
             </p>
           </div>
@@ -157,7 +159,7 @@ export default function DrawAdminPage() {
             className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-black font-bold py-3 px-6 rounded-xl transition-colors"
           >
             <Users size={18} />
-            <span>إدارة الفرق</span>
+            <span>{t('draw.goToTeams')}</span>
           </Link>
         </div>
       </div>
@@ -168,27 +170,27 @@ export default function DrawAdminPage() {
     <div ref={containerRef} className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">سحب القرعة</h1>
-          <p className="text-sm text-text-secondary mt-1">توزيع 12 فريق على 3 مجموعات (4 فرق لكل مجموعة)</p>
+          <h1 className="text-2xl font-bold">{t('draw.title')}</h1>
+          <p className="text-sm text-text-secondary mt-1">{t('draw.subtitle')}</p>
         </div>
 
         {drawComplete && (
           <div className="flex items-center gap-2 text-sm text-accent bg-accent/10 border border-accent/30 px-4 py-2 rounded-xl">
             <Lock size={16} />
-            <span>القرعة مكتملة — لا يمكن إعادتها</span>
+            <span>{t('draw.drawComplete')}</span>
           </div>
         )}
       </div>
 
       {canDraw && (
-        <div className="glass-card p-8 flex flex-col items-center text-center gap-6">
+        <div className="glass-card p-6 md:p-8 flex flex-col items-center text-center gap-6">
           <div className="w-20 h-20 rounded-full bg-accent/15 border-2 border-accent/40 flex items-center justify-center shadow-[0_0_30px_rgba(245,197,24,0.25)]">
             <Shuffle size={36} className="text-accent-light" />
           </div>
           <div>
-            <h2 className="text-xl font-bold mb-2">جاهز لسحب القرعة</h2>
+            <h2 className="text-xl font-bold mb-2">{t('draw.ready')}</h2>
             <p className="text-sm text-text-secondary">
-              تم تسجيل {MAX_TEAMS} فريق — اضغط الزر لتوزيعهم عشوائياً
+              {t('draw.readyDesc')}
             </p>
           </div>
           <button
@@ -196,14 +198,14 @@ export default function DrawAdminPage() {
             onClick={handleDraw}
             className="w-full max-w-xs bg-accent hover:bg-accent-hover text-black font-bold text-lg py-4 px-8 rounded-2xl transition-all shadow-[0_4px_25px_rgba(245,197,24,0.4)] hover:shadow-[0_6px_35px_rgba(245,197,24,0.5)] hover:scale-[1.02] active:scale-[0.98]"
           >
-            إجراء القرعة
+            {t('draw.performDraw')}
           </button>
         </div>
       )}
 
       {isDrawing && (
         <div className="text-center py-4">
-          <p className="text-accent font-bold animate-pulse">جاري سحب القرعة...</p>
+          <p className="text-accent font-bold animate-pulse">{t('draw.drawing')}</p>
         </div>
       )}
 
@@ -219,6 +221,7 @@ export default function DrawAdminPage() {
                 groupRefs.current[group] = el
               }}
               hidden={Boolean(previewGroups)}
+              itemLabel={isAr ? 'فرق' : 'teams'}
             />
           ))}
         </div>

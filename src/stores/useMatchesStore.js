@@ -29,11 +29,20 @@ export const useMatchesStore = create((set, get) => ({
     set({ loading: true, fetchError: null, error: null })
     try {
       const matches = await matchesService.fetchMatches()
-      set({ matches, loading: false, initialized: true })
+      set({
+        matches: matches.map((m) => ({
+          ...m,
+          result: m.result || null,
+          status: m.status || 'scheduled',
+        })),
+        loading: false,
+        initialized: true,
+      })
     } catch (err) {
+      console.error('[MatchesStore] fetchAll error:', err)
       set({
         loading: false,
-        fetchError: err.message || 'فشل تحميل المباريات',
+        fetchError: err.message || 'Failed to load matches',
         initialized: true,
       })
     }
@@ -41,11 +50,15 @@ export const useMatchesStore = create((set, get) => ({
 
   addMatch: async ({ group, teamA, teamB, date, time, venue }) => {
     try {
+      if (!group || !teamA || !teamB || !date || !time || !venue) {
+        throw new Error('All fields are required')
+      }
       const match = await matchesService.createMatch({ group, teamA, teamB, date, time, venue })
-      set({ matches: [...get().matches, match] })
+      set((state) => ({ matches: [...state.matches, match], error: null }))
       return match.id
     } catch (err) {
-      set({ error: err.message || 'فشل إضافة المباراة' })
+      console.error('[MatchesStore] addMatch error:', err)
+      set({ error: err.message || 'Failed to add match' })
       return null
     }
   },
@@ -54,30 +67,33 @@ export const useMatchesStore = create((set, get) => ({
     try {
       const schedule = buildFullSchedule(teams)
       if (!schedule.length) {
-        set({ error: 'يجب إجراء القرعة أولاً — لا توجد فرق في المجموعات' })
+        set({ error: 'Draw required first — no teams in groups' })
         return false
       }
       const created = await matchesService.bulkCreateMatches(schedule)
-      set({ matches: [...get().matches, ...created] })
+      set((state) => ({ matches: [...state.matches, ...created], error: null }))
       return true
     } catch (err) {
-      set({ error: err.message || 'فشل إنشاء الجدول' })
+      console.error('[MatchesStore] generateSchedule error:', err)
+      set({ error: err.message || 'Failed to generate schedule' })
       return false
     }
   },
 
   updateMatchSchedule: async (id, { date, time, venue }) => {
     try {
-      const updates = { date, time, venue: venue.trim() }
+      const updates = { date, time, venue: (venue || '').trim() }
       await matchesService.updateMatchDoc(id, updates)
-      set({
-        matches: get().matches.map((match) =>
+      set((state) => ({
+        matches: state.matches.map((match) =>
           match.id === id ? { ...match, ...updates } : match
         ),
-      })
+        error: null,
+      }))
       return true
     } catch (err) {
-      set({ error: err.message || 'فشل تحديث موعد المباراة' })
+      console.error('[MatchesStore] updateMatchSchedule error:', err)
+      set({ error: err.message || 'Failed to update match schedule' })
       return false
     }
   },
@@ -85,13 +101,15 @@ export const useMatchesStore = create((set, get) => ({
   updateMatch: async (id, updates) => {
     try {
       await matchesService.updateMatchDoc(id, updates)
-      set({
-        matches: get().matches.map((match) =>
+      set((state) => ({
+        matches: state.matches.map((match) =>
           match.id === id ? { ...match, ...updates } : match
         ),
-      })
+        error: null,
+      }))
     } catch (err) {
-      set({ error: err.message || 'فشل تحديث المباراة' })
+      console.error('[MatchesStore] updateMatch error:', err)
+      set({ error: err.message || 'Failed to update match' })
     }
   },
 
@@ -99,9 +117,13 @@ export const useMatchesStore = create((set, get) => ({
     try {
       await matchesService.deleteMatchDoc(id)
       await clearLiveMatch(id).catch(() => {})
-      set({ matches: get().matches.filter((match) => match.id !== id) })
+      set((state) => ({
+        matches: state.matches.filter((match) => match.id !== id),
+        error: null,
+      }))
     } catch (err) {
-      set({ error: err.message || 'فشل حذف المباراة' })
+      console.error('[MatchesStore] deleteMatch error:', err)
+      set({ error: err.message || 'Failed to delete match' })
     }
   },
 
@@ -119,11 +141,12 @@ export const useMatchesStore = create((set, get) => ({
           redCards: result.redCards || [],
         },
       }
-      set({
-        matches: get().matches.map((match) =>
+      set((state) => ({
+        matches: state.matches.map((match) =>
           match.id === id ? { ...match, ...updated } : match
         ),
-      })
+        error: null,
+      }))
 
       if (isLive) {
         const events = (result.scorers || []).map((s) => ({
@@ -142,7 +165,8 @@ export const useMatchesStore = create((set, get) => ({
         await clearLiveMatch(id).catch(() => {})
       }
     } catch (err) {
-      set({ error: err.message || 'فشل حفظ النتيجة' })
+      console.error('[MatchesStore] saveResult error:', err)
+      set({ error: err.message || 'Failed to save result' })
     }
   },
 
@@ -151,13 +175,15 @@ export const useMatchesStore = create((set, get) => ({
       const initialResult = { ...emptyResult }
       await matchesService.updateMatchDoc(id, { status: 'live', result: initialResult })
       await setLiveMatch(id, { scoreA: 0, scoreB: 0, status: 'live', events: [] })
-      set({
-        matches: get().matches.map((match) =>
+      set((state) => ({
+        matches: state.matches.map((match) =>
           match.id === id ? { ...match, status: 'live', result: initialResult } : match
         ),
-      })
+        error: null,
+      }))
     } catch (err) {
-      set({ error: err.message || 'فشل بدء البث المباشر' })
+      console.error('[MatchesStore] setMatchLive error:', err)
+      set({ error: err.message || 'Failed to start live broadcast' })
     }
   },
 
@@ -171,13 +197,15 @@ export const useMatchesStore = create((set, get) => ({
       }
       await updateLiveScoreRtdb(id, updatedResult.scoreA, updatedResult.scoreB, events)
       await matchesService.updateMatchDoc(id, { status: 'live', result: updatedResult })
-      set({
-        matches: get().matches.map((m) =>
+      set((state) => ({
+        matches: state.matches.map((m) =>
           m.id === id ? { ...m, status: 'live', result: updatedResult } : m
         ),
-      })
+        error: null,
+      }))
     } catch (err) {
-      set({ error: err.message || 'فشل تحديث النتيجة المباشرة' })
+      console.error('[MatchesStore] updateLiveScore error:', err)
+      set({ error: err.message || 'Failed to update live score' })
     }
   },
 

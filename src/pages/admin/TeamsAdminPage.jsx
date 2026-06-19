@@ -7,12 +7,14 @@ import EmptyState from '../../components/common/EmptyState'
 import { useTeamsStore, MAX_TEAMS } from '../../stores/useTeamsStore'
 import TeamFormModal from './components/TeamFormModal'
 import DeleteConfirmModal from './components/DeleteConfirmModal'
+import { useI18n } from '../../i18n/useI18n'
 
 export default function TeamsAdminPage() {
   const teams = useTeamsStore((state) => state.teams)
   const addTeam = useTeamsStore((state) => state.addTeam)
   const updateTeam = useTeamsStore((state) => state.updateTeam)
   const deleteTeam = useTeamsStore((state) => state.deleteTeam)
+  const { t, isAr } = useI18n()
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingTeam, setEditingTeam] = useState(null)
@@ -45,20 +47,20 @@ export default function TeamsAdminPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">إدارة الفرق</h1>
-          <p className="text-sm text-text-secondary mt-1">إضافة وتعديل وحذف الفرق المشاركة</p>
+          <h1 className="text-2xl font-bold">{t('teams.title')}</h1>
+          <p className="text-sm text-text-secondary mt-1">{t('teams.subtitle')}</p>
         </div>
 
         <GoldButton onClick={openAddForm} disabled={maxReached} className="shrink-0">
           <Plus size={20} />
-          <span>إضافة فريق</span>
+          <span>{t('teams.addTeam')}</span>
         </GoldButton>
       </div>
 
       {/* Team count */}
       <DarkCard className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-text-secondary">الفرق المسجلة</span>
+          <span className="text-sm text-text-secondary">{t('teams.registeredTeams')}</span>
           <span className="text-xl font-bold text-accent">
             {teamCount}/{MAX_TEAMS}
           </span>
@@ -72,19 +74,19 @@ export default function TeamsAdminPage() {
           />
         </div>
         {maxReached && (
-          <p className="text-xs text-success mt-2">تم اكتمال عدد الفرق — جاهز للقرعة</p>
+          <p className="text-xs text-success mt-2">{t('teams.teamComplete')}</p>
         )}
       </DarkCard>
 
       {teams.length === 0 ? (
         <EmptyState
-          title="لا توجد فرق مسجلة"
-          message="ابدأ بإضافة الفرق المشاركة في البطولة"
+          title={t('teams.noTeams')}
+          message={t('teams.noTeamsMsg')}
           icon={Users}
           action={
             <GoldButton onClick={openAddForm}>
               <Plus size={18} />
-              <span>إضافة أول فريق</span>
+              <span>{t('teams.addFirstTeam')}</span>
             </GoldButton>
           }
         />
@@ -114,9 +116,9 @@ export default function TeamsAdminPage() {
                     <span className="truncate">{team.manager}</span>
                   </div>
                   <p className="text-xs text-text-secondary mt-1">
-                    {team.players.length} لاعب
+                    {team.players.length} {t('teams.playersCount')}
                     {team.group && (
-                      <span className="mr-2 text-accent">• مجموعة {team.group}</span>
+                      <span className="text-accent"> • {t('teams.group')} {team.group}</span>
                     )}
                   </p>
                 </div>
@@ -129,7 +131,7 @@ export default function TeamsAdminPage() {
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-bg-surface border border-border text-sm hover:bg-accent/10 hover:border-accent/30 hover:text-accent transition-colors"
                 >
                   <Pencil size={15} />
-                  <span>تعديل</span>
+                  <span>{t('common.edit')}</span>
                 </button>
                 <button
                   type="button"
@@ -137,7 +139,7 @@ export default function TeamsAdminPage() {
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-bg-surface border border-border text-sm text-danger hover:bg-danger/10 hover:border-danger/30 transition-colors"
                 >
                   <Trash2 size={15} />
-                  <span>حذف</span>
+                  <span>{t('common.delete')}</span>
                 </button>
               </div>
               </DarkCard>
