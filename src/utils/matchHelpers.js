@@ -1,4 +1,4 @@
-export function formatMatchDate(dateStr) {
+export function formatMatchDate(dateStr, lang = 'ar') {
   if (!dateStr) return ''
   const date = new Date(dateStr + 'T00:00:00')
   const today = new Date()
@@ -8,9 +8,11 @@ export function formatMatchDate(dateStr) {
   const matchDay = new Date(date)
   matchDay.setHours(0, 0, 0, 0)
 
-  if (matchDay.getTime() === today.getTime()) return 'اليوم'
-  if (matchDay.getTime() === tomorrow.getTime()) return 'غداً'
-  return date.toLocaleDateString('ar-SA', { weekday: 'short', day: 'numeric', month: 'short' })
+  const isAr = lang === 'ar'
+  if (matchDay.getTime() === today.getTime()) return isAr ? 'اليوم' : 'Today'
+  if (matchDay.getTime() === tomorrow.getTime()) return isAr ? 'غداً' : 'Tomorrow'
+  const locale = isAr ? 'ar-SA' : 'en-US'
+  return date.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
 export function getMatchDisplayStatus(match) {

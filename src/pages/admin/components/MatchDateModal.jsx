@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Calendar } from 'lucide-react'
+import { haptic } from '../../../hooks/useHaptics'
 import { useI18n } from '../../../i18n/useI18n'
 
 export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA, teamB }) {
@@ -31,6 +32,8 @@ export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
+
+    haptic.intense()
     onSubmit(form)
     onClose()
   }

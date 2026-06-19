@@ -9,6 +9,7 @@ import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery } from '../../hooks/useQueries'
 import { useAppStore } from '../../stores/useAppStore'
+import { haptic } from '../../hooks/useHaptics'
 
 const t = {
   ar: {
@@ -80,13 +81,16 @@ export default function TeamsPage() {
 
         <select
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(e) => {
+            haptic.light()
+            setFilter(e.target.value)
+          }}
           className="bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary appearance-none"
         >
           <option value="all">{t[lang].all}</option>
-          <option value="A">{t[lang].group} A</option>
-          <option value="B">{t[lang].group} B</option>
-          <option value="C">{t[lang].group} C</option>
+          <option value="A">{lang === 'ar' ? 'المجموعة أ' : 'Group A'}</option>
+          <option value="B">{lang === 'ar' ? 'المجموعة ب' : 'Group B'}</option>
+          <option value="C">{lang === 'ar' ? 'المجموعة ج' : 'Group C'}</option>
         </select>
       </div>
 
@@ -107,13 +111,18 @@ export default function TeamsPage() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 24 }}
             >
-              <Link to={`/teams/${team.id}`}>
+              <Link
+                to={`/teams/${team.id}`}
+                onClick={() => {
+                  haptic.light()
+                }}
+              >
                 <DarkCard hover className="p-4 flex flex-col items-center justify-center gap-3 aspect-square border-t border-border">
                   <TeamLogo logo={team.logo} name={team.name} size="lg" />
                   <div className="text-center">
                     <h3 className="font-bold text-text-primary">{team.name}</h3>
                     <span className="text-[10px] text-text-secondary">
-                      {team.group ? `${t[lang].group} ${team.group}` : t[lang].awaitingDraw}
+                      {team.group ? (lang === 'ar' ? `المجموعة ${team.group === 'A' ? 'أ' : team.group === 'B' ? 'ب' : team.group === 'C' ? 'ج' : team.group}` : `Group ${team.group}`) : t[lang].awaitingDraw}
                     </span>
                   </div>
                 </DarkCard>

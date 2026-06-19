@@ -8,6 +8,7 @@ import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { enrichMatch, getMatchDisplayStatus, groupMatchesByDate } from '../../utils/matchHelpers'
 import { useAppStore } from '../../stores/useAppStore'
+import { haptic } from '../../hooks/useHaptics'
 
 const t = {
   ar: {
@@ -84,6 +85,11 @@ export default function MatchesPage() {
     )
   }
 
+  const isAr = lang === 'ar'
+  const indicatorStyle = isAr
+    ? { right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, left: 'auto' }
+    : { left: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, right: 'auto' }
+
   return (
     <div className="px-4 py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
@@ -93,7 +99,10 @@ export default function MatchesPage() {
           <button
             key={f.id}
             type="button"
-            onClick={() => setFilter(f.id)}
+            onClick={() => {
+              haptic.light()
+              setFilter(f.id)
+            }}
             className={`flex-1 py-2 text-sm font-medium z-10 transition-colors ${filter === f.id ? 'text-black' : 'text-text-secondary hover:text-text-primary'}`}
           >
             {f.label}
@@ -103,7 +112,7 @@ export default function MatchesPage() {
           className="absolute top-1 bottom-1 bg-accent rounded-lg transition-all duration-300 -z-10"
           style={{
             width: `calc(25% - 0.5rem)`,
-            right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`,
+            ...indicatorStyle,
           }}
         />
       </div>
@@ -132,7 +141,10 @@ export default function MatchesPage() {
                   >
                     <MatchRow
                       match={match}
-                      onClick={() => navigate(`/matches/${match.id}`)}
+                      onClick={() => {
+                        haptic.light()
+                        navigate(`/matches/${match.id}`)
+                      }}
                     />
                   </motion.div>
                 ))}

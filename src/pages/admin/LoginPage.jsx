@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { Lock, ShieldAlert, ArrowRight, Loader2 } from 'lucide-react'
+import { haptic } from '../../hooks/useHaptics'
 import DarkCard from '../../components/common/DarkCard'
 import GoldButton from '../../components/common/GoldButton'
 import { useI18n } from '../../i18n/useI18n'
@@ -24,8 +25,10 @@ export default function LoginPage() {
     await new Promise((r) => setTimeout(r, 300))
 
     if (login(pin)) {
+      haptic.intense()
       navigate('/admin/dashboard')
     } else {
+      haptic.heavy()
       setError(true)
       setPin('')
       setSubmitting(false)
@@ -35,7 +38,10 @@ export default function LoginPage() {
   return (
     <div className={`min-h-screen flex items-center justify-center px-4 relative overflow-hidden bg-bg-primary ${isAr ? 'rtl' : 'ltr'}`} dir={isAr ? 'rtl' : 'ltr'}>
       <button
-        onClick={() => navigate('/more')}
+        onClick={() => {
+          haptic.light()
+          navigate('/more')
+        }}
         className="absolute top-4 end-4 px-4 py-2 flex items-center gap-2 rounded-xl bg-bg-surface border border-border text-text-secondary hover:text-accent hover:border-accent/30 transition-all text-sm font-semibold"
       >
         {isAr && <ArrowRight size={16} />}

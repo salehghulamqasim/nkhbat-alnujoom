@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle } from 'lucide-react'
+import { haptic } from '../../../hooks/useHaptics'
 import { useI18n } from '../../../i18n/useI18n'
 
 export default function DeleteConfirmModal({
@@ -49,7 +50,10 @@ export default function DeleteConfirmModal({
               <div className="flex gap-3 w-full mt-2">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => {
+                    haptic.light()
+                    onClose()
+                  }}
                   className="flex-1 py-3 rounded-xl bg-bg-surface border border-border hover:bg-bg-primary transition-colors font-medium"
                 >
                   {t('common.cancel')}
@@ -57,6 +61,7 @@ export default function DeleteConfirmModal({
                 <button
                   type="button"
                   onClick={() => {
+                    haptic.heavy()
                     onConfirm()
                     onClose()
                   }}

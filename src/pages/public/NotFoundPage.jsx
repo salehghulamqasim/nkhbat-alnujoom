@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useAppStore } from '../../stores/useAppStore'
 import { Home, ArrowLeft } from 'lucide-react'
+import { haptic } from '../../hooks/useHaptics'
 
 const t = {
   ar: {
@@ -48,6 +49,7 @@ export default function NotFoundPage() {
 
       <Link
         to="/"
+        onClick={() => haptic.light()}
         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-black font-bold text-sm hover:bg-accent-light transition-all shadow-lg shadow-accent/20"
       >
         <Home size={18} strokeWidth={2} />

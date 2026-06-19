@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { haptic } from '../../../hooks/useHaptics'
 import { useTeamsStore } from '../../../stores/useTeamsStore'
 import { useI18n } from '../../../i18n/useI18n'
 
@@ -48,6 +49,8 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
+
+    haptic.intense()
     onSubmit(form)
     onClose()
   }

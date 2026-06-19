@@ -9,8 +9,47 @@ import ErrorState from '../../components/common/ErrorState'
 import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { useLiveMatch } from '../../hooks/useLiveMatch'
 import { enrichMatch, formatMatchDate, getMatchDisplayStatus } from '../../utils/matchHelpers'
+import { useAppStore } from '../../stores/useAppStore'
+import { haptic } from '../../hooks/useHaptics'
+
+const t = {
+  ar: {
+    back: 'رجوع',
+    live: 'مباشر',
+    completed: 'منتهية',
+    upcoming: 'قادمة',
+    group: (g) => {
+      const arGroups = { A: 'أ', B: 'ب', C: 'ج' }
+      return `المجموعة ${arGroups[g] || g}`
+    },
+    loading: 'جاري تحميل المباراة...',
+    errorLive: 'تعذر الاتصال بالبث المباشر',
+    errorMatch: 'تعذر تحميل بيانات المباراة',
+    notFoundTitle: 'المباراة غير موجودة',
+    notFoundMessage: 'لم يتم العثور على هذه مباراة',
+    events: 'أحداث المباراة',
+    notStarted: 'المباراة لم تبدأ بعد',
+    viewAllMatches: 'عرض جميع المباريات'
+  },
+  en: {
+    back: 'Back',
+    live: 'Live',
+    completed: 'Finished',
+    upcoming: 'Upcoming',
+    group: (g) => `Group ${g}`,
+    loading: 'Loading match...',
+    errorLive: 'Failed to connect to live stream',
+    errorMatch: 'Failed to load match data',
+    notFoundTitle: 'Match Not Found',
+    notFoundMessage: 'This match could not be found',
+    events: 'Match Events',
+    notStarted: 'The match has not started yet',
+    viewAllMatches: 'View all matches'
+  }
+}
 
 export default function LiveMatchPage() {
+  const lang = useAppStore((s) => s.language)
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
@@ -32,7 +71,7 @@ export default function LiveMatchPage() {
   const isLoading = teamsLoading || matchesLoading || (isLive && liveLoading)
   const isError = teamsError || matchesError || (isLive && liveError)
 
-  if (isLoading) return <LoadingState message="جاري تحميل المباراة..." />
+  if (isLoading) return <LoadingState message={t[lang].loading} />
 
   if (isError) {
     return (
@@ -40,8 +79,8 @@ export default function LiveMatchPage() {
         <ErrorState
           message={
             liveError
-              ? 'تعذر الاتصال بالبث المباشر'
-              : 'تعذر تحميل بيانات المباراة'
+              ? t[lang].errorLive
+              : t[lang].errorMatch
           }
           onRetry={() => {
             refetchTeams()
@@ -56,8 +95,8 @@ export default function LiveMatchPage() {
     return (
       <div className="px-4 py-6">
         <ErrorState
-          title="المباراة غير موجودة"
-          message="لم يتم العثور على هذه المباراة"
+          title={t[lang].notFoundTitle}
+          message={t[lang].notFoundMessage}
           onRetry={() => navigate('/matches')}
         />
       </div>
@@ -70,11 +109,14 @@ export default function LiveMatchPage() {
     <div className="px-4 py-6 space-y-6">
       <button
         type="button"
-        onClick={() => navigate(-1)}
+        onClick={() => {
+          haptic.light()
+          navigate(-1)
+        }}
         className="flex items-center gap-2 text-sm text-text-secondary hover:text-accent transition-colors"
       >
         <ArrowRight size={16} />
-        <span>رجوع</span>
+        <span>{t[lang].back}</span>
       </button>
 
       <div className="text-center space-y-2">
@@ -82,11 +124,11 @@ export default function LiveMatchPage() {
           <span className="inline-flex items-center gap-2 text-live font-bold text-sm">
             <Radio size={14} className="animate-pulse" />
             <span className="w-2 h-2 rounded-full bg-live animate-pulse" />
-            مباشر
+            {t[lang].live}
           </span>
         ) : (
           <span className="text-sm text-text-secondary">
-            {status === 'completed' ? 'منتهية' : 'قادمة'} • المجموعة {enriched.group}
+            {status === 'completed' ? t[lang].completed : t[lang].upcoming} • {t[lang].group(enriched.group)}
           </span>
         )}
       </div>
@@ -123,7 +165,7 @@ export default function LiveMatchPage() {
         <div className="flex flex-wrap justify-center gap-4 mt-6 pt-4 border-t border-border text-xs text-text-secondary">
           <span className="flex items-center gap-1">
             <Calendar size={12} />
-            {formatMatchDate(enriched.date)}
+            {formatMatchDate(enriched.date, lang)}
           </span>
           <span className="flex items-center gap-1" dir="ltr">
             <Clock size={12} />
@@ -140,7 +182,7 @@ export default function LiveMatchPage() {
 
       {(status === 'live' || status === 'completed') && events.length > 0 && (
         <section>
-          <h2 className="text-lg font-bold mb-3">أحداث المباراة</h2>
+          <h2 className="text-lg font-bold mb-3">{t[lang].events}</h2>
           <div className="space-y-2">
             {events.map((event, index) => {
               const isGoal = event.type === 'goal' || event.player
@@ -176,9 +218,9 @@ export default function LiveMatchPage() {
 
       {status === 'upcoming' && (
         <DarkCard className="p-6 text-center">
-          <p className="text-text-secondary text-sm">المباراة لم تبدأ بعد</p>
+          <p className="text-text-secondary text-sm">{t[lang].notStarted}</p>
           <Link to="/matches" className="text-accent text-sm mt-2 inline-block hover:underline">
-            عرض جميع المباريات
+            {t[lang].viewAllMatches}
           </Link>
         </DarkCard>
       )}

@@ -132,3 +132,40 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
+
+/* Haptic visual fallback — brief body-level pulse when vibrate() unavailable */
+body.haptic-pulse-light {
+  animation: haptic-flash-light 0.12s ease-out;
+}
+body.haptic-pulse-medium {
+  animation: haptic-flash-medium 0.12s ease-out;
+}
+body.haptic-pulse-heavy {
+  animation: haptic-flash-heavy 0.12s ease-out;
+}
+body.haptic-pulse-intense {
+  animation: haptic-flash-intense 0.14s ease-out;
+}
+
+@keyframes haptic-flash-light {
+  0% { opacity: 1; }
+  50% { opacity: 0.96; }
+  100% { opacity: 1; }
+}
+@keyframes haptic-flash-medium {
+  0% { opacity: 1; }
+  50% { opacity: 0.93; transform: scale(1.003); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes haptic-flash-heavy {
+  0% { opacity: 1; }
+  50% { opacity: 0.90; transform: scale(1.005); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes haptic-flash-intense {
+  0% { opacity: 1; }
+  25% { opacity: 0.88; transform: scale(1.008); }
+  50% { opacity: 0.93; transform: scale(0.997); }
+  75% { opacity: 0.90; transform: scale(1.005); }
+  100% { opacity: 1; transform: scale(1); }
+}
