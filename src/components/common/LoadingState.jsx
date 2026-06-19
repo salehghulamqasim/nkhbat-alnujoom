@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react'
-import { useI18n } from '../i18n/useI18n'
+import { useI18n } from '../../i18n/useI18n'
 
 export default function LoadingState({ message }) {
   const { isAr } = useI18n()

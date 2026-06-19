@@ -1,7 +1,7 @@
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import GoldButton from './GoldButton'
 import DarkCard from './DarkCard'
-import { useI18n } from '../i18n/useI18n'
+import { useI18n } from '../../i18n/useI18n'
 
 export default function ErrorState({
   title,

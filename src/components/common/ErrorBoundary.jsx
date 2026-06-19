@@ -1,6 +1,6 @@
 import { Component } from 'react'
-import { useAppStore } from '../stores/useAppStore'
-import { Warning } from 'lucide-react'
+import { useAppStore } from '../../stores/useAppStore'
+import { AlertTriangle } from 'lucide-react'
 
 const arTexts = {
   unexpectedError: 'حدث خطأ غير متوقع',
@@ -22,7 +22,7 @@ function ErrorUI({ error, lang }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-bg-primary text-center">
       <div className="w-16 h-16 rounded-full bg-danger/10 flex items-center justify-center mb-4">
-        <Warning size={32} className="text-danger" />
+        <AlertTriangle size={32} className="text-danger" />
       </div>
       <h2 className="text-lg font-bold mb-2">{texts.unexpectedError}</h2>
       <p className="text-sm text-text-secondary mb-4 max-w-xs">

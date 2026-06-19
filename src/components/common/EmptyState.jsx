@@ -1,6 +1,6 @@
 import { Inbox } from 'lucide-react'
 import DarkCard from './DarkCard'
-import { useI18n } from '../i18n/useI18n'
+import { useI18n } from '../../i18n/useI18n'
 
 export default function EmptyState({ title, message, icon: Icon = Inbox, action }) {
   const { isAr } = useI18n()
