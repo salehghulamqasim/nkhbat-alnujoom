@@ -135,14 +135,13 @@ export default function HomePage() {
     <div ref={containerRef} className="space-y-6 pb-8 overflow-x-hidden">
       {/* Home header controls — fixed so they stay tappable above the hero */}
       <div className="fixed top-0 inset-x-0 z-50 px-4 pt-4 sm:pt-6 flex items-center justify-between pointer-events-none">
-        <button
-          type="button"
-          onClick={() => navigate('/more')}
+        <Link
+          to="/more"
           className="pointer-events-auto w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-black/60 border border-accent/30 text-accent hover:bg-accent/20 hover:border-accent/60 transition-all duration-200 backdrop-blur-sm"
           aria-label={language === 'ar' ? 'الإعدادات' : 'Settings'}
         >
           <Settings size={18} strokeWidth={1.75} />
-        </button>
+        </Link>
 
         <div className="flex items-center gap-2 pointer-events-auto">
           <button
@@ -254,10 +253,12 @@ export default function HomePage() {
         <section>
           <div className="flex items-center justify-between mb-4 px-1">
             <h2 className="text-base font-bold">{t[lang].upcomingMatches}</h2>
-            <Link to="/matches" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
-              {t[lang].viewAll}
-              <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
-            </Link>
+            {upcomingMatches.length > 0 && (
+              <Link to="/matches" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
+                {t[lang].viewAll}
+                <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
+              </Link>
+            )}
           </div>
 
           {upcomingMatches.length === 0 ? (
@@ -294,10 +295,12 @@ export default function HomePage() {
         <section>
           <div className="flex items-center justify-between mb-4 px-1">
             <h2 className="text-base font-bold">{t[lang].latestResults}</h2>
-            <Link to="/matches" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
-              {t[lang].viewAll}
-              <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
-            </Link>
+            {latestResults.length > 0 && (
+              <Link to="/matches" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
+                {t[lang].viewAll}
+                <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
+              </Link>
+            )}
           </div>
 
           {latestResults.length === 0 ? (
@@ -319,10 +322,12 @@ export default function HomePage() {
         <section>
           <div className="flex items-center justify-between mb-4 px-1">
             <h2 className="text-base font-bold">{t[lang].topScorers}</h2>
-            <Link to="/top-scorers" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
-              {t[lang].viewAll}
-              <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
-            </Link>
+            {topScorers.length > 0 && (
+              <Link to="/top-scorers" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
+                {t[lang].viewAll}
+                <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
+              </Link>
+            )}
           </div>
 
           {topScorers.length === 0 ? (

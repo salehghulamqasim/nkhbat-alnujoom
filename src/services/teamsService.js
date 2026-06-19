@@ -16,7 +16,7 @@ export async function fetchTeams() {
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
-export async function createTeam({ name, manager, players, logo }) {
+export async function createTeam({ name, manager, players, logo, group }) {
   const id = crypto.randomUUID()
   const team = {
     id,
@@ -24,7 +24,7 @@ export async function createTeam({ name, manager, players, logo }) {
     manager: manager.trim(),
     players,
     logo: logo || null,
-    group: null,
+    group: group || null,
     createdAt: serverTimestamp(),
   }
   await setDoc(doc(db, COLLECTION, id), team)

@@ -48,7 +48,7 @@ export const useTeamsStore = create((set, get) => ({
     }
   },
 
-  addTeam: async ({ name, manager, players, logo }) => {
+  addTeam: async ({ name, manager, players, logo, group }) => {
     if (get().teams.length >= MAX_TEAMS) return false
     try {
       const newTeam = await teamsService.createTeam({
@@ -56,6 +56,7 @@ export const useTeamsStore = create((set, get) => ({
         manager,
         players: normalizePlayers(players),
         logo,
+        group: group || null,
       })
       set({ teams: [...get().teams, newTeam], drawLocked: false })
       await settingsService.updateSettings({ drawLocked: false })
@@ -66,13 +67,14 @@ export const useTeamsStore = create((set, get) => ({
     }
   },
 
-  updateTeam: async (id, { name, manager, players, logo }) => {
+  updateTeam: async (id, { name, manager, players, logo, group }) => {
     try {
       await teamsService.updateTeamDoc(id, {
         name,
         manager,
         players: normalizePlayers(players),
         logo,
+        group: group || null,
       })
       set({
         teams: get().teams.map((team) =>
@@ -83,6 +85,7 @@ export const useTeamsStore = create((set, get) => ({
                 manager: manager.trim(),
                 players: normalizePlayers(players),
                 logo: logo ?? team.logo,
+                group: group || null,
               }
             : team
         ),

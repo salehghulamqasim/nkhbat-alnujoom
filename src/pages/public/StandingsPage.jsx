@@ -97,26 +97,28 @@ export default function StandingsPage() {
           message={t[lang].emptyMessage}
         />
       ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          key={activeGroup}
-          transition={{ duration: 0.3 }}
-        >
-          <StandingsTable standings={standings} />
-        </motion.div>
-      )}
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            key={activeGroup}
+            transition={{ duration: 0.3 }}
+          >
+            <StandingsTable standings={standings} />
+          </motion.div>
 
-      <div className="flex gap-4 text-[10px] text-text-secondary justify-center px-4">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-success" />
-          {t[lang].directQualify}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-warning" />
-          {t[lang].bestThird}
-        </div>
-      </div>
+          <div className="flex gap-4 text-[10px] text-text-secondary justify-center px-4 mt-4">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-success" />
+              {t[lang].directQualify}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-warning" />
+              {t[lang].bestThird}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, Calendar, Shuffle } from 'lucide-react'
+import { LayoutDashboard, Users, Calendar, Shuffle, Compass } from 'lucide-react'
 import { useAppStore } from '../../stores/useAppStore'
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { path: '/admin/teams', labelAr: 'إدارة الفرق', labelEn: 'Teams', icon: Users },
   { path: '/admin/matches', labelAr: 'المباريات', labelEn: 'Matches', icon: Calendar },
   { path: '/admin/draw', labelAr: 'القرعة', labelEn: 'Draw', icon: Shuffle },
+  { path: '/admin/schedule', labelAr: 'نظرة النسر', labelEn: 'Eagle Eye', icon: Compass },
 ]
 
 export default function AdminBottomNav() {
@@ -21,7 +22,7 @@ export default function AdminBottomNav() {
       aria-label={isAr ? 'القائمة السفلية' : 'Bottom navigation'}
     >
       <div
-        className="h-14 bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 grid grid-cols-4"
+        className="h-14 bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 grid grid-cols-5"
         dir={isAr ? 'rtl' : 'ltr'}
       >
         {navItems.map((item) => {
