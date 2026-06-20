@@ -75,6 +75,36 @@ pnpm build
 firebase deploy
 ```
 
+## Testing Setup & Execution
+
+We have configured **Reliability Testing (E2E)** and **Security Rules Testing (Local sandbox)** using Playwright and Vitest.
+
+### Prerequisite 1: Playwright Browsers (For E2E/Reliability Tests)
+Playwright is configured to run headless and headed tests using your local browser environment. To download/synchronize Playwright's browser engines, run:
+```bash
+npx playwright install
+```
+
+### Prerequisite 2: Java JDK 21+ (For Database Security Rules Tests)
+The Firebase Local Emulator Suite requires Java JDK 21 or above to run local Firestore and Realtime Database sandboxes.
+- **macOS:** `brew install openjdk@21`
+- **Windows/Linux:** Download from [Adoptium Temurin](https://adoptium.net/temurin/releases/).
+
+### Running the Tests
+
+- **Run E2E/Reliability tests (using Playwright):**
+  ```bash
+  pnpm test:e2e
+  ```
+- **Run E2E/Reliability tests with Interactive UI:**
+  ```bash
+  pnpm test:e2e:ui
+  ```
+- **Run Security Rules Unit Tests (using Vitest + Firebase Emulator):**
+  ```bash
+  pnpm test:rules
+  ```
+
 ### Environment Variables
 
 Create a `.env` file in the project root:

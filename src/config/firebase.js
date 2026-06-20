@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
-import { getDatabase } from 'firebase/database'
+import { 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager, 
+  connectFirestoreEmulator 
+} from 'firebase/firestore'
+import { getDatabase, connectDatabaseEmulator } from 'firebase/database'
 
 const firebaseConfig = {
   apiKey: "AIzaSyCfC2gWBc_CNV0vmTUrqPUE-pkO4Q92tHM",
@@ -14,7 +19,20 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 
-export const db = getFirestore(app)
+// Enable offline persistence for Firestore
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+})
+
 export const rtdb = getDatabase(app)
+
+// Connect to emulators locally during development & testing
+const isDev = import.meta.env.DEV || (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+if (isDev) {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080)
+  connectDatabaseEmulator(rtdb, '127.0.0.1', 9000)
+}
 
 export default app
