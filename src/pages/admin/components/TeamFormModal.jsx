@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Trash2, ImagePlus } from 'lucide-react'
+import { X, Plus, Trash2, ImagePlus, Camera } from 'lucide-react'
 import { MAX_PLAYERS } from '../../../stores/useTeamsStore'
 import { useI18n } from '../../../i18n/useI18n'
+import { haptic } from '../../../hooks/useHaptics'
 
 const emptyForm = {
   name: '',
   manager: '',
-  players: [''],
+  players: [{ key: crypto.randomUUID(), value: '' }],
   logo: null,
 }
 
@@ -15,6 +16,7 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [playerPhotos, setPlayerPhotos] = useState({})
   const { t, isAr } = useI18n()
   const isEditing = Boolean(team)
 
@@ -24,11 +26,20 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
         setForm({
           name: team.name || '',
           manager: team.manager || '',
-          players: team.players?.length > 0 ? team.players.map((p) => p?.name || '') : [''],
+          players: team.players?.length > 0
+            ? team.players.map((p) => ({ key: crypto.randomUUID(), value: p?.name || '' }))
+            : [{ key: crypto.randomUUID(), value: '' }],
           logo: team.logo || null,
         })
+        // Load existing player photos
+        const photos = {}
+        team.players.forEach((p, i) => {
+          if (p.photo) photos[i] = p.photo
+        })
+        setPlayerPhotos(photos)
       } else {
         setForm(emptyForm)
+        setPlayerPhotos({})
       }
       setErrors({})
       setSubmitting(false)
@@ -93,23 +104,54 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     reader.readAsDataURL(file)
   }
 
-  const addPlayerField = () => {
-    if (form.players.length >= MAX_PLAYERS) return
-    setForm((prev) => ({ ...prev, players: [...prev.players, ''] }))
+  const handlePlayerPhoto = async (index, e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) return
+    if (file.size > 700 * 1024) return
+
+    const reader = new FileReader()
+    reader.onload = async () => {
+      try {
+        const resized = await resizeImage(reader.result, 128)
+        setPlayerPhotos((prev) => ({ ...prev, [index]: resized }))
+      } catch {
+        // silently fail for player photo
+      }
+    }
+    reader.readAsDataURL(file)
   }
 
-  const removePlayerField = (index) => {
+  const addPlayerField = () => {
+    haptic.light()
+    if (form.players.length >= MAX_PLAYERS) return
+    setForm((prev) => ({ ...prev, players: [...prev.players, { key: crypto.randomUUID(), value: '' }] }))
+  }
+
+  const removePlayerField = (key) => {
     if (form.players.length <= 1) return
     setForm((prev) => ({
       ...prev,
-      players: prev.players.filter((_, i) => i !== index),
+      players: prev.players.filter((p) => p.key !== key),
     }))
+    // Clean up photo for the removed player
+    setPlayerPhotos((prev) => {
+      const newPhotos = {}
+      let photoIdx = 0
+      form.players.forEach((p) => {
+        if (p.key === key) return
+        if (prev[photoIdx]) newPhotos[photoIdx] = prev[photoIdx]
+        photoIdx++
+      })
+      return newPhotos
+    })
   }
 
   const updatePlayer = (index, value) => {
     setForm((prev) => ({
       ...prev,
-      players: prev.players.map((p, i) => (i === index ? value : p)),
+      players: prev.players.map((p, i) => (i === index ? { ...p, value } : p)),
     }))
   }
 
@@ -119,7 +161,7 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     if (!form.name.trim()) nextErrors.name = t('teams.nameRequired')
     if (!form.manager.trim()) nextErrors.manager = t('teams.managerRequired')
 
-    const filledPlayers = form.players.filter((p) => p.trim())
+    const filledPlayers = form.players.filter((p) => p.value.trim())
     if (filledPlayers.length === 0) {
       nextErrors.players = t('teams.playerRequired')
     }
@@ -134,11 +176,15 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     if (!validate()) return
 
     setSubmitting(true)
+    haptic.intense()
     try {
       await onSubmit({
         name: form.name,
         manager: form.manager,
-        players: form.players,
+        players: form.players.map((p, i) => ({
+          name: p.value,
+          photo: playerPhotos[i] || null,
+        })),
         logo: form.logo,
       })
       onClose()
@@ -149,7 +195,7 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     }
   }
 
-  const filledCount = form.players.filter((p) => p.trim()).length
+  const filledCount = form.players.filter((p) => p.value.trim()).length
 
   return (
     <AnimatePresence>
@@ -267,10 +313,24 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
 
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                   {form.players.map((player, index) => (
-                    <div key={index} className="flex gap-2">
+                    <div key={player.key} className="flex gap-2 items-center">
+                      {/* Player photo */}
+                      <label className="w-9 h-9 shrink-0 rounded-full bg-bg-surface border border-border flex items-center justify-center cursor-pointer hover:border-accent/40 hover:text-accent transition-colors overflow-hidden">
+                        {playerPhotos[index] ? (
+                          <img src={playerPhotos[index]} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Camera size={14} className="text-text-secondary" />
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePlayerPhoto(index, e)}
+                          className="hidden"
+                        />
+                      </label>
                       <input
                         type="text"
-                        value={player}
+                        value={player.value}
                         onChange={(e) => updatePlayer(index, e.target.value)}
                         placeholder={`${isAr ? 'اللاعب' : 'Player'} ${index + 1}`}
                         className="flex-1 bg-bg-surface border border-border rounded-xl py-2.5 px-3 md:px-4 text-sm focus:outline-none focus:border-accent transition-colors"
@@ -278,7 +338,7 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
                       {form.players.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => removePlayerField(index)}
+                          onClick={() => removePlayerField(player.key)}
                           className="w-10 h-10 rounded-xl bg-bg-surface border border-border flex items-center justify-center text-danger hover:bg-danger/10 transition-colors shrink-0"
                         >
                           <Trash2 size={16} />

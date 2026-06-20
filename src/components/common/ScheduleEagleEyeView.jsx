@@ -70,6 +70,15 @@ export default function ScheduleEagleEyeView({
     })
   }, [filteredMatches])
 
+  // Sort ALL matches globally by date then time to get stable numbering
+  const globalSortedMatches = useMemo(() => {
+    return [...matches].sort((a, b) => {
+      const dateCmp = (a.date || '').localeCompare(b.date || '')
+      if (dateCmp !== 0) return dateCmp
+      return (a.time || '').localeCompare(b.time || '')
+    })
+  }, [matches])
+
   const getMatchStatus = useCallback((match) => {
     if (!match) return 'scheduled'
     if (match.status === 'live') return 'live'
@@ -93,7 +102,7 @@ export default function ScheduleEagleEyeView({
     if (!containerRef.current) return
     setCapturing(true)
     try {
-      const { toPng, toSvg } = await import('html-to-image')
+      const { toPng } = await import('html-to-image')
       const target = containerRef.current
 
       // Save original inline styles and apply flat colors
@@ -119,25 +128,12 @@ export default function ScheduleEagleEyeView({
         }
       })
 
-      let dataUrl
-      try {
-        dataUrl = await toSvg(target, {
-          quality: 1.0,
-          pixelRatio: 2,
-          backgroundColor: '#0e0e0e',
-          width: 1200,
-          height: Math.min(target.scrollHeight, 2000),
-          cacheBust: true,
-        })
-      } catch (svgErr) {
-        console.warn('toSvg failed:', svgErr)
-        dataUrl = await toPng(target, {
-          quality: 1.0,
-          pixelRatio: 2,
-          backgroundColor: '#0e0e0e',
-          cacheBust: true,
-        })
-      }
+      const dataUrl = await toPng(target, {
+        quality: 1.0,
+        pixelRatio: 2,
+        backgroundColor: '#0e0e0e',
+        cacheBust: true,
+      })
 
       // Restore styles
       savedStyles.forEach(({ el, bg, color, borderColor }) => {
@@ -203,7 +199,7 @@ export default function ScheduleEagleEyeView({
     if (!containerRef.current) return
     setCapturing(true)
     try {
-      const { toSvg, toPng } = await import('html-to-image')
+      const { toPng } = await import('html-to-image')
       const target = containerRef.current
 
       const allElements = target.querySelectorAll('*')
@@ -227,23 +223,12 @@ export default function ScheduleEagleEyeView({
         }
       })
 
-      let dataUrl
-      try {
-        dataUrl = await toSvg(containerRef.current, {
-          quality: 1.0,
-          pixelRatio: 2,
-          backgroundColor: '#0e0e0e',
-          cacheBust: true,
-        })
-      } catch (svgErr) {
-        console.warn('toSvg for share failed:', svgErr)
-        dataUrl = await toPng(containerRef.current, {
-          quality: 1.0,
-          pixelRatio: 2,
-          backgroundColor: '#0e0e0e',
-          cacheBust: true,
-        })
-      }
+      const dataUrl = await toPng(containerRef.current, {
+        quality: 1.0,
+        pixelRatio: 2,
+        backgroundColor: '#0e0e0e',
+        cacheBust: true,
+      })
 
       savedStyles.forEach(({ el, bg, color, borderColor }) => {
         el.style.backgroundColor = bg
@@ -311,7 +296,7 @@ export default function ScheduleEagleEyeView({
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-full end-0 mb-2 w-40 bg-zinc-900 border border-zinc-700 rounded-xl py-1.5 shadow-xl z-20"
+                className="absolute bottom-full ltr:right-0 rtl:left-0 ltr:left-auto rtl:right-auto mb-2 w-40 bg-zinc-900 border border-zinc-700 rounded-xl py-1.5 shadow-xl z-20"
               >
                 <button
                   onClick={() => { captureAndDownload('png'); setShowDownloadMenu(false) }}
@@ -349,8 +334,9 @@ export default function ScheduleEagleEyeView({
       </div>
 
       {/* Schedule Table */}
-      <div ref={containerRef} className="overflow-x-auto rounded-xl border border-zinc-800/60">
-        <table className="w-full text-sm" dir={isAr ? 'rtl' : 'ltr'}>
+      <div className="overflow-x-auto rounded-xl border border-zinc-800/60">
+        <div ref={containerRef} className="min-w-[800px] w-full bg-[#0e0e0e] p-4">
+          <table className="w-full text-sm" dir={isAr ? 'rtl' : 'ltr'}>
           <thead>
             <tr className="bg-zinc-900/80 border-b border-zinc-800">
               <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-10">#</th>
@@ -405,7 +391,9 @@ export default function ScheduleEagleEyeView({
                     onClick={() => setSelectedMatch(match)}
                     className="border-b border-zinc-800/40 hover:bg-zinc-800/30 cursor-pointer transition-colors"
                   >
-                    <td className="px-3 py-3 text-center text-xs text-zinc-500">{idx + 1}</td>
+                    <td className="px-3 py-3 text-center text-xs text-zinc-500">
+                        {globalSortedMatches.findIndex((m) => m.id === match.id) + 1}
+                      </td>
                     <td className="px-3 py-3 text-center text-xs text-zinc-300 whitespace-nowrap">
                       {match.date || '—'}
                     </td>
@@ -467,6 +455,7 @@ export default function ScheduleEagleEyeView({
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Match count */}

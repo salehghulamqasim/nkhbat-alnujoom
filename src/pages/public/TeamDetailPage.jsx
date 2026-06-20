@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { haptic } from '../../hooks/useHaptics'
 import DarkCard from '../../components/common/DarkCard'
 import TeamLogo from '../../components/common/TeamLogo'
 import MatchRow from '../../components/common/MatchRow'
@@ -81,6 +82,7 @@ export default function TeamDetailPage() {
 
         <Link
           to="/teams"
+          onClick={() => haptic.light()}
           className="relative z-10 flex items-center text-sm text-text-secondary hover:text-text-primary mb-4 w-fit"
         >
           <ChevronRight size={16} className="rtl:-scale-x-100" /> عودة للفرق
@@ -92,7 +94,7 @@ export default function TeamDetailPage() {
           <div className="flex items-center gap-2 text-sm text-text-secondary flex-wrap justify-center">
             {team.group && (
               <span className="bg-bg-surface px-2 py-0.5 rounded">
-                المجموعة {team.group}
+                المجموعة {team.group === 'A' ? 'أ' : team.group === 'B' ? 'ب' : team.group === 'C' ? 'ج' : team.group}
                 {rank && ` — المركز ${rank}`}
               </span>
             )}
@@ -125,7 +127,10 @@ export default function TeamDetailPage() {
           <button
             key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              haptic.light()
+              setActiveTab(tab.id)
+            }}
             className={`flex-1 py-4 text-sm font-bold relative transition-colors ${activeTab === tab.id ? 'text-accent' : 'text-text-secondary'}`}
           >
             {tab.label}
@@ -143,8 +148,12 @@ export default function TeamDetailPage() {
               playersWithGoals.map((player, index) => (
                 <DarkCard key={player.id || index} className="p-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-bg-surface flex items-center justify-center font-bold border border-border">
-                      {index + 1}
+                    <div className="w-10 h-10 rounded-full bg-bg-surface flex items-center justify-center font-bold border border-border overflow-hidden">
+                      {player.photo ? (
+                        <img src={player.photo.startsWith('data:') ? player.photo : `data:image/png;base64,${player.photo}`} alt={player.name} className="w-full h-full object-cover" />
+                      ) : (
+                        index + 1
+                      )}
                     </div>
                     <div className="flex flex-col">
                       <span className="font-bold text-sm">{player.name}</span>

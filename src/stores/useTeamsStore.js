@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import * as teamsService from '../services/teamsService'
+import * as matchesService from '../services/matchesService'
 import * as groupsService from '../services/groupsService'
 import * as settingsService from '../services/settingsService'
 
@@ -9,10 +10,21 @@ export const MAX_PLAYERS = 20
 const normalizePlayers = (players) => {
   if (!Array.isArray(players)) return []
   return players
-    .map((p) => (typeof p === 'string' ? p.trim() : p?.name?.trim()))
+    .map((p) => {
+      if (typeof p === 'string') {
+        const name = p.trim()
+        return name ? { name, photo: null } : null
+      }
+      if (p && typeof p === 'object') {
+        const name = (p.name || '').trim()
+        if (!name) return null
+        return { name, photo: p.photo || null }
+      }
+      return null
+    })
     .filter(Boolean)
     .slice(0, MAX_PLAYERS)
-    .map((name, index) => ({ id: `player-${index}-${name}`, name }))
+    .map((p, index) => ({ id: `player-${index}-${p.name}`, name: p.name, photo: p.photo || null }))
 }
 
 export const useTeamsStore = create((set, get) => ({

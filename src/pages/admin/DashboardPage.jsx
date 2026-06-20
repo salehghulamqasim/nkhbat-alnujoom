@@ -5,6 +5,7 @@ import DarkCard from '../../components/common/DarkCard'
 import { useTeamsStore, MAX_TEAMS, isDrawComplete } from '../../stores/useTeamsStore'
 import { useMatchesStore } from '../../stores/useMatchesStore'
 import { useI18n } from '../../i18n/useI18n'
+import { haptic } from '../../hooks/useHaptics'
 
 export default function DashboardPage() {
   const teams = useTeamsStore((state) => state.teams)
@@ -85,7 +86,7 @@ export default function DashboardPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + i * 0.1 }}
               >
-                <Link to={action.path}>
+                <Link to={action.path} onClick={() => haptic.light()}>
                   <DarkCard hover className="p-4 flex items-center gap-4 group">
                     <div className="w-12 h-12 rounded-xl bg-bg-surface flex items-center justify-center border border-border group-hover:bg-accent/20 group-hover:border-accent/50 transition-colors">
                       <Icon size={24} className="text-accent" />

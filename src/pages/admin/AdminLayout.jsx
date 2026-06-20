@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useAppStore } from '../../stores/useAppStore'
 import { Trophy, LogOut, LayoutDashboard, Users, Calendar, Shuffle, RotateCcw } from 'lucide-react'
@@ -10,6 +12,13 @@ import AdminBottomNav from '../../components/layout/AdminBottomNav'
 import { useTeamsStore } from '../../stores/useTeamsStore'
 import { useMatchesStore } from '../../stores/useMatchesStore'
 import { useI18n } from '../../i18n/useI18n'
+import { haptic } from '../../hooks/useHaptics'
+
+const adminPageVariants = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: 'easeIn' } },
+}
 
 const navItemsEn = [
   { path: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -30,6 +39,7 @@ const navItemsAr = [
 export default function AdminLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const teamsLoading = useTeamsStore((s) => s.loading && !s.initialized)
@@ -43,13 +53,24 @@ export default function AdminLayout() {
 
   const navItems = isAr ? navItemsAr : navItemsEn
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isLoggingOut) {
     return <Navigate to="/admin/login" replace />
   }
 
   const handleLogout = () => {
-    logout()
-    navigate('/', { replace: true })
+    haptic.medium()
+    setIsLoggingOut(true)
+    // Animate out before logout
+    const main = document.querySelector('main')
+    if (main) {
+      main.style.transition = 'opacity 0.3s ease, transform 0.3s ease'
+      main.style.opacity = '0'
+      main.style.transform = 'translateY(-10px)'
+    }
+    setTimeout(() => {
+      logout()
+      navigate('/', { replace: true })
+    }, 300)
   }
 
   const loadingMsg = isAr ? 'جاري تحميل بيانات الإدارة...' : 'Loading admin data...'
@@ -61,6 +82,7 @@ export default function AdminLayout() {
           <div className="flex items-center gap-2 md:gap-3 min-w-0">
             <Link
               to="/"
+              onClick={() => haptic.light()}
               className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20 text-accent hover:bg-accent hover:text-black transition-all text-[10px] md:text-xs font-semibold shrink-0"
             >
               <Trophy size={14} />
@@ -75,7 +97,10 @@ export default function AdminLayout() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => useAppStore.getState().toggleLanguage()}
+              onClick={() => {
+                haptic.medium()
+                useAppStore.getState().toggleLanguage()
+              }}
               className="text-[10px] md:text-xs px-2 py-1 rounded-lg bg-bg-surface border border-border hover:border-accent/30 transition-colors font-medium"
               aria-label="Toggle language"
             >
@@ -84,7 +109,10 @@ export default function AdminLayout() {
 
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => {
+                haptic.medium()
+                handleLogout()
+              }}
               className="flex items-center gap-1.5 text-xs md:text-sm text-text-secondary hover:text-danger transition-colors"
             >
               <span className="hidden sm:inline">{t('nav.logout')}</span>
@@ -106,6 +134,7 @@ export default function AdminLayout() {
                     <li key={item.path}>
                       <Link
                         to={item.path}
+                        onClick={() => haptic.light()}
                         className={`flex items-center gap-3 h-11 px-3 rounded-xl transition-all duration-200 ${
                           isActive
                             ? 'bg-accent/10 text-accent border border-accent/20'
@@ -136,7 +165,15 @@ export default function AdminLayout() {
             ) : (
               <div className="max-w-4xl mx-auto">
                 <AdminErrorBanner />
-                <Outlet />
+                <motion.div
+                  key={location.pathname}
+                  variants={adminPageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  <Outlet />
+                </motion.div>
               </div>
             )}
           </main>

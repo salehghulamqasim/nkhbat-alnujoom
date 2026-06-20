@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { LayoutDashboard, Users, Calendar, Shuffle } from 'lucide-react'
 import { useAppStore } from '../../stores/useAppStore'
+import { haptic } from '../../hooks/useHaptics'
 
 const navItems = [
   { path: '/admin/dashboard', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: LayoutDashboard },
@@ -31,6 +32,7 @@ export default function AdminBottomNav() {
             <Link
               key={item.path}
               to={item.path}
+              onClick={() => haptic.light()}
               className={`flex flex-col items-center justify-center h-full gap-0.5 transition-all duration-150
                 ${isActive ? 'text-accent' : 'text-zinc-500 active:text-zinc-300'}
               `}

@@ -2,10 +2,30 @@ import DarkCard from './DarkCard'
 import TeamLogo from './TeamLogo'
 import { formatMatchDate, getMatchDisplayStatus } from '../../utils/matchHelpers'
 import { useLiveMatch } from '../../hooks/useLiveMatch'
+import { useAppStore } from '../../stores/useAppStore'
+
+const t = {
+  ar: {
+    live: 'مباشر',
+    completed: 'منتهية',
+    upcoming: 'قادمة',
+    group: (g) => {
+      const arGroups = { A: 'أ', B: 'ب', C: 'ج' }
+      return `المجموعة ${arGroups[g] || g}`
+    }
+  },
+  en: {
+    live: 'Live',
+    completed: 'Finished',
+    upcoming: 'Upcoming',
+    group: (g) => `Group ${g}`
+  }
+}
 
 export default function MatchRow({ match, onClick }) {
+  const lang = useAppStore((s) => s.language)
   const status = getMatchDisplayStatus(match)
-  const dateLabel = formatMatchDate(match.date)
+  const dateLabel = formatMatchDate(match.date, lang)
   const { liveData, loading: liveLoading } = useLiveMatch(status === 'live' ? match.id : null)
 
   const centerContent =
@@ -31,14 +51,14 @@ export default function MatchRow({ match, onClick }) {
         {status === 'live' ? (
           <span className="flex items-center gap-1.5 text-live font-bold">
             <span className="w-2 h-2 rounded-full bg-live animate-pulse" />
-            مباشر
+            {t[lang].live}
           </span>
         ) : (
           <span className="font-medium">
-            {status === 'completed' ? 'منتهية' : 'قادمة'}
+            {status === 'completed' ? t[lang].completed : t[lang].upcoming}
           </span>
         )}
-        <span>المجموعة {match.group}</span>
+        <span>{t[lang].group(match.group)}</span>
       </div>
 
       <div className="flex items-center justify-between">

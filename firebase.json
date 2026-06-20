@@ -6,6 +6,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "nkhbat-alnujoom",
     "public": "dist",
     "ignore": [
       "firebase.json",

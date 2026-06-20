@@ -12,6 +12,7 @@ import {
   CalendarClock,
   Wand2,
 } from 'lucide-react'
+import { haptic } from '../../hooks/useHaptics'
 import { useTeamsStore, isDrawComplete } from '../../stores/useTeamsStore'
 import { useMatchesStore } from '../../stores/useMatchesStore'
 import EmptyState from '../../components/common/EmptyState'
@@ -168,7 +169,10 @@ function AdminMatchCard({
 
         <button
           type="button"
-          onClick={() => onDelete(match)}
+          onClick={() => {
+            haptic.heavy()
+            onDelete(match)
+          }}
           className="absolute top-2 end-2 w-8 h-8 rounded-lg bg-bg-surface/80 border border-border flex items-center justify-center text-danger hover:bg-danger/10 hover:border-danger/30 transition-colors"
           aria-label={t('common.delete')}
         >

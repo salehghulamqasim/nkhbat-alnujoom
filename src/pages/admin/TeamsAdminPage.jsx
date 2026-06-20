@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Pencil, Trash2, Users, UserCircle } from 'lucide-react'
+import { haptic } from '../../hooks/useHaptics'
 import GoldButton from '../../components/common/GoldButton'
 import DarkCard from '../../components/common/DarkCard'
 import EmptyState from '../../components/common/EmptyState'
@@ -135,7 +136,10 @@ export default function TeamsAdminPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDeletingTeam(team)}
+                  onClick={() => {
+                    haptic.light()
+                    setDeletingTeam(team)
+                  }}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-bg-surface border border-border text-sm text-danger hover:bg-danger/10 hover:border-danger/30 transition-colors"
                 >
                   <Trash2 size={15} />

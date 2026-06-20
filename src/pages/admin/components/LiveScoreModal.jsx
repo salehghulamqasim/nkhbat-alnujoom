@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Radio } from 'lucide-react'
+import { haptic } from '../../../hooks/useHaptics'
 import { useI18n } from '../../../i18n/useI18n'
 
 export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA, teamB, liveData }) {
@@ -31,6 +32,7 @@ export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA
     e.preventDefault()
     if (!validate()) return
 
+    haptic.intense()
     const events = (liveData?.events || []).slice()
     onSubmit({
       scoreA: Number(scoreA),
