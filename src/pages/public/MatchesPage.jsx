@@ -101,10 +101,17 @@ export default function MatchesPage() {
         ))}
         <div
           className="absolute top-1 bottom-1 bg-accent rounded-lg transition-all duration-300 -z-10"
-          style={{
-            width: `calc(25% - 0.5rem)`,
-            right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`,
-          }}
+          style={
+            lang === 'ar'
+              ? {
+                  width: `calc(25% - 0.5rem)`,
+                  right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`,
+                }
+              : {
+                  width: `calc(25% - 0.5rem)`,
+                  left: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`,
+                }
+          }
         />
       </div>
 
