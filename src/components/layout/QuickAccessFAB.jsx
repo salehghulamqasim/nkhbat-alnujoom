@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, LayoutList, Star, Calendar, CalendarDays } from 'lucide-react'
+import { Compass, Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useAppStore } from '../../stores/useAppStore'
+import { haptic } from '../../hooks/useHaptics'
 
 export default function QuickAccessFAB() {
   const [isOpen, setIsOpen] = useState(false)
@@ -10,22 +11,30 @@ export default function QuickAccessFAB() {
   const isAr = language === 'ar'
 
   const actions = [
+    { icon: Compass, labelAr: 'جدول', labelEn: 'Schedule', path: '/schedule' },
     { icon: Star, labelAr: 'الهدافون', labelEn: 'Top Scorers', path: '/top-scorers' },
-    { icon: Calendar, labelAr: 'الجدول', labelEn: 'Schedule', path: '/matches' },
-    { icon: CalendarDays, labelAr: 'المجموعات', labelEn: 'Groups', path: '/standings' },
   ]
 
-  const toggleOpen = () => setIsOpen(!isOpen)
+  const toggleOpen = () => {
+    haptic.light()
+    setIsOpen(!isOpen)
+  }
+
+  const handleAction = () => {
+    haptic.medium()
+    setIsOpen(false)
+  }
 
   return (
-    <div className="fixed bottom-20 end-4 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-20 end-4 z-50 flex flex-col items-end gap-2">
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.8 }}
+            initial={{ opacity: 0, y: 12, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.8 }}
-            className="flex flex-col gap-3"
+            exit={{ opacity: 0, y: 12, scale: 0.9 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="flex flex-col gap-2"
           >
             {actions.map((action) => {
               const Icon = action.icon
@@ -33,14 +42,19 @@ export default function QuickAccessFAB() {
                 <Link
                   key={action.path}
                   to={action.path}
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleAction}
                   className="flex items-center justify-end gap-2 group"
                 >
-                  <span className="bg-bg-surface text-text-primary text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg whitespace-nowrap border border-border group-hover:border-accent/50 transition-colors">
+                  <motion.span
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="bg-zinc-900 text-zinc-300 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-zinc-700/60 group-hover:border-zinc-500 transition-colors shadow-lg whitespace-nowrap"
+                  >
                     {isAr ? action.labelAr : action.labelEn}
-                  </span>
-                  <div className="w-12 h-12 rounded-full bg-bg-surface border border-border flex items-center justify-center shadow-lg text-text-primary group-hover:text-accent group-hover:border-accent/50 transition-colors">
-                    <Icon size={20} />
+                  </motion.span>
+                  <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-700/60 flex items-center justify-center shadow-lg text-zinc-300 group-hover:text-white group-hover:border-zinc-500 transition-colors">
+                    <Icon size={18} />
                   </div>
                 </Link>
               )
@@ -49,22 +63,23 @@ export default function QuickAccessFAB() {
         )}
       </AnimatePresence>
 
-      <button
+      <motion.button
         type="button"
         onClick={toggleOpen}
-        className="w-14 h-14 rounded-full bg-accent text-black flex items-center justify-center shadow-[0_4px_15px_rgba(212,175,55,0.4)] hover:scale-105 hover:bg-accent-light active:scale-95 transition-all"
+        whileTap={{ scale: 0.9 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+        className="w-14 h-14 rounded-full bg-zinc-900 text-accent flex items-center justify-center border border-accent/20 hover:bg-accent/10 hover:border-accent/40 hover:text-accent transition-colors shadow-lg shadow-accent/5"
         aria-label={isOpen ? (isAr ? 'إغلاق القائمة' : 'Close menu') : (isAr ? 'فتح القائمة' : 'Open menu')}
       >
         <motion.div
           key={isOpen ? 'open' : 'closed'}
-          initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
-          animate={{ rotate: 0, opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="flex items-center justify-center"
+          initial={{ rotate: -90, opacity: 0 }}
+          animate={{ rotate: 0, opacity: 1 }}
+          transition={{ duration: 0.15 }}
         >
-          {isOpen ? <X size={26} strokeWidth={2.5} /> : <LayoutList size={26} strokeWidth={2.5} />}
+          <Compass size={24} strokeWidth={1.75} />
         </motion.div>
-      </button>
+      </motion.button>
     </div>
   )
 }

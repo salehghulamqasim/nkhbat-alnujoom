@@ -6,7 +6,8 @@ import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { calculateStandings } from '../../utils/standings'
-import { useTranslation } from '../../hooks/useTranslation'
+import { useAppStore } from '../../stores/useAppStore'
+import { haptic } from '../../hooks/useHaptics'
 
 const GROUPS = ['A', 'B', 'C']
 
@@ -53,7 +54,10 @@ export default function StandingsPage() {
           <button
             key={group}
             type="button"
-            onClick={() => setActiveGroup(group)}
+            onClick={() => {
+              haptic.light()
+              setActiveGroup(group)
+            }}
             className={`flex-1 py-2 text-sm font-medium z-10 transition-colors ${activeGroup === group ? 'text-black' : 'text-text-secondary hover:text-text-primary'}`}
           >
             {lang === 'ar' ? `المجموعة ${group === 'A' ? 'أ' : group === 'B' ? 'ب' : group === 'C' ? 'ج' : group}` : `Group ${group}`}

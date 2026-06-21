@@ -22,7 +22,7 @@ export default function AdminBottomNav() {
       aria-label={isAr ? 'القائمة السفلية' : 'Bottom navigation'}
     >
       <div
-        className="h-14 bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 grid grid-cols-5"
+        className="h-14 bg-bg-nav/95 backdrop-blur-xl border-t border-border grid grid-cols-5"
         dir={isAr ? 'rtl' : 'ltr'}
       >
         {navItems.map((item) => {
@@ -33,7 +33,7 @@ export default function AdminBottomNav() {
               key={item.path}
               to={item.path}
               className={`flex flex-col items-center justify-center h-full gap-0.5 transition-all duration-150
-                ${isActive ? 'text-accent' : 'text-zinc-500 active:text-zinc-300'}
+                ${isActive ? 'text-accent' : 'text-text-secondary hover:text-text-primary active:text-text-primary'}
               `}
               aria-current={isActive ? 'page' : undefined}
             >

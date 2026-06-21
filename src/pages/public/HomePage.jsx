@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import gsap from 'gsap'
 import { motion } from 'framer-motion'
 import { ChevronLeft, Settings, Sun, Moon } from 'lucide-react'
+import { haptic } from '../../hooks/useHaptics'
 import StatCard from '../../components/common/StatCard'
 import MatchRow from '../../components/common/MatchRow'
 import DarkCard from '../../components/common/DarkCard'
@@ -93,8 +94,12 @@ export default function HomePage() {
     <div ref={containerRef} className="space-y-6 pb-8 overflow-x-hidden">
       {/* Home header controls — fixed so they stay tappable above the hero */}
       <div className="fixed top-0 inset-x-0 z-50 px-4 pt-4 sm:pt-6 flex items-center justify-between pointer-events-none">
-        <Link
-          to="/more"
+        <button
+          type="button"
+          onClick={() => {
+            haptic.light()
+            navigate('/more')
+          }}
           className="pointer-events-auto w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-black/60 border border-accent/30 text-accent hover:bg-accent/20 hover:border-accent/60 transition-all duration-200 backdrop-blur-sm"
           aria-label={language === 'ar' ? 'الإعدادات' : 'Settings'}
         >
@@ -104,7 +109,10 @@ export default function HomePage() {
         <div className="flex items-center gap-2 pointer-events-auto">
           <button
             type="button"
-            onClick={toggleTheme}
+            onClick={() => {
+              haptic.medium()
+              toggleTheme()
+            }}
             className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-black/60 border border-accent/30 text-accent hover:bg-accent/20 hover:border-accent/60 transition-all duration-200 backdrop-blur-sm"
             aria-label={language === 'ar' ? 'تبديل المظهر' : 'Toggle theme'}
           >
@@ -113,7 +121,10 @@ export default function HomePage() {
 
           <button
             type="button"
-            onClick={toggleLanguage}
+            onClick={() => {
+              haptic.medium()
+              toggleLanguage()
+            }}
             className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-black/60 border border-accent/30 text-xs font-bold text-accent hover:bg-accent hover:text-black transition-all duration-200 backdrop-blur-sm"
           >
             {language === 'ar' ? 'EN' : 'AR'}

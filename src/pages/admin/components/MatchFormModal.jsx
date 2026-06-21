@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import { haptic } from '../../../hooks/useHaptics'
 import { useTeamsStore } from '../../../stores/useTeamsStore'
+import { useI18n } from '../../../i18n/useI18n'
 
 const GROUPS = ['A', 'B', 'C']
 
 export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
   const teams = useTeamsStore((state) => state.teams)
+  const { t, isAr } = useI18n()
 
   const [form, setForm] = useState({
     group: 'A',
@@ -33,12 +36,12 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
 
   const validate = () => {
     const nextErrors = {}
-    if (!form.teamA) nextErrors.teamA = 'اختر الفريق الأول'
-    if (!form.teamB) nextErrors.teamB = 'اختر الفريق الثاني'
-    if (form.teamA && form.teamA === form.teamB) nextErrors.teamB = 'لا يمكن اختيار نفس الفريق'
-    if (!form.date) nextErrors.date = 'التاريخ مطلوب'
-    if (!form.time) nextErrors.time = 'الوقت مطلوب'
-    if (!form.venue.trim()) nextErrors.venue = 'الملعب مطلوب'
+    if (!form.teamA) nextErrors.teamA = t('matches.team1Required')
+    if (!form.teamB) nextErrors.teamB = t('matches.team2Required')
+    if (form.teamA && form.teamA === form.teamB) nextErrors.teamB = t('matches.sameTeamError')
+    if (!form.date) nextErrors.date = t('matches.dateRequired')
+    if (!form.time) nextErrors.time = t('matches.timeRequired')
+    if (!form.venue.trim()) nextErrors.venue = t('matches.venueRequired')
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -46,6 +49,8 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
+
+    haptic.intense()
     onSubmit(form)
     onClose()
   }
@@ -58,7 +63,7 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={onClose}
           />
 
@@ -69,7 +74,7 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
             className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto glass-card rounded-t-2xl md:rounded-2xl shadow-2xl"
           >
             <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-bg-card/95 backdrop-blur-md">
-              <h2 className="text-lg font-bold">إضافة مباراة</h2>
+              <h2 className="text-lg font-bold">{t('matches.addMatchTitle')}</h2>
               <button
                 type="button"
                 onClick={onClose}
@@ -81,7 +86,7 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
 
             <form onSubmit={handleSubmit} className="p-4 space-y-4 pb-8">
               <div>
-                <label className="block text-sm text-text-secondary mb-2">المجموعة</label>
+                <label className="block text-sm text-text-secondary mb-2">{t('matches.group')}</label>
                 <select
                   value={form.group}
                   onChange={(e) => setForm((prev) => ({ ...prev, group: e.target.value }))}
@@ -89,25 +94,23 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
                 >
                   {GROUPS.map((g) => (
                     <option key={g} value={g}>
-                      مجموعة {g}
+                      {t('matches.group')} {g}
                     </option>
                   ))}
                 </select>
                 {groupTeams.length < 2 && (
-                  <p className="text-xs text-warning mt-1">
-                    يجب إجراء القرعة أولاً — لا توجد فرق كافية في هذه المجموعة
-                  </p>
+                  <p className="text-xs text-warning mt-1">{t('matches.needDrawFirst')}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm text-text-secondary mb-2">الفريق الأول</label>
+                <label className="block text-sm text-text-secondary mb-2">{t('matches.team1')}</label>
                 <select
                   value={form.teamA}
                   onChange={(e) => setForm((prev) => ({ ...prev, teamA: e.target.value }))}
                   className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
                 >
-                  <option value="">— اختر —</option>
+                  <option value="">{t('matches.selectTeam')}</option>
                   {groupTeams.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.name}
@@ -118,13 +121,13 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
               </div>
 
               <div>
-                <label className="block text-sm text-text-secondary mb-2">الفريق الثاني</label>
+                <label className="block text-sm text-text-secondary mb-2">{t('matches.team2')}</label>
                 <select
                   value={form.teamB}
                   onChange={(e) => setForm((prev) => ({ ...prev, teamB: e.target.value }))}
                   className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
                 >
-                  <option value="">— اختر —</option>
+                  <option value="">{t('matches.selectTeam')}</option>
                   {groupTeams
                     .filter((t) => t.id !== form.teamA)
                     .map((t) => (
@@ -138,7 +141,7 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">التاريخ</label>
+                  <label className="block text-sm text-text-secondary mb-2">{t('matches.date')}</label>
                   <input
                     type="date"
                     value={form.date}
@@ -149,7 +152,7 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
                   {errors.date && <p className="text-xs text-danger mt-1">{errors.date}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">الوقت</label>
+                  <label className="block text-sm text-text-secondary mb-2">{t('matches.time')}</label>
                   <input
                     type="time"
                     value={form.time}
@@ -162,12 +165,12 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
               </div>
 
               <div>
-                <label className="block text-sm text-text-secondary mb-2">الملعب</label>
+                <label className="block text-sm text-text-secondary mb-2">{t('matches.venue')}</label>
                 <input
                   type="text"
                   value={form.venue}
                   onChange={(e) => setForm((prev) => ({ ...prev, venue: e.target.value }))}
-                  placeholder="مثال: ملعب النجوم"
+                  placeholder={isAr ? 'مثال: ملعب النجوم' : 'e.g. Stars Stadium'}
                   className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
                 />
                 {errors.venue && <p className="text-xs text-danger mt-1">{errors.venue}</p>}
@@ -178,7 +181,7 @@ export default function MatchFormModal({ isOpen, onClose, onSubmit }) {
                 disabled={groupTeams.length < 2}
                 className="w-full bg-accent hover:bg-accent-hover text-black font-bold py-3.5 rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                إضافة المباراة
+                {t('matches.addMatchTitle')}
               </button>
             </form>
           </motion.div>

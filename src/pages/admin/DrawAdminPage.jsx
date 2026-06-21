@@ -1,13 +1,14 @@
 import { useRef, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import gsap from 'gsap'
-import { Shuffle, Lock, Users, AlertCircle } from 'lucide-react'
+import { Shuffle, Lock, Users, AlertCircle, RefreshCw } from 'lucide-react'
+import { haptic } from '../../hooks/useHaptics'
 import {
   useTeamsStore,
   MAX_TEAMS,
   isDrawComplete,
 } from '../../stores/useTeamsStore'
-import DeleteConfirmModal from './components/DeleteConfirmModal'
+import { useI18n } from '../../i18n/useI18n'
 
 const GROUPS = ['A', 'B', 'C']
 
@@ -20,18 +21,18 @@ function shuffleTeams(teams) {
   }
 }
 
-function GroupCard({ group, teamIds, teams, innerRef, hidden = false }) {
+function GroupCard({ group, teamIds, teams, innerRef, hidden = false, itemLabel }) {
   const groupTeams = teamIds.map((id) => teams.find((t) => t.id === id)).filter(Boolean)
 
   return (
     <div
       ref={innerRef}
-      className={`glass-card p-5 ${hidden ? 'opacity-0 translate-y-8' : ''}`}
+      className={`glass-card p-4 md:p-5 ${hidden ? 'opacity-0 translate-y-8' : ''}`}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-accent">المجموعة {group}</h3>
+        <h3 className="text-xl font-bold text-accent">Group {group}</h3>
         <span className="text-xs text-text-secondary bg-bg-surface px-2 py-1 rounded-lg border border-border">
-          {groupTeams.length} فرق
+          {groupTeams.length} {itemLabel}
         </span>
       </div>
 
@@ -61,17 +62,18 @@ export default function DrawAdminPage() {
   const drawLocked = useTeamsStore((state) => state.drawLocked)
   const assignGroups = useTeamsStore((state) => state.assignGroups)
   const clearGroups = useTeamsStore((state) => state.clearGroups)
+  const { t, isAr } = useI18n()
 
   const [isDrawing, setIsDrawing] = useState(false)
   const [previewGroups, setPreviewGroups] = useState(null)
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false)
+  const [drawError, setDrawError] = useState(null)
 
   const groupRefs = useRef({ A: null, B: null, C: null })
   const containerRef = useRef(null)
 
   const teamCount = teams.length
   const drawComplete = isDrawComplete(teams, drawLocked)
-  const canDraw = teamCount === MAX_TEAMS && !drawComplete && !isDrawing
+  const canDraw = teamCount === MAX_TEAMS && !isDrawing
 
   const getGroupTeamIds = (group) => {
     if (previewGroups) return previewGroups[group]
@@ -82,9 +84,21 @@ export default function DrawAdminPage() {
     (groups) => {
       const tl = gsap.timeline({
         onComplete: () => {
-          assignGroups(groups)
-          setPreviewGroups(null)
-          setIsDrawing(false)
+          // Fire async — gsap onComplete doesn't support async,
+          // so use .then() to ensure isDrawing resets on error too
+          Promise.resolve()
+            .then(() => assignGroups(groups))
+            .then(() => {
+              setPreviewGroups(null)
+              setIsDrawing(false)
+              setDrawError(null)
+            })
+            .catch((err) => {
+              console.error('[Draw] assignGroups failed:', err)
+              setDrawError(err.message || 'Failed to save draw')
+              setPreviewGroups(null)
+              setIsDrawing(false)
+            })
         },
       })
 
@@ -121,6 +135,7 @@ export default function DrawAdminPage() {
 
   const handleDraw = () => {
     if (!canDraw) return
+    setDrawError(null)
 
     const groups = shuffleTeams(teams)
     setPreviewGroups(groups)
@@ -136,22 +151,39 @@ export default function DrawAdminPage() {
     })
   }
 
+  const handleRedraw = async () => {
+    if (isDrawing) return
+    setDrawError(null)
+
+    // First clear existing groups, then re-draw
+    try {
+      setIsDrawing(true)
+      await clearGroups()
+      // After clearing, the teams have no groups, so we can re-draw
+      handleDraw()
+    } catch (err) {
+      console.error('[Draw] clearGroups failed:', err)
+      setDrawError(err.message || 'Failed to reset draw')
+      setIsDrawing(false)
+    }
+  }
+
   if (teamCount < MAX_TEAMS) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">سحب القرعة</h1>
-          <p className="text-sm text-text-secondary mt-1">توزيع الفرق على المجموعات الثلاث</p>
+          <h1 className="text-2xl font-bold">{t('draw.title')}</h1>
+          <p className="text-sm text-text-secondary mt-1">{t('draw.subtitleShort')}</p>
         </div>
 
-        <div className="glass-card p-8 flex flex-col items-center text-center gap-4">
+        <div className="glass-card p-6 md:p-8 flex flex-col items-center text-center gap-4">
           <div className="w-16 h-16 rounded-full bg-warning/10 border border-warning/30 flex items-center justify-center">
             <AlertCircle size={32} className="text-warning" />
           </div>
           <div>
-            <h2 className="text-lg font-bold mb-2">يجب تسجيل 12 فريق أولاً</h2>
+            <h2 className="text-lg font-bold mb-2">{t('draw.needTeams')}</h2>
             <p className="text-sm text-text-secondary">
-              الفرق المسجلة حالياً:{' '}
+              {t('draw.currentTeams')}:{' '}
               <span className="text-accent font-bold">{teamCount}/{MAX_TEAMS}</span>
             </p>
           </div>
@@ -160,7 +192,7 @@ export default function DrawAdminPage() {
             className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-black font-bold py-3 px-6 rounded-xl transition-colors"
           >
             <Users size={18} />
-            <span>إدارة الفرق</span>
+            <span>{t('draw.goToTeams')}</span>
           </Link>
         </div>
       </div>
@@ -171,55 +203,88 @@ export default function DrawAdminPage() {
     <div ref={containerRef} className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">سحب القرعة</h1>
-          <p className="text-sm text-text-secondary mt-1">توزيع 12 فريق على 3 مجموعات (4 فرق لكل مجموعة)</p>
+          <h1 className="text-2xl font-bold">{t('draw.title')}</h1>
+          <p className="text-sm text-text-secondary mt-1">{t('draw.subtitle')}</p>
         </div>
 
         {drawComplete && (
-          <div className="flex flex-wrap gap-2 items-center">
-            <div className="flex items-center gap-2 text-sm text-accent bg-accent/10 border border-accent/30 px-4 py-2 rounded-xl">
-              <Lock size={16} />
-              <span>القرعة مكتملة</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setConfirmResetOpen(true)}
-              className="flex items-center gap-2 text-sm text-danger bg-danger/10 border border-danger/30 px-4 py-2 rounded-xl hover:bg-danger/20 transition-colors"
-            >
-              <span>إعادة تعيين القرعة</span>
-            </button>
+          <div className="flex items-center gap-2 text-sm text-accent bg-accent/10 border border-accent/30 px-4 py-2 rounded-xl">
+            <Lock size={16} />
+            <span>{t('draw.drawComplete')}</span>
           </div>
         )}
       </div>
 
-      {canDraw && (
-        <div className="glass-card p-8 flex flex-col items-center text-center gap-6">
-          <div className="w-20 h-20 rounded-full bg-accent/15 border-2 border-accent/40 flex items-center justify-center shadow-[0_0_30px_rgba(245,197,24,0.25)]">
-            <Shuffle size={36} className="text-accent-light" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold mb-2">جاهز لسحب القرعة</h2>
-            <p className="text-sm text-text-secondary">
-              تم تسجيل {MAX_TEAMS} فريق — اضغط الزر لتوزيعهم عشوائياً
-            </p>
+      {/* Draw error */}
+      {drawError && (
+        <div className="glass-card p-4 border border-danger/30 bg-danger/5 flex items-start gap-3 rounded-xl">
+          <AlertCircle size={20} className="text-danger shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-bold text-danger">{t('common.error')}</p>
+            <p className="text-xs text-text-secondary mt-1">{drawError}</p>
           </div>
           <button
             type="button"
-            onClick={handleDraw}
-            className="w-full max-w-xs bg-accent hover:bg-accent-hover text-black font-bold text-lg py-4 px-8 rounded-2xl transition-all shadow-[0_4px_25px_rgba(245,197,24,0.4)] hover:shadow-[0_6px_35px_rgba(245,197,24,0.5)] hover:scale-[1.02] active:scale-[0.98]"
+            onClick={() => setDrawError(null)}
+            className="text-text-secondary hover:text-text-primary text-xs px-2 py-1"
           >
-            إجراء القرعة
+            {t('common.close')}
           </button>
         </div>
       )}
 
-      {isDrawing && (
-        <div className="text-center py-4">
-          <p className="text-accent font-bold animate-pulse">جاري سحب القرعة...</p>
+      {/* Draw button — only show if there are teams and we're not drawing */}
+      {!drawComplete && !isDrawing && (
+        <div className="glass-card p-6 md:p-8 flex flex-col items-center text-center gap-6">
+          <div className="w-20 h-20 rounded-full bg-accent/15 border-2 border-accent/40 flex items-center justify-center shadow-[0_0_30px_rgba(245,197,24,0.25)]">
+            <Shuffle size={36} className="text-accent-light" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold mb-2">{t('draw.ready')}</h2>
+            <p className="text-sm text-text-secondary">
+              {t('draw.readyDesc')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              haptic.intense()
+              handleDraw()
+            }}
+            disabled={isDrawing}
+            className="w-full max-w-xs bg-accent hover:bg-accent-hover text-black font-bold text-lg py-4 px-8 rounded-2xl transition-all shadow-[0_4px_25px_rgba(245,197,24,0.4)] hover:shadow-[0_6px_35px_rgba(245,197,24,0.5)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {t('draw.performDraw')}
+          </button>
         </div>
       )}
 
-      {(drawComplete || previewGroups) && (
+      {/* Redraw button — only if draw is complete */}
+      {drawComplete && !isDrawing && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              haptic.medium()
+              handleRedraw()
+            }}
+            className="flex items-center gap-2 bg-bg-surface hover:bg-bg-card border border-border text-text-primary font-medium py-2 px-5 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <RefreshCw size={16} />
+            <span>إعادة القرعة</span>
+          </button>
+        </div>
+      )}
+
+      {/* Drawing indicator */}
+      {isDrawing && (
+        <div className="text-center py-4">
+          <p className="text-accent font-bold animate-pulse">{t('draw.drawing')}</p>
+        </div>
+      )}
+
+      {/* Group cards — show if draw complete or preview is active */}
+      {(previewGroups || drawComplete || isDrawing) && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {GROUPS.map((group) => (
             <GroupCard
@@ -230,7 +295,8 @@ export default function DrawAdminPage() {
               innerRef={(el) => {
                 groupRefs.current[group] = el
               }}
-              hidden={Boolean(previewGroups)}
+              hidden={Boolean(previewGroups) && isDrawing}
+              itemLabel={isAr ? 'فرق' : 'teams'}
             />
           ))}
         </div>

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Trash2, ImagePlus } from 'lucide-react'
+import { X, Plus, Trash2, ImagePlus, Camera } from 'lucide-react'
 import { MAX_PLAYERS } from '../../../stores/useTeamsStore'
+import { useI18n } from '../../../i18n/useI18n'
+import { haptic } from '../../../hooks/useHaptics'
 
 const emptyForm = {
   name: '',
   manager: '',
-  players: [''],
+  players: [{ key: crypto.randomUUID(), value: '' }],
   logo: null,
   group: '',
 }
@@ -14,26 +16,38 @@ const emptyForm = {
 export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeamsReached }) {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
+  const [submitting, setSubmitting] = useState(false)
+  const [playerPhotos, setPlayerPhotos] = useState({})
+  const { t, isAr } = useI18n()
   const isEditing = Boolean(team)
 
   useEffect(() => {
     if (isOpen) {
       if (team) {
         setForm({
-          name: team.name,
-          manager: team.manager,
-          players: team.players.length > 0 ? team.players.map((p) => p.name) : [''],
-          logo: team.logo,
-          group: team.group || '',
+          name: team.name || '',
+          manager: team.manager || '',
+          players: team.players?.length > 0
+            ? team.players.map((p) => ({ key: crypto.randomUUID(), value: p?.name || '' }))
+            : [{ key: crypto.randomUUID(), value: '' }],
+          logo: team.logo || null,
         })
+        // Load existing player photos
+        const photos = {}
+        team.players.forEach((p, i) => {
+          if (p.photo) photos[i] = p.photo
+        })
+        setPlayerPhotos(photos)
       } else {
         setForm(emptyForm)
+        setPlayerPhotos({})
       }
       setErrors({})
+      setSubmitting(false)
     }
   }, [isOpen, team])
 
-  const MAX_LOGO_SIZE = 700 * 1024 // 700KB → base64 ~950KB, safe for Firebase
+  const MAX_LOGO_SIZE = 700 * 1024
   const MAX_LOGO_DIM = 256
 
   const resizeImage = (dataUrl, maxDim) =>
@@ -69,12 +83,12 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      setErrors((prev) => ({ ...prev, logo: 'يرجى اختيار ملف صورة' }))
+      setErrors((prev) => ({ ...prev, logo: t('teams.logoError') }))
       return
     }
 
     if (file.size > MAX_LOGO_SIZE) {
-      setErrors((prev) => ({ ...prev, logo: 'حجم الصورة يجب أن لا يتجاوز 700 كيلوبايت' }))
+      setErrors((prev) => ({ ...prev, logo: t('teams.logoError') }))
       return
     }
 
@@ -85,66 +99,104 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
         setForm((prev) => ({ ...prev, logo: resized }))
         setErrors((prev) => ({ ...prev, logo: undefined }))
       } catch {
-        setErrors((prev) => ({ ...prev, logo: 'فشل في معالجة الصورة' }))
+        setErrors((prev) => ({ ...prev, logo: t('teams.imageError') }))
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handlePlayerPhoto = async (index, e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) return
+    if (file.size > 700 * 1024) return
+
+    const reader = new FileReader()
+    reader.onload = async () => {
+      try {
+        const resized = await resizeImage(reader.result, 128)
+        setPlayerPhotos((prev) => ({ ...prev, [index]: resized }))
+      } catch {
+        // silently fail for player photo
       }
     }
     reader.readAsDataURL(file)
   }
 
   const addPlayerField = () => {
+    haptic.light()
     if (form.players.length >= MAX_PLAYERS) return
-    setForm((prev) => ({ ...prev, players: [...prev.players, ''] }))
+    setForm((prev) => ({ ...prev, players: [...prev.players, { key: crypto.randomUUID(), value: '' }] }))
   }
 
-  const removePlayerField = (index) => {
+  const removePlayerField = (key) => {
     if (form.players.length <= 1) return
     setForm((prev) => ({
       ...prev,
-      players: prev.players.filter((_, i) => i !== index),
+      players: prev.players.filter((p) => p.key !== key),
     }))
+    // Clean up photo for the removed player
+    setPlayerPhotos((prev) => {
+      const newPhotos = {}
+      let photoIdx = 0
+      form.players.forEach((p) => {
+        if (p.key === key) return
+        if (prev[photoIdx]) newPhotos[photoIdx] = prev[photoIdx]
+        photoIdx++
+      })
+      return newPhotos
+    })
   }
 
   const updatePlayer = (index, value) => {
     setForm((prev) => ({
       ...prev,
-      players: prev.players.map((p, i) => (i === index ? value : p)),
+      players: prev.players.map((p, i) => (i === index ? { ...p, value } : p)),
     }))
   }
 
   const validate = () => {
     const nextErrors = {}
 
-    if (!form.name.trim()) nextErrors.name = 'اسم الفريق مطلوب'
-    if (!form.manager.trim()) nextErrors.manager = 'اسم المدرب مطلوب'
+    if (!form.name.trim()) nextErrors.name = t('teams.nameRequired')
+    if (!form.manager.trim()) nextErrors.manager = t('teams.managerRequired')
 
-    const playerErrors = form.players.map((p) => !p.trim() ? 'اسم اللاعب مطلوب' : '')
-    if (playerErrors.some(err => err)) {
-      nextErrors.playerErrors = playerErrors
-    }
-
-    const filledPlayers = form.players.filter((p) => p.trim())
-    if (filledPlayers.length === 0 && !nextErrors.playerErrors) {
-      nextErrors.players = 'أضف لاعباً واحداً على الأقل'
+    const filledPlayers = form.players.filter((p) => p.value.trim())
+    if (filledPlayers.length === 0) {
+      nextErrors.players = t('teams.playerRequired')
     }
 
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!isEditing && maxTeamsReached) return
     if (!validate()) return
 
-    onSubmit({
-      name: form.name,
-      manager: form.manager,
-      players: form.players,
-      logo: form.logo,
-      group: form.group || null,
-    })
-    onClose()
+    setSubmitting(true)
+    haptic.intense()
+    try {
+      await onSubmit({
+        name: form.name,
+        manager: form.manager,
+        players: form.players.map((p, i) => ({
+          name: p.value,
+          photo: playerPhotos[i] || null,
+        })),
+        logo: form.logo,
+      })
+      onClose()
+    } catch (err) {
+      console.error('[TeamFormModal] submit error:', err)
+    } finally {
+      setSubmitting(false)
+    }
   }
+
+  const filledCount = form.players.filter((p) => p.value.trim()).length
 
   return (
     <AnimatePresence>
@@ -167,7 +219,7 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
           >
             <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-bg-card/95 backdrop-blur-md">
               <h2 className="text-lg font-bold">
-                {isEditing ? 'تعديل الفريق' : 'إضافة فريق جديد'}
+                {isEditing ? t('teams.editTeam') : t('teams.addNewTeam')}
               </h2>
               <button
                 type="button"
@@ -181,19 +233,19 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
             <form onSubmit={handleSubmit} className="p-4 space-y-5 pb-8">
               {/* Logo upload */}
               <div>
-                <label className="block text-sm text-text-secondary mb-2">شعار الفريق</label>
+                <label className="block text-sm text-text-secondary mb-2">{t('teams.logo')}</label>
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0">
                     {form.logo ? (
-                      <img src={form.logo} alt="شعار الفريق" className="w-full h-full object-cover" />
+                      <img src={form.logo} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <ImagePlus size={28} className="text-text-secondary" />
+                      <ImagePlus size={24} className="text-text-secondary" />
                     )}
                   </div>
-                  <div className="flex-1">
-                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-bg-surface border border-border text-sm cursor-pointer hover:bg-bg-primary transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <label className="inline-flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-bg-surface border border-border text-sm cursor-pointer hover:bg-bg-primary transition-colors">
                       <ImagePlus size={16} className="text-accent" />
-                      <span>اختر صورة</span>
+                      <span className="truncate">{t('teams.chooseImage')}</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -207,7 +259,7 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
                         onClick={() => setForm((prev) => ({ ...prev, logo: null }))}
                         className="block mt-2 text-xs text-danger hover:underline"
                       >
-                        إزالة الشعار
+                        {t('teams.removeLogo')}
                       </button>
                     )}
                     {errors.logo && (
@@ -219,32 +271,26 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
 
               {/* Team name */}
               <div>
-                <label className="block text-sm text-text-secondary mb-2">اسم الفريق</label>
+                <label className="block text-sm text-text-secondary mb-2">{t('teams.teamName')}</label>
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(e) => {
-                    setForm((prev) => ({ ...prev, name: e.target.value }))
-                    if (errors.name) setErrors(prev => ({ ...prev, name: undefined }))
-                  }}
-                  placeholder="مثال: النجوم"
-                  className={`w-full bg-bg-surface border ${errors.name ? 'border-danger' : 'border-border'} rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors`}
+                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder={isAr ? 'مثال: النجوم' : 'e.g. Stars'}
+                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
                 />
                 {errors.name && <p className="text-xs text-danger mt-1">{errors.name}</p>}
               </div>
 
               {/* Manager name */}
               <div>
-                <label className="block text-sm text-text-secondary mb-2">اسم المدرب</label>
+                <label className="block text-sm text-text-secondary mb-2">{t('teams.managerName')}</label>
                 <input
                   type="text"
                   value={form.manager}
-                  onChange={(e) => {
-                    setForm((prev) => ({ ...prev, manager: e.target.value }))
-                    if (errors.manager) setErrors(prev => ({ ...prev, manager: undefined }))
-                  }}
-                  placeholder="مثال: أحمد محمد"
-                  className={`w-full bg-bg-surface border ${errors.manager ? 'border-danger' : 'border-border'} rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors`}
+                  onChange={(e) => setForm((prev) => ({ ...prev, manager: e.target.value }))}
+                  placeholder={isAr ? 'مثال: أحمد محمد' : 'e.g. Ahmed'}
+                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
                 />
                 {errors.manager && <p className="text-xs text-danger mt-1">{errors.manager}</p>}
               </div>
@@ -275,7 +321,7 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm text-text-secondary">
-                    اللاعبون ({form.players.filter((p) => p.trim()).length}/{MAX_PLAYERS})
+                    {t('teams.players')} ({filledCount}/{MAX_PLAYERS})
                   </label>
                   <button
                     type="button"
@@ -284,54 +330,59 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
                     className="flex items-center gap-1 text-xs text-accent hover:text-accent-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
                     <Plus size={14} />
-                    <span>إضافة لاعب</span>
+                    <span>{t('teams.addPlayer')}</span>
                   </button>
                 </div>
 
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {form.players.map((player, index) => {
-                    const hasError = errors.playerErrors?.[index]
-                    return (
-                      <div key={index} className="flex flex-col gap-1">
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={player}
-                            onChange={(e) => {
-                              updatePlayer(index, e.target.value)
-                              if (errors.playerErrors) {
-                                const newPlayerErrors = [...errors.playerErrors]
-                                newPlayerErrors[index] = ''
-                                setErrors(prev => ({ ...prev, playerErrors: newPlayerErrors }))
-                              }
-                            }}
-                            placeholder={`اللاعب ${index + 1}`}
-                            className={`flex-1 bg-bg-surface border ${hasError ? 'border-danger' : 'border-border'} rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-accent transition-colors`}
-                          />
-                          {form.players.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removePlayerField(index)}
-                              className="w-10 h-10 rounded-xl bg-bg-surface border border-border flex items-center justify-center text-danger hover:bg-danger/10 transition-colors shrink-0"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </div>
-                        {hasError && <p className="text-xs text-danger pr-1">{hasError}</p>}
-                      </div>
-                    )
-                  })}
+                  {form.players.map((player, index) => (
+                    <div key={player.key} className="flex gap-2 items-center">
+                      {/* Player photo */}
+                      <label className="w-9 h-9 shrink-0 rounded-full bg-bg-surface border border-border flex items-center justify-center cursor-pointer hover:border-accent/40 hover:text-accent transition-colors overflow-hidden">
+                        {playerPhotos[index] ? (
+                          <img src={playerPhotos[index]} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Camera size={14} className="text-text-secondary" />
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handlePlayerPhoto(index, e)}
+                          className="hidden"
+                        />
+                      </label>
+                      <input
+                        type="text"
+                        value={player.value}
+                        onChange={(e) => updatePlayer(index, e.target.value)}
+                        placeholder={`${isAr ? 'اللاعب' : 'Player'} ${index + 1}`}
+                        className="flex-1 bg-bg-surface border border-border rounded-xl py-2.5 px-3 md:px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                      />
+                      {form.players.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removePlayerField(player.key)}
+                          className="w-10 h-10 rounded-xl bg-bg-surface border border-border flex items-center justify-center text-danger hover:bg-danger/10 transition-colors shrink-0"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
                 {errors.players && <p className="text-xs text-danger mt-1">{errors.players}</p>}
               </div>
 
               <button
                 type="submit"
-                disabled={!isEditing && maxTeamsReached}
+                disabled={(!isEditing && maxTeamsReached) || submitting}
                 className="w-full bg-accent text-black font-bold py-3.5 rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {isEditing ? 'حفظ التعديلات' : 'إضافة الفريق'}
+                {submitting
+                  ? t('common.loading')
+                  : isEditing
+                    ? t('teams.saveChanges')
+                    : t('teams.addTeamBtn')}
               </button>
             </form>
           </motion.div>

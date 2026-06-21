@@ -34,6 +34,14 @@ function App() {
     root.dir = language === 'ar' ? 'rtl' : 'ltr'
   }, [theme, language])
 
+  useEffect(() => {
+    // Add theme-transition class after initial paint to prevent transitions on load
+    const timer = setTimeout(() => {
+      document.documentElement.classList.add('theme-transition')
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <ErrorBoundary>
       <Routes>

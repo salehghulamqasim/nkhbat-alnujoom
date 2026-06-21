@@ -8,7 +8,37 @@ import LoadingState from '../../components/common/LoadingState'
 import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery } from '../../hooks/useQueries'
-import { useTranslation } from '../../hooks/useTranslation'
+import { useAppStore } from '../../stores/useAppStore'
+import { haptic } from '../../hooks/useHaptics'
+
+const t = {
+  ar: {
+    title: 'الفرق المشاركة',
+    search: 'بحث عن فريق...',
+    all: 'الكل',
+    group: 'المجموعة',
+    awaitingDraw: 'بانتظار القرعة',
+    emptyTitle: 'لا توجد فرق مسجلة',
+    emptyMsg: 'سيتم عرض الفرق المشاركة هنا بعد تسجيلها',
+    noResultsTitle: 'لم يتم العثور على نتائج',
+    noResultsMsg: 'جرب تغيير معايير البحث أو التصفية',
+    loading: 'جاري تحميل الفرق...',
+    error: 'تعذر تحميل الفرق',
+  },
+  en: {
+    title: 'Participating Teams',
+    search: 'Search for a team...',
+    all: 'All',
+    group: 'Group',
+    awaitingDraw: 'Awaiting Draw',
+    emptyTitle: 'No teams registered',
+    emptyMsg: 'Participating teams will appear here after registration',
+    noResultsTitle: 'No results found',
+    noResultsMsg: 'Try changing your search or filter criteria',
+    loading: 'Loading teams...',
+    error: 'Failed to load teams',
+  },
+}
 
 export default function TeamsPage() {
   const { t, lang } = useTranslation()
@@ -51,10 +81,13 @@ export default function TeamsPage() {
 
         <select
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(e) => {
+            haptic.light()
+            setFilter(e.target.value)
+          }}
           className="bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary appearance-none"
         >
-          <option value="all">{t.teams.all}</option>
+          <option value="all">{t[lang].all}</option>
           <option value="A">{lang === 'ar' ? 'المجموعة أ' : 'Group A'}</option>
           <option value="B">{lang === 'ar' ? 'المجموعة ب' : 'Group B'}</option>
           <option value="C">{lang === 'ar' ? 'المجموعة ج' : 'Group C'}</option>
@@ -78,13 +111,18 @@ export default function TeamsPage() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 24 }}
             >
-              <Link to={`/teams/${team.id}`}>
+              <Link
+                to={`/teams/${team.id}`}
+                onClick={() => {
+                  haptic.light()
+                }}
+              >
                 <DarkCard hover className="p-4 flex flex-col items-center justify-center gap-3 aspect-square border-t border-border">
                   <TeamLogo logo={team.logo} name={team.name} size="lg" />
                   <div className="text-center">
                     <h3 className="font-bold text-text-primary">{team.name}</h3>
                     <span className="text-[10px] text-text-secondary">
-                      {team.group ? (lang === 'ar' ? `المجموعة ${t.common.arGroups[team.group] || team.group}` : `Group ${team.group}`) : t.teams.awaitingDraw}
+                      {team.group ? (lang === 'ar' ? `المجموعة ${team.group === 'A' ? 'أ' : team.group === 'B' ? 'ب' : team.group === 'C' ? 'ج' : team.group}` : `Group ${team.group}`) : t[lang].awaitingDraw}
                     </span>
                   </div>
                 </DarkCard>

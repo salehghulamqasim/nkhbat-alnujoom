@@ -24,7 +24,7 @@ export default function AdminErrorBanner() {
         type="button"
         onClick={dismiss}
         className="text-danger/70 hover:text-danger shrink-0"
-        aria-label="إغلاق"
+        aria-label="Dismiss"
       >
         <X size={16} />
       </button>

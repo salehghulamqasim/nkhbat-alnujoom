@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Radio } from 'lucide-react'
+import { haptic } from '../../../hooks/useHaptics'
+import { useI18n } from '../../../i18n/useI18n'
 
 export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA, teamB, liveData }) {
   const [scoreA, setScoreA] = useState(0)
   const [scoreB, setScoreB] = useState(0)
   const [errors, setErrors] = useState({})
+  const { t, isAr } = useI18n()
 
   useEffect(() => {
     if (isOpen && match) {
@@ -19,8 +22,8 @@ export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA
 
   const validate = () => {
     const nextErrors = {}
-    if (scoreA === '' || scoreA < 0) nextErrors.scoreA = 'مطلوب'
-    if (scoreB === '' || scoreB < 0) nextErrors.scoreB = 'مطلوب'
+    if (scoreA === '' || scoreA < 0) nextErrors.scoreA = t('common.required')
+    if (scoreB === '' || scoreB < 0) nextErrors.scoreB = t('common.required')
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -29,6 +32,7 @@ export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA
     e.preventDefault()
     if (!validate()) return
 
+    haptic.intense()
     const events = (liveData?.events || []).slice()
     onSubmit({
       scoreA: Number(scoreA),
@@ -62,7 +66,7 @@ export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA
               <div>
                 <h2 className="text-lg font-bold flex items-center gap-2">
                   <Radio size={18} className="text-live" />
-                  تحديث النتيجة المباشرة
+                  {t('matches.liveScoreUpdate')}
                 </h2>
                 <p className="text-xs text-text-secondary mt-0.5">
                   {teamA?.name} vs {teamB?.name}
@@ -78,7 +82,7 @@ export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA
             </div>
 
             <form onSubmit={handleSubmit} className="p-4 space-y-5 pb-8">
-              <div className="flex items-center justify-center gap-6 py-4">
+              <div className="flex items-center justify-center gap-4 md:gap-6 py-4">
                 <div className="text-center flex-1">
                   <p className="text-sm font-bold mb-2 truncate">{teamA?.name}</p>
                   <input
@@ -86,7 +90,7 @@ export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA
                     min="0"
                     value={scoreA}
                     onChange={(e) => setScoreA(e.target.value)}
-                    className="w-20 h-16 text-3xl font-bold text-center bg-bg-surface border border-border rounded-xl focus:outline-none focus:border-live"
+                    className="w-16 md:w-20 h-14 md:h-16 text-2xl md:text-3xl font-bold text-center bg-bg-surface border border-border rounded-xl focus:outline-none focus:border-live"
                     dir="ltr"
                   />
                   {errors.scoreA && <p className="text-xs text-danger mt-1">{errors.scoreA}</p>}
@@ -99,7 +103,7 @@ export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA
                     min="0"
                     value={scoreB}
                     onChange={(e) => setScoreB(e.target.value)}
-                    className="w-20 h-16 text-3xl font-bold text-center bg-bg-surface border border-border rounded-xl focus:outline-none focus:border-live"
+                    className="w-16 md:w-20 h-14 md:h-16 text-2xl md:text-3xl font-bold text-center bg-bg-surface border border-border rounded-xl focus:outline-none focus:border-live"
                     dir="ltr"
                   />
                   {errors.scoreB && <p className="text-xs text-danger mt-1">{errors.scoreB}</p>}
@@ -107,14 +111,14 @@ export default function LiveScoreModal({ isOpen, onClose, onSubmit, match, teamA
               </div>
 
               <p className="text-xs text-text-secondary text-center">
-                سيتم تحديث النتيجة فوراً على صفحة المباراة المباشرة
+                {t('matches.liveUpdateDesc')}
               </p>
 
               <button
                 type="submit"
                 className="w-full bg-live hover:bg-live/90 text-white font-bold py-3.5 rounded-xl transition-colors"
               >
-                تحديث النتيجة
+                {t('matches.scoreA11n')}
               </button>
             </form>
           </motion.div>

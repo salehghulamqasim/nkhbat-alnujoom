@@ -337,72 +337,91 @@ export default function ScheduleEagleEyeView({
       <div className="overflow-x-auto rounded-xl border border-zinc-800/60">
         <div ref={containerRef} className="min-w-[800px] w-full bg-[#0e0e0e] p-4">
           <table className="w-full text-sm" dir={isAr ? 'rtl' : 'ltr'}>
-            <thead>
-              <tr className="bg-zinc-900/80 border-b border-zinc-800">
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-10">#</th>
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
-                  {isAr ? 'التاريخ' : 'Date'}
-                </th>
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
-                  {isAr ? 'الوقت' : 'Time'}
-                </th>
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
-                  {isAr ? 'المجموعة' : 'Group'}
-                </th>
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center">
-                  {isAr ? 'الفريق' : 'Home'}
-                </th>
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-20">
-                  {isAr ? 'النتيجة' : 'Score'}
-                </th>
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center">
-                  {isAr ? 'الضيف' : 'Away'}
-                </th>
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
-                  {isAr ? 'الملعب' : 'Venue'}
-                </th>
-                <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-14">
-                  {isAr ? 'الحالة' : 'Status'}
-                </th>
+          <thead>
+            <tr className="bg-zinc-900/80 border-b border-zinc-800">
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-10">#</th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
+                {isAr ? 'التاريخ' : 'Date'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
+                {isAr ? 'الوقت' : 'Time'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
+                {isAr ? 'المجموعة' : 'Group'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center">
+                {isAr ? 'الفريق' : 'Home'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-20">
+                {isAr ? 'النتيجة' : 'Score'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center">
+                {isAr ? 'الضيف' : 'Away'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center whitespace-nowrap">
+                {isAr ? 'الملعب' : 'Venue'}
+              </th>
+              <th className="px-3 py-3 text-xs font-medium text-zinc-500 text-center w-14">
+                {isAr ? 'الحالة' : 'Status'}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedMatches.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="px-4 py-12 text-center text-zinc-500 text-sm">
+                  {isAr ? 'لا توجد مباريات' : 'No matches found'}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {sortedMatches.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-zinc-500 text-sm">
-                    {isAr ? 'لا توجد مباريات' : 'No matches found'}
-                  </td>
-                </tr>
-              ) : (
-                sortedMatches.map((match, idx) => {
-                  const tA = teamsById[match.teamA]
-                  const tB = teamsById[match.teamB]
-                  const status = getMatchStatus(match)
-                  const score = getScore(match)
-                  const badge = STATUS_BADGE[status]
-                  const isLive = status === 'live'
+            ) : (
+              sortedMatches.map((match, idx) => {
+                const tA = teamsById[match.teamA]
+                const tB = teamsById[match.teamB]
+                const status = getMatchStatus(match)
+                const score = getScore(match)
+                const badge = STATUS_BADGE[status]
+                const isLive = status === 'live'
 
-                  return (
-                    <motion.tr
-                      key={match.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: idx * 0.02 }}
-                      onClick={() => setSelectedMatch(match)}
-                      className="border-b border-zinc-800/40 hover:bg-zinc-800/30 cursor-pointer transition-colors"
-                    >
-                      <td className="px-3 py-3 text-center text-xs text-zinc-500">
+                return (
+                  <motion.tr
+                    key={match.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: idx * 0.02 }}
+                    onClick={() => setSelectedMatch(match)}
+                    className="border-b border-zinc-800/40 hover:bg-zinc-800/30 cursor-pointer transition-colors"
+                  >
+                    <td className="px-3 py-3 text-center text-xs text-zinc-500">
                         {globalSortedMatches.findIndex((m) => m.id === match.id) + 1}
                       </td>
-                      <td className="px-3 py-3 text-center text-xs text-zinc-300 whitespace-nowrap">
-                        {match.date || '—'}
-                      </td>
-                      <td className="px-3 py-3 text-center text-xs text-zinc-300 whitespace-nowrap">
-                        {match.time || '—'}
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-accent/10 text-accent text-[10px] font-bold border border-accent/20">
-                          {match.group}
+                    <td className="px-3 py-3 text-center text-xs text-zinc-300 whitespace-nowrap">
+                      {match.date || '—'}
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs text-zinc-300 whitespace-nowrap">
+                      {match.time || '—'}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-accent/10 text-accent text-[10px] font-bold border border-accent/20">
+                        {match.group}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
+                        {!isAr && tA?.logo ? (
+                          <img src={tA.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
+                        ) : null}
+                        <span className="text-xs font-medium truncate max-w-[100px]">
+                          {tA?.name || match.teamA || '—'}
+                        </span>
+                        {isAr && tA?.logo ? (
+                          <img src={tA.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      {score ? (
+                        <span className={`text-sm font-bold ${isLive ? 'text-amber-400' : 'text-accent'}`}>
+                          {score}
                         </span>
                       </td>
                       <td className="px-3 py-3">
@@ -448,13 +467,26 @@ export default function ScheduleEagleEyeView({
                           {isLive && <Zap size={8} className="animate-pulse" />}
                           {isAr ? badge.label : badge.labelEn}
                         </span>
-                      </td>
-                    </motion.tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
+                        {!isAr && tB?.logo ? (
+                          <img src={tB.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-center text-xs text-zinc-400 truncate max-w-[100px]">
+                      {match.venue || '—'}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${badge.bg} ${badge.text}`}>
+                        {isLive && <Zap size={8} className="animate-pulse" />}
+                        {isAr ? badge.label : badge.labelEn}
+                      </span>
+                    </td>
+                  </motion.tr>
+                )
+              })
+            )}
+          </tbody>
+        </table>
         </div>
       </div>
 

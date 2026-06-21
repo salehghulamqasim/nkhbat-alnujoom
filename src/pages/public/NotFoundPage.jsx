@@ -1,6 +1,23 @@
 import { Link } from 'react-router-dom'
 import { Home, ArrowLeft } from 'lucide-react'
-import { useTranslation } from '../../hooks/useTranslation'
+import { haptic } from '../../hooks/useHaptics'
+
+const t = {
+  ar: {
+    title: 'الصفحة غير موجودة',
+    subtitle: 'عذراً، الصفحة التي تبحث عنها غير موجودة',
+    desc: 'قد يكون الرابط غير صحيح أو تم نقل الصفحة إلى رابط آخر',
+    home: 'العودة للرئيسية',
+    back: 'رجوع',
+  },
+  en: {
+    title: 'Page Not Found',
+    subtitle: 'Sorry, the page you are looking for does not exist',
+    desc: 'The link may be incorrect or the page has been moved',
+    home: 'Go Home',
+    back: 'Go Back',
+  },
+}
 
 export default function NotFoundPage() {
   const { t } = useTranslation()
@@ -30,6 +47,7 @@ export default function NotFoundPage() {
 
       <Link
         to="/"
+        onClick={() => haptic.light()}
         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-black font-bold text-sm hover:bg-accent-light transition-all shadow-lg shadow-accent/20"
       >
         <Home size={18} strokeWidth={2} />

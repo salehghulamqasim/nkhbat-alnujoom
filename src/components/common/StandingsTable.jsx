@@ -1,24 +1,47 @@
 import { Link } from 'react-router-dom'
-import { useTranslation } from '../../hooks/useTranslation'
+import { useAppStore } from '../../stores/useAppStore'
 import DarkCard from './DarkCard'
 import TeamLogo from './TeamLogo'
 
+const t = {
+  ar: {
+    rank: '#',
+    team: 'الفريق',
+    played: 'لعب',
+    won: 'ف',
+    drawn: 'ت',
+    lost: 'خ',
+    gd: '±',
+    pts: 'نقاط',
+  },
+  en: {
+    rank: '#',
+    team: 'Team',
+    played: 'P',
+    won: 'W',
+    drawn: 'D',
+    lost: 'L',
+    gd: 'GD',
+    pts: 'PTS',
+  },
+}
+
 export default function StandingsTable({ standings }) {
-  const { t } = useTranslation()
+  const lang = useAppStore((s) => s.language)
 
   return (
     <DarkCard className="overflow-hidden">
       <table className="w-full text-sm text-start">
         <thead className="bg-bg-surface text-text-secondary text-xs uppercase">
           <tr>
-            <th className="py-3 px-3 w-8 text-center">{t.standingsTable.rank}</th>
-            <th className="py-3 px-2 text-start">{t.standingsTable.team}</th>
-            <th className="py-3 px-1 text-center w-8">{t.standingsTable.played}</th>
-            <th className="py-3 px-1 text-center w-8">{t.standingsTable.won}</th>
-            <th className="py-3 px-1 text-center w-8">{t.standingsTable.drawn}</th>
-            <th className="py-3 px-1 text-center w-8">{t.standingsTable.lost}</th>
-            <th className="py-3 px-1 text-center w-10">{t.standingsTable.gd}</th>
-            <th className="py-3 px-3 text-center w-12 font-bold text-text-primary">{t.standingsTable.pts}</th>
+            <th className="py-3 px-3 w-8 text-center">{t[lang].rank}</th>
+            <th className="py-3 px-2 text-start">{t[lang].team}</th>
+            <th className="py-3 px-1 text-center w-8">{t[lang].played}</th>
+            <th className="py-3 px-1 text-center w-8">{t[lang].won}</th>
+            <th className="py-3 px-1 text-center w-8">{t[lang].drawn}</th>
+            <th className="py-3 px-1 text-center w-8">{t[lang].lost}</th>
+            <th className="py-3 px-1 text-center w-10">{t[lang].gd}</th>
+            <th className="py-3 px-3 text-center w-12 font-bold text-text-primary">{t[lang].pts}</th>
           </tr>
         </thead>
         <tbody>

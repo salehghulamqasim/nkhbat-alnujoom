@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Calendar } from 'lucide-react'
+import { haptic } from '../../../hooks/useHaptics'
+import { useI18n } from '../../../i18n/useI18n'
 
 export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA, teamB }) {
   const [form, setForm] = useState({ date: '', time: '', venue: '' })
   const [errors, setErrors] = useState({})
+  const { t, isAr } = useI18n()
 
   useEffect(() => {
     if (isOpen && match) {
@@ -19,9 +22,9 @@ export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA
 
   const validate = () => {
     const nextErrors = {}
-    if (!form.date) nextErrors.date = 'التاريخ مطلوب'
-    if (!form.time) nextErrors.time = 'الوقت مطلوب'
-    if (!form.venue.trim()) nextErrors.venue = 'الملعب مطلوب'
+    if (!form.date) nextErrors.date = t('matches.dateRequired')
+    if (!form.time) nextErrors.time = t('matches.timeRequired')
+    if (!form.venue.trim()) nextErrors.venue = t('matches.venueRequired')
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -29,6 +32,8 @@ export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
+
+    haptic.intense()
     onSubmit(form)
     onClose()
   }
@@ -55,7 +60,7 @@ export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA
           >
             <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-bg-card/95 backdrop-blur-md">
               <div>
-                <h2 className="text-lg font-bold">تعديل موعد المباراة</h2>
+                <h2 className="text-lg font-bold">{t('matches.editDate')}</h2>
                 <p className="text-xs text-text-secondary mt-0.5">
                   {teamA?.name} vs {teamB?.name}
                 </p>
@@ -73,13 +78,15 @@ export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA
               <div className="flex items-center gap-3 p-3 rounded-xl bg-accent/10 border border-accent/20 text-sm">
                 <Calendar size={18} className="text-accent shrink-0" />
                 <p className="text-text-secondary">
-                  حدّد التاريخ والوقت حتى يعرف الفريقان موعد المباراة
+                  {isAr
+                    ? 'حدّد التاريخ والوقت حتى يعرف الفريقان موعد المباراة'
+                    : 'Set the date and time so both teams know when the match is'}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">التاريخ</label>
+                  <label className="block text-sm text-text-secondary mb-2">{t('matches.date')}</label>
                   <input
                     type="date"
                     value={form.date}
@@ -90,7 +97,7 @@ export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA
                   {errors.date && <p className="text-xs text-danger mt-1">{errors.date}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">الوقت</label>
+                  <label className="block text-sm text-text-secondary mb-2">{t('matches.time')}</label>
                   <input
                     type="time"
                     value={form.time}
@@ -103,12 +110,12 @@ export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA
               </div>
 
               <div>
-                <label className="block text-sm text-text-secondary mb-2">الملعب</label>
+                <label className="block text-sm text-text-secondary mb-2">{t('matches.venue')}</label>
                 <input
                   type="text"
                   value={form.venue}
                   onChange={(e) => setForm((prev) => ({ ...prev, venue: e.target.value }))}
-                  placeholder="مثال: ملعب النجوم"
+                  placeholder={isAr ? 'مثال: ملعب النجوم' : 'e.g. Stars Stadium'}
                   className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
                 />
                 {errors.venue && <p className="text-xs text-danger mt-1">{errors.venue}</p>}
@@ -118,7 +125,7 @@ export default function MatchDateModal({ isOpen, onClose, onSubmit, match, teamA
                 type="submit"
                 className="w-full bg-accent hover:bg-accent-hover text-black font-bold py-3.5 rounded-xl transition-colors"
               >
-                حفظ الموعد
+                {t('common.save')}
               </button>
             </form>
           </motion.div>

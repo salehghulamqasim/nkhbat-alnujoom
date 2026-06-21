@@ -1,14 +1,22 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle } from 'lucide-react'
+import { haptic } from '../../../hooks/useHaptics'
+import { useI18n } from '../../../i18n/useI18n'
 
 export default function DeleteConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  title = 'حذف الفريق',
+  title,
   itemName,
   message,
 }) {
+  const { t, isAr } = useI18n()
+
+  const defaultMessage = isAr
+    ? `هل أنت متأكد من حذف "${itemName}"؟ لا يمكن التراجع عن هذا الإجراء.`
+    : `Are you sure you want to delete "${itemName}"? This action cannot be undone.`
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -35,35 +43,31 @@ export default function DeleteConfirmModal({
               <div>
                 <h3 className="text-lg font-bold mb-1">{title}</h3>
                 <p className="text-sm text-text-secondary">
-                  {message ? (
-                    message
-                  ) : (
-                    <>
-                      هل أنت متأكد من حذف{' '}
-                      <span className="text-text-primary font-bold">{itemName}</span>؟ لا يمكن التراجع
-                      عن هذا الإجراء.
-                    </>
-                  )}
+                  {message || defaultMessage}
                 </p>
               </div>
 
               <div className="flex gap-3 w-full mt-2">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => {
+                    haptic.light()
+                    onClose()
+                  }}
                   className="flex-1 py-3 rounded-xl bg-bg-surface border border-border hover:bg-bg-primary transition-colors font-medium"
                 >
-                  إلغاء
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
+                    haptic.heavy()
                     onConfirm()
                     onClose()
                   }}
                   className="flex-1 py-3 rounded-xl bg-danger text-white font-bold hover:bg-danger/90 transition-colors"
                 >
-                  حذف
+                  {t('common.delete')}
                 </button>
               </div>
             </div>
