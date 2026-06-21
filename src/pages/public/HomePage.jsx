@@ -12,88 +12,46 @@ import LoadingState from '../../components/common/LoadingState'
 import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import TeamLogo from '../../components/common/TeamLogo'
-import { useTeamsQuery, useMatchesQuery, useSettingsQuery } from '../../hooks/useQueries'
+import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { enrichMatch } from '../../utils/matchHelpers'
 import { calculateTopScorers, getTotalGoals } from '../../utils/scorers'
 import { MAX_TEAMS } from '../../stores/useTeamsStore'
 import { useAppStore } from '../../stores/useAppStore'
-
-const t = {
-  ar: {
-    title: 'بطولة نخبة النجوم',
-    subtitle: 'بطولة',
-    groupsTable: 'ترتيب المجموعات',
-    matchesSchedule: 'جدول المباريات',
-    upcomingMatches: 'المباريات القادمة',
-    latestResults: 'آخر النتائج',
-    topScorers: 'الهدافون',
-    viewAll: 'عرض الكل',
-    noUpcoming: 'لا توجد مباريات قادمة',
-    noUpcomingDesc: 'سيتم عرض المباريات المجدولة هنا',
-    noResults: 'لا توجد نتائج بعد',
-    noResultsDesc: 'ستظهر نتائج المباريات المنتهية هنا',
-    noScorers: 'لا يوجد هدافون بعد',
-    noScorersDesc: 'ستظهر قائمة الهدافين بعد تسجيل النتائج',
-    team: 'فريق',
-    match: 'مباراة',
-    goal: 'هدف',
-    limit: 'حد أقصى',
-  },
-  en: {
-    title: 'Star Elite Cup',
-    subtitle: 'Championship',
-    groupsTable: 'Group Standings',
-    matchesSchedule: 'Match Schedule',
-    upcomingMatches: 'Upcoming Matches',
-    latestResults: 'Latest Results',
-    topScorers: 'Top Scorers',
-    viewAll: 'View All',
-    noUpcoming: 'No upcoming matches',
-    noUpcomingDesc: 'Scheduled matches will appear here',
-    noResults: 'No results yet',
-    noResultsDesc: 'Completed match results will appear here',
-    noScorers: 'No top scorers yet',
-    noScorersDesc: 'Top scorers will appear after results are recorded',
-    team: 'Teams',
-    match: 'Matches',
-    goal: 'Goals',
-    limit: 'Max Teams',
-  }
-}
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const { theme, toggleTheme } = useAppStore()
+  const { t, lang } = useTranslation()
+
+  const { language, toggleLanguage } = useAppStore()
+
+  const isRtl = lang === 'ar'
   const containerRef = useRef(null)
-  const { language, theme, toggleTheme, toggleLanguage } = useAppStore()
+
   const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
   const { data: matches = [], isLoading: matchesLoading, isError: matchesError, refetch: refetchMatches } = useMatchesQuery()
-  const { data: settings } = useSettingsQuery()
-
-  const lang = language === 'ar' ? 'ar' : 'en'
-  const isRtl = lang === 'ar'
 
   const isLoading = teamsLoading || matchesLoading
   const isError = teamsError || matchesError
 
+  // GSAP Entrance Animations
   useEffect(() => {
-    if (isLoading) return // Don't animate while loading
-    
-    let ctx = gsap.context(() => {
-      // Only animate Y position, opacity stays 1
-      gsap.from('.hero-content', {
-        y: 15,
-        duration: 0.7,
-        ease: 'power2.out',
-        stagger: 0.08,
-      })
-    }, containerRef)
-    return () => ctx.revert()
-  }, [isLoading])
+    if (isLoading || isError) return
 
-  const enrichedMatches = useMemo(
-    () => matches.map((m) => enrichMatch(m, teams)),
-    [matches, teams]
-  )
+    const ctx = gsap.context(() => {
+      // Smooth fade-in for hero contents
+      gsap.fromTo(
+        '.hero-content',
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1, ease: 'power3.out', stagger: 0.15 }
+      )
+    }, containerRef)
+
+    return () => ctx.revert()
+  }, [isLoading, isError])
+
+  const enrichedMatches = useMemo(() => matches.map((m) => enrichMatch(m, teams)), [matches, teams])
 
   const upcomingMatches = useMemo(
     () =>
@@ -113,16 +71,16 @@ export default function HomePage() {
     [enrichedMatches]
   )
 
-  const topScorers = useMemo(() => calculateTopScorers(teams, matches).slice(0, 5), [teams, matches])
+  const topScorersList = useMemo(() => calculateTopScorers(teams, matches).slice(0, 5), [teams, matches])
   const totalGoals = useMemo(() => getTotalGoals(matches), [matches])
 
-  if (isLoading) return <LoadingState message={lang === 'ar' ? 'جاري تحميل البطولة...' : 'Loading tournament...'} />
+  if (isLoading) return <LoadingState message={t.home.loading} />
   
   if (isError) {
     return (
       <div className="px-4 py-6">
         <ErrorState
-          message={lang === 'ar' ? 'تعذر تحميل بيانات البطولة. تأكد من إعداد Firebase.' : 'Failed to load tournament data. Check Firebase setup.'}
+          message={t.home.error}
           onRetry={() => {
             refetchTeams()
             refetchMatches()
@@ -146,7 +104,7 @@ export default function HomePage() {
           aria-label={language === 'ar' ? 'الإعدادات' : 'Settings'}
         >
           <Settings size={18} strokeWidth={1.75} />
-        </button>
+        </Link>
 
         <div className="flex items-center gap-2 pointer-events-auto">
           <button
@@ -192,12 +150,12 @@ export default function HomePage() {
           <div className={`flex flex-col gap-3 sm:gap-4 max-w-lg ${isRtl ? 'items-start text-right' : 'items-start text-left'}`}>
             {/* Subtitle badge */}
             <span className="hero-content opacity-100 text-accent-light text-xs sm:text-sm font-bold uppercase tracking-widest bg-accent/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-accent/20 whitespace-nowrap">
-              {t[lang].subtitle}
+              {t.home.subtitle}
             </span>
 
             {/* Main Title */}
             <h2 className="hero-content opacity-100 text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-accent drop-shadow-[0_2px_14px_rgba(0,0,0,0.95)] leading-tight">
-              {t[lang].title}
+              {t.home.title}
             </h2>
 
             {/* Gold Stars */}
@@ -210,34 +168,34 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Stats Cards floating over the Hero bottom */}
+       {/* Stats Cards floating over the Hero bottom */}
       <div className="relative z-30 -mt-14 sm:-mt-16 md:-mt-20 px-4 sm:px-6 max-w-2xl mx-auto">
         <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           <StatCard
             key={`teams-${lang}-${teams.length}`}
             value={teams.length}
-            label={t[lang].team}
+            label={t.home.team}
             delay={0}
             className="backdrop-blur-md shadow-md py-3 sm:py-4"
           />
           <StatCard
             key={`matches-${lang}-${matches.length}`}
             value={matches.length}
-            label={t[lang].match}
+            label={t.home.match}
             delay={0.1}
             className="backdrop-blur-md shadow-md py-3 sm:py-4"
           />
           <StatCard
             key={`goals-${lang}-${totalGoals}`}
             value={totalGoals}
-            label={t[lang].goal}
+            label={t.home.goal}
             delay={0.2}
             className="backdrop-blur-md shadow-md py-3 sm:py-4"
           />
           <StatCard
             key={`limit-${lang}-${MAX_TEAMS}`}
             value={MAX_TEAMS}
-            label={t[lang].limit}
+            label={t.home.limit}
             delay={0.3}
             className="backdrop-blur-md shadow-md py-3 sm:py-4"
           />
@@ -250,12 +208,12 @@ export default function HomePage() {
         <div className="flex gap-3 pt-2 sm:pt-4">
           <Link to="/standings" className="flex-1">
             <GoldButton className="w-full text-xs sm:text-sm font-bold h-11 rounded-xl shadow-lg shadow-accent/15">
-              {t[lang].groupsTable}
+              {t.home.groupsTable}
             </GoldButton>
           </Link>
           <Link to="/matches" className="flex-1">
             <GoldButton variant="ghost" className="w-full text-xs sm:text-sm font-bold h-11 rounded-xl">
-              {t[lang].matchesSchedule}
+              {t.home.matchesSchedule}
             </GoldButton>
           </Link>
         </div>
@@ -263,15 +221,17 @@ export default function HomePage() {
         {/* Upcoming Matches */}
         <section>
           <div className="flex items-center justify-between mb-4 px-1">
-            <h2 className="text-base font-bold">{t[lang].upcomingMatches}</h2>
-            <Link to="/matches" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
-              {t[lang].viewAll}
-              <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
-            </Link>
+            <h2 className="text-base font-bold">{t.home.upcomingMatches}</h2>
+            {upcomingMatches.length > 0 && (
+              <Link to="/matches" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
+                {t.home.viewAll}
+                <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
+              </Link>
+            )}
           </div>
 
           {upcomingMatches.length === 0 ? (
-            <EmptyState title={t[lang].noUpcoming} message={t[lang].noUpcomingDesc} />
+            <EmptyState title={t.home.noUpcoming} message={t.home.noUpcomingDesc} />
           ) : (
             <motion.div
               className="space-y-3"
@@ -287,31 +247,33 @@ export default function HomePage() {
                   key={match.id}
                   variants={{
                     hidden: { y: 10, opacity: 0 },
-                  visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } },
-                }}
-              >
-                <MatchRow
-                  match={match}
-                  onClick={() => navigate(`/matches/${match.id}`)}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+                    visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } },
+                  }}
+                >
+                  <MatchRow
+                    match={match}
+                    onClick={() => navigate(`/matches/${match.id}`)}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
         </section>
 
         {/* Latest Results */}
         <section>
           <div className="flex items-center justify-between mb-4 px-1">
-            <h2 className="text-base font-bold">{t[lang].latestResults}</h2>
-            <Link to="/matches" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
-              {t[lang].viewAll}
-              <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
-            </Link>
+            <h2 className="text-base font-bold">{t.home.latestResults}</h2>
+            {latestResults.length > 0 && (
+              <Link to="/matches" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
+                {t.home.viewAll}
+                <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
+              </Link>
+            )}
           </div>
 
           {latestResults.length === 0 ? (
-            <EmptyState title={t[lang].noResults} message={t[lang].noResultsDesc} />
+            <EmptyState title={t.home.noResults} message={t.home.noResultsDesc} />
           ) : (
             <div className="space-y-3">
               {latestResults.map((match) => (
@@ -328,34 +290,36 @@ export default function HomePage() {
         {/* Top Scorers */}
         <section>
           <div className="flex items-center justify-between mb-4 px-1">
-            <h2 className="text-base font-bold">{t[lang].topScorers}</h2>
-            <Link to="/top-scorers" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
-              {t[lang].viewAll}
-              <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
-            </Link>
+            <h2 className="text-base font-bold">{t.home.topScorers}</h2>
+            {topScorersList.length > 0 && (
+              <Link to="/top-scorers" className="text-xs text-text-secondary hover:text-accent flex items-center gap-0.5">
+                {t.home.viewAll}
+                <ChevronLeft size={14} className="mt-[1px] ltr:rotate-180" />
+              </Link>
+            )}
           </div>
 
-          {topScorers.length === 0 ? (
-            <EmptyState title={t[lang].noScorers} message={t[lang].noScorersDesc} />
+          {topScorersList.length === 0 ? (
+            <EmptyState title={t.home.noScorers} message={t.home.noScorersDesc} />
           ) : (
             <div className="space-y-2">
-              {topScorers.map((scorer, index) => (
+              {topScorersList.map((scorer, index) => (
                 <DarkCard key={scorer.id} className="p-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-full bg-bg-surface flex items-center justify-center text-[10px] font-bold text-accent">
                       {index + 1}
                     </span>
-                  <TeamLogo logo={scorer.logo} name={scorer.team} size="sm" />
-                  <div>
-                    <p className="font-bold text-xs sm:text-sm">{scorer.name}</p>
-                    <p className="text-[9px] text-text-secondary">{scorer.team}</p>
+                    <TeamLogo logo={scorer.logo} name={scorer.team} size="sm" />
+                    <div>
+                      <p className="font-bold text-xs sm:text-sm">{scorer.name}</p>
+                      <p className="text-[9px] text-text-secondary">{scorer.team}</p>
+                    </div>
                   </div>
-                </div>
-                <span className="font-bold text-accent text-sm">{scorer.goals}</span>
-              </DarkCard>
-            ))}
-          </div>
-        )}
+                  <span className="font-bold text-accent text-sm">{scorer.goals}</span>
+                </DarkCard>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>

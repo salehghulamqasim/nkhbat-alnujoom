@@ -64,9 +64,14 @@ export default function MatchesPage() {
     )
   }
 
+  const isAr = lang === 'ar'
+  const indicatorStyle = isAr
+    ? { right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, left: 'auto' }
+    : { left: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, right: 'auto' }
+
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t.matches.title}</h1>
 
       <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative" dir={isAr ? 'rtl' : 'ltr'}>
         {filters.map((f) => (
@@ -90,7 +95,7 @@ export default function MatchesPage() {
       </div>
 
       {filteredMatches.length === 0 ? (
-        <EmptyState title={t[lang].noMatches} message={t[lang].noMatchesDesc} />
+        <EmptyState title={t.matches.noMatches} message={t.matches.noMatchesDesc} />
       ) : (
         <motion.div
           initial={{ opacity: 0 }}

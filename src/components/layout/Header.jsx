@@ -70,7 +70,7 @@ export default function Header() {
           aria-label={language === 'ar' ? 'الإعدادات' : 'Settings'}
         >
           <Settings size={18} strokeWidth={1.75} />
-        </button>
+        </Link>
       )}
 
       {/* Center: Title (empty for home screen) */}

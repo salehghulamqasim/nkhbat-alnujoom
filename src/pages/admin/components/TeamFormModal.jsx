@@ -10,6 +10,7 @@ const emptyForm = {
   manager: '',
   players: [{ key: crypto.randomUUID(), value: '' }],
   logo: null,
+  group: '',
 }
 
 export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeamsReached }) {
@@ -292,6 +293,28 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
                   className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
                 />
                 {errors.manager && <p className="text-xs text-danger mt-1">{errors.manager}</p>}
+              </div>
+
+              {/* Group selection */}
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">المجموعة</label>
+                <div className="relative">
+                  <select
+                    value={form.group}
+                    onChange={(e) => setForm((prev) => ({ ...prev, group: e.target.value }))}
+                    className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="">بدون مجموعة (لم يتم السحب بعد)</option>
+                    <option value="A">المجموعة A</option>
+                    <option value="B">المجموعة B</option>
+                    <option value="C">المجموعة C</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center px-4 text-text-secondary">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* Players */}

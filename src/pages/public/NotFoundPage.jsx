@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { useAppStore } from '../../stores/useAppStore'
 import { Home, ArrowLeft } from 'lucide-react'
 import { haptic } from '../../hooks/useHaptics'
 
@@ -21,9 +20,8 @@ const t = {
 }
 
 export default function NotFoundPage() {
-  const { language } = useAppStore()
-  const lang = language === 'ar' ? 'ar' : 'en'
-  const tx = t[lang]
+  const { t } = useTranslation()
+  const tx = t.notFound
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">

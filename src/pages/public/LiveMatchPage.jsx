@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, MapPin, Clock, Calendar, Radio } from 'lucide-react'
+import { MapPin, Clock, Calendar, Radio } from 'lucide-react'
 import TeamLogo from '../../components/common/TeamLogo'
 import DarkCard from '../../components/common/DarkCard'
 import LoadingState from '../../components/common/LoadingState'

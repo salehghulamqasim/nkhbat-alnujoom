@@ -1,8 +1,5 @@
 export function calculateStandings(teams, matches, group) {
   const groupTeams = teams.filter((t) => t.group === group)
-  const groupMatches = matches.filter(
-    (m) => m.group === group && m.status === 'completed' && m.result
-  )
 
   const table = {}
   groupTeams.forEach((team) => {
@@ -19,6 +16,10 @@ export function calculateStandings(teams, matches, group) {
       pts: 0,
     }
   })
+
+  const groupMatches = matches.filter(
+    (m) => m.status === 'completed' && m.result && table[m.teamA] && table[m.teamB]
+  )
 
   groupMatches.forEach((match) => {
     const { scoreA, scoreB } = match.result

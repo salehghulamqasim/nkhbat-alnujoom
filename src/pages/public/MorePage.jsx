@@ -6,46 +6,12 @@ import { useAppStore } from '../../stores/useAppStore'
 import { haptic } from '../../hooks/useHaptics'
 
 export default function MorePage() {
-  const { theme, toggleTheme, language, toggleLanguage } = useAppStore()
-  const lang = language === 'ar' ? 'ar' : 'en'
+  const { theme, toggleTheme, toggleLanguage } = useAppStore()
+  const { t, lang } = useTranslation()
   const isRtl = lang === 'ar'
 
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight
-
-  const t = {
-    ar: {
-      title: 'الإعدادات',
-      subtitle: 'تخصيص المظهر وتفضيلات التطبيق',
-      preferences: 'تفضيلات التطبيق',
-      theme: 'المظهر',
-      themeDark: 'داكن',
-      themeLight: 'فاتح',
-      themeDesc: 'تبديل بين الوضع الداكن والفاتح',
-      language: 'اللغة',
-      languageDesc: 'تغيير لغة واجهة التطبيق',
-      admin: 'لوحة التحكم',
-      adminDesc: 'إدارة البطولة والنتائج والفرق',
-      appName: 'بطولة نخبة النجوم',
-      version: 'الإصدار 2026',
-    },
-    en: {
-      title: 'Settings',
-      subtitle: 'Customize the appearance and preferences',
-      preferences: 'App Preferences',
-      theme: 'Theme',
-      themeDark: 'Dark',
-      themeLight: 'Light',
-      themeDesc: 'Toggle between dark and light mode',
-      language: 'Language',
-      languageDesc: 'Change the app interface language',
-      admin: 'Admin Panel',
-      adminDesc: 'Manage tournament, scores, and teams',
-      appName: 'Star Elite Cup',
-      version: 'Version 2026',
-    },
-  }
-
-  const tx = t[lang]
+  const tx = t.more
 
   return (
     <div className="pb-10">

@@ -63,7 +63,7 @@ export const useTeamsStore = create((set, get) => ({
     }
   },
 
-  addTeam: async ({ name, manager, players, logo }) => {
+  addTeam: async ({ name, manager, players, logo, group }) => {
     if (get().teams.length >= MAX_TEAMS) return false
     try {
       const cleanName = (name || '').trim()
@@ -102,7 +102,7 @@ export const useTeamsStore = create((set, get) => ({
     }
   },
 
-  updateTeam: async (id, { name, manager, players, logo }) => {
+  updateTeam: async (id, { name, manager, players, logo, group }) => {
     try {
       const cleanName = (name || '').trim()
       const cleanManager = (manager || '').trim()
@@ -127,6 +127,7 @@ export const useTeamsStore = create((set, get) => ({
                 manager: cleanManager,
                 players: normalizedPlayers,
                 logo: logo ?? team.logo,
+                group: group || null,
               }
             : team
         ),

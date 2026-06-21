@@ -66,11 +66,11 @@ export default function TopScorersPage() {
   return (
     <div className="px-4 py-6 space-y-8">
       {top3.length > 0 && (
-        <div className="flex items-end justify-center gap-2 h-48 mb-8 mt-12">
+        <div className="flex items-end justify-center gap-2 h-52 mb-8 mt-12">
           {podiumOrder.map((scorer, idx) => {
             const rank = scorer === top3[0] ? 1 : scorer === top3[1] ? 2 : 3
             const isFirst = rank === 1
-            const heights = { 1: 'h-32', 2: 'h-24', 3: 'h-20' }
+            const heights = { 1: 'h-36', 2: 'h-28', 3: 'h-24' }
             const borders = { 1: 'border-accent', 2: 'border-slate-300', 3: 'border-amber-700' }
             const badgeColors = { 1: 'bg-accent text-black', 2: 'bg-slate-300 text-black', 3: 'bg-amber-700 text-white' }
 
@@ -94,6 +94,7 @@ export default function TopScorersPage() {
                   className={`w-full ${heights[rank]} bg-gradient-to-t from-bg-surface ${isFirst ? 'to-accent/20 border-t-2 border-accent shadow-[0_0_20px_rgba(212,175,55,0.2)]' : rank === 2 ? 'to-slate-400/20 border-t border-slate-400/40' : 'to-amber-600/20 border-t border-amber-600/40'} rounded-t-xl flex flex-col items-center justify-end pb-3`}
                 >
                   <span className={`${isFirst ? 'text-sm' : 'text-xs'} font-bold text-center px-1 line-clamp-1`}>{scorer.name}</span>
+                  <span className="text-[10px] text-text-secondary text-center px-1 line-clamp-1">{scorer.team}</span>
                   <span className={`${isFirst ? 'text-xl' : 'text-lg'} font-bold text-accent`}>{scorer.goals}</span>
                 </div>
               </motion.div>

@@ -301,6 +301,16 @@ export default function DrawAdminPage() {
           ))}
         </div>
       )}
+
+      <DeleteConfirmModal
+        isOpen={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={async () => {
+          await clearGroups()
+        }}
+        title="إعادة تعيين القرعة"
+        message="هل أنت متأكد من إعادة تعيين القرعة وإزالة جميع الفرق من المجموعات؟ لا يمكن التراجع عن هذا الإجراء."
+      />
     </div>
   )
 }
