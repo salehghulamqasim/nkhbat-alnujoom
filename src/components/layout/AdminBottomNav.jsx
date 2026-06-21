@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Users, Calendar, Shuffle } from 'lucide-react'
+import { LayoutDashboard, Users, Calendar, Shuffle, Compass } from 'lucide-react'
 import { useAppStore } from '../../stores/useAppStore'
-import { haptic } from '../../hooks/useHaptics'
 
 const navItems = [
   { path: '/admin/dashboard', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: LayoutDashboard },
   { path: '/admin/teams', labelAr: 'إدارة الفرق', labelEn: 'Teams', icon: Users },
   { path: '/admin/matches', labelAr: 'المباريات', labelEn: 'Matches', icon: Calendar },
   { path: '/admin/draw', labelAr: 'القرعة', labelEn: 'Draw', icon: Shuffle },
+  { path: '/admin/schedule', labelAr: 'نظرة النسر', labelEn: 'Eagle Eye', icon: Compass },
 ]
 
 export default function AdminBottomNav() {
@@ -22,7 +22,7 @@ export default function AdminBottomNav() {
       aria-label={isAr ? 'القائمة السفلية' : 'Bottom navigation'}
     >
       <div
-        className="h-14 bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 grid grid-cols-4"
+        className="h-14 bg-bg-nav/95 backdrop-blur-xl border-t border-border grid grid-cols-5"
         dir={isAr ? 'rtl' : 'ltr'}
       >
         {navItems.map((item) => {
@@ -32,9 +32,8 @@ export default function AdminBottomNav() {
             <Link
               key={item.path}
               to={item.path}
-              onClick={() => haptic.light()}
               className={`flex flex-col items-center justify-center h-full gap-0.5 transition-all duration-150
-                ${isActive ? 'text-accent' : 'text-zinc-500 active:text-zinc-300'}
+                ${isActive ? 'text-accent' : 'text-text-secondary hover:text-text-primary active:text-text-primary'}
               `}
               aria-current={isActive ? 'page' : undefined}
             >

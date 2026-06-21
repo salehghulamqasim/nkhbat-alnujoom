@@ -11,10 +11,10 @@
   --color-bg-surface: var(--theme-bg-surface);
   --color-bg-nav: var(--theme-bg-nav);
 
-  /* Muted, premium gold palette */
-  --color-accent: #B89B5E;
-  --color-accent-light: #D4B96A;
-  --color-accent-hover: #A68B4B;
+  /* Muted, premium gold palette — resolve via CSS vars */
+  --color-accent: var(--theme-accent);
+  --color-accent-light: var(--theme-accent-light);
+  --color-accent-hover: var(--theme-accent-hover);
 
   --color-text-primary: var(--theme-text-primary);
   --color-text-secondary: var(--theme-text-secondary);
@@ -29,19 +29,25 @@
 
 @layer base {
   :root {
-    /* ─── Light Mode: Clean warm ivory ─── */
+    /* ─── Light Mode: Sunlight-Optimized Clean Warm Ivory ─── */
     --theme-bg-primary:        #FAF8F4;
     --theme-bg-card:           #FFFFFF;
     --theme-bg-surface:        #F3EDE4;
     --theme-bg-nav:            #FFFFFF;
     --theme-text-primary:      #1C1712;
-    --theme-text-secondary:    #6B5E50;
-    --theme-border:            #E5DDD2;
+    --theme-text-secondary:    #5C5043; /* Darkened for outdoor/sunlight contrast */
+    --theme-border:            #DDD2C2; /* Darkened for outdoor/sunlight border definition */
+    
+    /* Dynamic gold accents optimized for light background and sunlight */
+    --theme-accent:            #8E6E30; /* 4.75:1 contrast ratio against pure white background */
+    --theme-accent-light:      #A58343;
+    --theme-accent-hover:      #755B25;
+    
     color-scheme: light;
   }
 
   :root.dark {
-    /* ─── Dark Mode ─── */
+    /* ─── Dark Mode: Premium Glowing Gold ─── */
     --theme-bg-primary:        #0E0E0E;
     --theme-bg-card:           #1A1A1A;
     --theme-bg-surface:        #242424;
@@ -49,21 +55,34 @@
     --theme-text-primary:      #E8EAED;
     --theme-text-secondary:    #9AA0A6;
     --theme-border:            #2D2D2D;
+    
+    /* Glowing Golds */
+    --theme-accent:            #B89B5E;
+    --theme-accent-light:      #D4B96A;
+    --theme-accent-hover:      #A68B4B;
+    
     color-scheme: dark;
   }
 
   /* ─── Targeted theme transitions for UI components ─── */
-  body,
-  header,
-  nav,
-  main,
-  button,
-  input,
-  select,
-  a,
-  .glass,
-  .glass-card,
-  h1, h2, h3, h4, p, span, td, th {
+  .theme-transition body,
+  .theme-transition header,
+  .theme-transition nav,
+  .theme-transition main,
+  .theme-transition button,
+  .theme-transition input,
+  .theme-transition select,
+  .theme-transition a,
+  .theme-transition .glass,
+  .theme-transition .glass-card,
+  .theme-transition h1,
+  .theme-transition h2,
+  .theme-transition h3,
+  .theme-transition h4,
+  .theme-transition p,
+  .theme-transition span,
+  .theme-transition td,
+  .theme-transition th {
     transition-property: background-color, border-color, color, fill, stroke, box-shadow, opacity;
     transition-duration: 350ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -131,41 +150,4 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-}
-
-/* Haptic visual fallback — brief body-level pulse when vibrate() unavailable */
-body.haptic-pulse-light {
-  animation: haptic-flash-light 0.12s ease-out;
-}
-body.haptic-pulse-medium {
-  animation: haptic-flash-medium 0.12s ease-out;
-}
-body.haptic-pulse-heavy {
-  animation: haptic-flash-heavy 0.12s ease-out;
-}
-body.haptic-pulse-intense {
-  animation: haptic-flash-intense 0.14s ease-out;
-}
-
-@keyframes haptic-flash-light {
-  0% { opacity: 1; }
-  50% { opacity: 0.96; }
-  100% { opacity: 1; }
-}
-@keyframes haptic-flash-medium {
-  0% { opacity: 1; }
-  50% { opacity: 0.93; transform: scale(1.003); }
-  100% { opacity: 1; transform: scale(1); }
-}
-@keyframes haptic-flash-heavy {
-  0% { opacity: 1; }
-  50% { opacity: 0.90; transform: scale(1.005); }
-  100% { opacity: 1; transform: scale(1); }
-}
-@keyframes haptic-flash-intense {
-  0% { opacity: 1; }
-  25% { opacity: 0.88; transform: scale(1.008); }
-  50% { opacity: 0.93; transform: scale(0.997); }
-  75% { opacity: 0.90; transform: scale(1.005); }
-  100% { opacity: 1; transform: scale(1); }
 }
