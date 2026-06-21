@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react'
 import { useAppStore } from '../../stores/useAppStore'
 import { haptic } from '../../hooks/useHaptics'
@@ -61,16 +61,13 @@ export default function Header() {
           <BackIcon size={18} />
         </button>
       ) : (
-        <button
-          onClick={() => {
-            haptic.light()
-            navigate('/more')
-          }}
+        <Link
+          to="/more"
           className="w-9 h-9 flex items-center justify-center rounded-xl bg-bg-surface border border-border text-text-secondary hover:bg-accent/10 hover:text-accent hover:border-accent/30 transition-all duration-200"
           aria-label={language === 'ar' ? 'الإعدادات' : 'Settings'}
         >
           <Settings size={18} strokeWidth={1.75} />
-        </button>
+        </Link>
       )}
 
       {/* Center: Title (empty for home screen) */}

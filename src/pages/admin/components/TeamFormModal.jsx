@@ -10,6 +10,7 @@ const emptyForm = {
   manager: '',
   players: [{ key: crypto.randomUUID(), value: '' }],
   logo: null,
+  group: '',
 }
 
 export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeamsReached }) {
@@ -24,12 +25,11 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     if (isOpen) {
       if (team) {
         setForm({
-          name: team.name || '',
-          manager: team.manager || '',
-          players: team.players?.length > 0
-            ? team.players.map((p) => ({ key: crypto.randomUUID(), value: p?.name || '' }))
-            : [{ key: crypto.randomUUID(), value: '' }],
-          logo: team.logo || null,
+          name: team.name,
+          manager: team.manager,
+          players: team.players.length > 0 ? team.players.map((p) => p.name) : [''],
+          logo: team.logo,
+          group: team.group || '',
         })
         // Load existing player photos
         const photos = {}
@@ -161,9 +161,14 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     if (!form.name.trim()) nextErrors.name = t('teams.nameRequired')
     if (!form.manager.trim()) nextErrors.manager = t('teams.managerRequired')
 
-    const filledPlayers = form.players.filter((p) => p.value.trim())
-    if (filledPlayers.length === 0) {
-      nextErrors.players = t('teams.playerRequired')
+    const playerErrors = form.players.map((p) => !p.trim() ? 'اسم اللاعب مطلوب' : '')
+    if (playerErrors.some(err => err)) {
+      nextErrors.playerErrors = playerErrors
+    }
+
+    const filledPlayers = form.players.filter((p) => p.trim())
+    if (filledPlayers.length === 0 && !nextErrors.playerErrors) {
+      nextErrors.players = 'أضف لاعباً واحداً على الأقل'
     }
 
     setErrors(nextErrors)
@@ -175,24 +180,14 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
     if (!isEditing && maxTeamsReached) return
     if (!validate()) return
 
-    setSubmitting(true)
-    haptic.intense()
-    try {
-      await onSubmit({
-        name: form.name,
-        manager: form.manager,
-        players: form.players.map((p, i) => ({
-          name: p.value,
-          photo: playerPhotos[i] || null,
-        })),
-        logo: form.logo,
-      })
-      onClose()
-    } catch (err) {
-      console.error('[TeamFormModal] submit error:', err)
-    } finally {
-      setSubmitting(false)
-    }
+    onSubmit({
+      name: form.name,
+      manager: form.manager,
+      players: form.players,
+      logo: form.logo,
+      group: form.group || null,
+    })
+    onClose()
   }
 
   const filledCount = form.players.filter((p) => p.value.trim()).length
@@ -274,9 +269,12 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  placeholder={isAr ? 'مثال: النجوم' : 'e.g. Stars'}
-                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                  onChange={(e) => {
+                    setForm((prev) => ({ ...prev, name: e.target.value }))
+                    if (errors.name) setErrors(prev => ({ ...prev, name: undefined }))
+                  }}
+                  placeholder="مثال: النجوم"
+                  className={`w-full bg-bg-surface border ${errors.name ? 'border-danger' : 'border-border'} rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors`}
                 />
                 {errors.name && <p className="text-xs text-danger mt-1">{errors.name}</p>}
               </div>
@@ -287,11 +285,36 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
                 <input
                   type="text"
                   value={form.manager}
-                  onChange={(e) => setForm((prev) => ({ ...prev, manager: e.target.value }))}
-                  placeholder={isAr ? 'مثال: أحمد محمد' : 'e.g. Ahmed'}
-                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
+                  onChange={(e) => {
+                    setForm((prev) => ({ ...prev, manager: e.target.value }))
+                    if (errors.manager) setErrors(prev => ({ ...prev, manager: undefined }))
+                  }}
+                  placeholder="مثال: أحمد محمد"
+                  className={`w-full bg-bg-surface border ${errors.manager ? 'border-danger' : 'border-border'} rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors`}
                 />
                 {errors.manager && <p className="text-xs text-danger mt-1">{errors.manager}</p>}
+              </div>
+
+              {/* Group selection */}
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">المجموعة</label>
+                <div className="relative">
+                  <select
+                    value={form.group}
+                    onChange={(e) => setForm((prev) => ({ ...prev, group: e.target.value }))}
+                    className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="">بدون مجموعة (لم يتم السحب بعد)</option>
+                    <option value="A">المجموعة A</option>
+                    <option value="B">المجموعة B</option>
+                    <option value="C">المجموعة C</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center px-4 text-text-secondary">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                      <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* Players */}
@@ -312,40 +335,39 @@ export default function TeamFormModal({ isOpen, onClose, onSubmit, team, maxTeam
                 </div>
 
                 <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {form.players.map((player, index) => (
-                    <div key={player.key} className="flex gap-2 items-center">
-                      {/* Player photo */}
-                      <label className="w-9 h-9 shrink-0 rounded-full bg-bg-surface border border-border flex items-center justify-center cursor-pointer hover:border-accent/40 hover:text-accent transition-colors overflow-hidden">
-                        {playerPhotos[index] ? (
-                          <img src={playerPhotos[index]} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <Camera size={14} className="text-text-secondary" />
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handlePlayerPhoto(index, e)}
-                          className="hidden"
-                        />
-                      </label>
-                      <input
-                        type="text"
-                        value={player.value}
-                        onChange={(e) => updatePlayer(index, e.target.value)}
-                        placeholder={`${isAr ? 'اللاعب' : 'Player'} ${index + 1}`}
-                        className="flex-1 bg-bg-surface border border-border rounded-xl py-2.5 px-3 md:px-4 text-sm focus:outline-none focus:border-accent transition-colors"
-                      />
-                      {form.players.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removePlayerField(player.key)}
-                          className="w-10 h-10 rounded-xl bg-bg-surface border border-border flex items-center justify-center text-danger hover:bg-danger/10 transition-colors shrink-0"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                  {form.players.map((player, index) => {
+                    const hasError = errors.playerErrors?.[index]
+                    return (
+                      <div key={index} className="flex flex-col gap-1">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={player}
+                            onChange={(e) => {
+                              updatePlayer(index, e.target.value)
+                              if (errors.playerErrors) {
+                                const newPlayerErrors = [...errors.playerErrors]
+                                newPlayerErrors[index] = ''
+                                setErrors(prev => ({ ...prev, playerErrors: newPlayerErrors }))
+                              }
+                            }}
+                            placeholder={`اللاعب ${index + 1}`}
+                            className={`flex-1 bg-bg-surface border ${hasError ? 'border-danger' : 'border-border'} rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-accent transition-colors`}
+                          />
+                          {form.players.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removePlayerField(index)}
+                              className="w-10 h-10 rounded-xl bg-bg-surface border border-border flex items-center justify-center text-danger hover:bg-danger/10 transition-colors shrink-0"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                        {hasError && <p className="text-xs text-danger pr-1">{hasError}</p>}
+                      </div>
+                    )
+                  })}
                 </div>
                 {errors.players && <p className="text-xs text-danger mt-1">{errors.players}</p>}
               </div>

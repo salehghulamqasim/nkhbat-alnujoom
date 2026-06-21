@@ -42,8 +42,8 @@ export default function AdminLayout() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const teamsLoading = useTeamsStore((s) => s.loading && !s.initialized)
-  const matchesLoading = useMatchesStore((s) => s.loading && !s.initialized)
+  const teamsLoading = useTeamsStore((s) => !s.initialized)
+  const matchesLoading = useMatchesStore((s) => !s.initialized)
   const teamsFetchError = useTeamsStore((s) => s.fetchError)
   const matchesFetchError = useMatchesStore((s) => s.fetchError)
   const fetchTeams = useTeamsStore((s) => s.fetchAll)
@@ -51,26 +51,14 @@ export default function AdminLayout() {
   const initFailed = !teamsLoading && !matchesLoading && (teamsFetchError || matchesFetchError)
   const { t, isAr } = useI18n()
 
-  const navItems = isAr ? navItemsAr : navItemsEn
-
   if (!isAuthenticated && !isLoggingOut) {
     return <Navigate to="/admin/login" replace />
   }
 
   const handleLogout = () => {
-    haptic.medium()
     setIsLoggingOut(true)
-    // Animate out before logout
-    const main = document.querySelector('main')
-    if (main) {
-      main.style.transition = 'opacity 0.3s ease, transform 0.3s ease'
-      main.style.opacity = '0'
-      main.style.transform = 'translateY(-10px)'
-    }
-    setTimeout(() => {
-      logout()
-      navigate('/', { replace: true })
-    }, 300)
+    navigate('/', { replace: true })
+    logout()
   }
 
   const loadingMsg = isAr ? 'جاري تحميل بيانات الإدارة...' : 'Loading admin data...'

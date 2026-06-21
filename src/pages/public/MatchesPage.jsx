@@ -1,83 +1,82 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import MatchRow from '../../components/common/MatchRow'
-import EmptyState from '../../components/common/EmptyState'
 import LoadingState from '../../components/common/LoadingState'
 import ErrorState from '../../components/common/ErrorState'
-import { useMatchesQuery } from '../../hooks/useQueries'
-import { useAppStore } from '../../stores/useAppStore'
-import { useNavigate } from 'react-router-dom'
-
-const t = {
-  ar: {
-    title: 'المباريات',
-    all: 'الكل',
-    live: 'مباشر',
-    completed: 'منتهية',
-    upcoming: 'قادمة',
-    noMatches: 'لا توجد مباريات',
-    noMatchesDesc: 'لا توجد مباريات تطابق الفلتر المحدد',
-  },
-  en: {
-    title: 'Matches',
-    all: 'All',
-    live: 'Live',
-    completed: 'Finished',
-    upcoming: 'Upcoming',
-    noMatches: 'No matches found',
-    noMatchesDesc: 'No matches match the selected filter',
-  },
-}
-
-const filters = [
-  { id: 'all', arLabel: 'الكل', enLabel: 'All' },
-  { id: 'live', arLabel: 'مباشر', enLabel: 'Live' },
-  { id: 'completed', arLabel: 'منتهية', enLabel: 'Finished' },
-  { id: 'upcoming', arLabel: 'قادمة', enLabel: 'Upcoming' },
-]
+import EmptyState from '../../components/common/EmptyState'
+import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
+import { enrichMatch, getMatchDisplayStatus, groupMatchesByDate } from '../../utils/matchHelpers'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function MatchesPage() {
-  const lang = useAppStore((s) => s.language)
   const navigate = useNavigate()
-  const { data: matches = [], isLoading, isError, refetch } = useMatchesQuery()
+  const { t, lang } = useTranslation()
   const [filter, setFilter] = useState('all')
 
-  const isAr = lang === 'ar'
-  const indicatorStyle = isAr
-    ? { right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, left: 'auto' }
-    : { left: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, right: 'auto' }
+  const filterTabs = [
+    { id: 'all', label: t.matches.all },
+    { id: 'upcoming', label: t.matches.upcoming },
+    { id: 'live', label: t.matches.live },
+    { id: 'completed', label: t.matches.completed },
+  ]
 
-  const filteredMatches = matches.filter((m) => {
-    if (filter === 'all') return true
-    return m.status === filter
-  })
+  const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
+  const { data: matches = [], isLoading: matchesLoading, isError: matchesError, refetch: refetchMatches } = useMatchesQuery()
 
-  if (isLoading) return <LoadingState message={lang === 'ar' ? 'جاري تحميل المباريات...' : 'Loading matches...'} />
+  const enrichedMatches = useMemo(
+    () => matches.map((m) => enrichMatch(m, teams)),
+    [matches, teams]
+  )
+
+  const filteredMatches = useMemo(() => {
+    return enrichedMatches.filter((match) => {
+      const status = getMatchDisplayStatus(match)
+      if (filter === 'all') return true
+      if (filter === 'upcoming') return status === 'upcoming'
+      return status === filter
+    })
+  }, [enrichedMatches, filter])
+
+  const grouped = useMemo(() => groupMatchesByDate(filteredMatches), [filteredMatches])
+
+  const isLoading = teamsLoading || matchesLoading
+  const isError = teamsError || matchesError
+
+  if (isLoading) return <LoadingState message={t.matches.loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
         <ErrorState
-          message={lang === 'ar' ? 'تعذر تحميل المباريات' : 'Failed to load matches'}
-          onRetry={refetch}
+          message={t.matches.error}
+          onRetry={() => {
+            refetchTeams()
+            refetchMatches()
+          }}
         />
       </div>
     )
   }
 
+  const isAr = lang === 'ar'
+  const indicatorStyle = isAr
+    ? { right: `calc(${filterTabs.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, left: 'auto' }
+    : { left: `calc(${filterTabs.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, right: 'auto' }
+
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t.matches.title}</h1>
 
-      <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative" dir={isAr ? 'rtl' : 'ltr'}>
-        {filters.map((f) => (
+      <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative z-0">
+        {filterTabs.map((f) => (
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors relative z-10 ${
-              filter === f.id ? 'text-black' : 'text-text-secondary'
+            className={`flex-1 py-2 text-sm font-medium z-10 transition-colors ${
+              filter === f.id ? 'text-black' : 'text-text-secondary hover:text-text-primary'
             }`}
           >
-            {isAr ? f.arLabel : f.enLabel}
+            {f.label}
           </button>
         ))}
         <div
@@ -90,25 +89,39 @@ export default function MatchesPage() {
       </div>
 
       {filteredMatches.length === 0 ? (
-        <EmptyState title={t[lang].noMatches} message={t[lang].noMatchesDesc} />
+        <EmptyState title={t.matches.noMatches} message={t.matches.noMatchesDesc} />
       ) : (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ staggerChildren: 0.05 }}
-          className="space-y-1"
+          className="space-y-6"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.05 } },
+          }}
         >
-          {filteredMatches.map((match) => (
-            <motion.div
-              key={match.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <MatchRow
-                match={match}
-                onClick={() => navigate(`/matches/${match.id}`)}
-              />
-            </motion.div>
+          {grouped.map(([date, dateMatches]) => (
+            <div key={date}>
+              <h3 className="text-sm font-bold text-accent mb-3 px-1">
+                {date === 'unknown' ? t.matches.unknownDate : date}
+              </h3>
+              <div className="space-y-3">
+                {dateMatches.map((match) => (
+                  <motion.div
+                    key={match.id}
+                    variants={{
+                      hidden: { y: 10, opacity: 0 },
+                      visible: { y: 0, opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } },
+                    }}
+                  >
+                    <MatchRow
+                      match={match}
+                      onClick={() => navigate(`/matches/${match.id}`)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           ))}
         </motion.div>
       )}

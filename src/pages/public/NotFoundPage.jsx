@@ -1,29 +1,10 @@
 import { Link } from 'react-router-dom'
-import { useAppStore } from '../../stores/useAppStore'
 import { Home, ArrowLeft } from 'lucide-react'
-import { haptic } from '../../hooks/useHaptics'
-
-const t = {
-  ar: {
-    title: 'الصفحة غير موجودة',
-    subtitle: 'عذراً، الصفحة التي تبحث عنها غير موجودة',
-    desc: 'قد يكون الرابط غير صحيح أو تم نقل الصفحة إلى رابط آخر',
-    home: 'العودة للرئيسية',
-    back: 'رجوع',
-  },
-  en: {
-    title: 'Page Not Found',
-    subtitle: 'Sorry, the page you are looking for does not exist',
-    desc: 'The link may be incorrect or the page has been moved',
-    home: 'Go Home',
-    back: 'Go Back',
-  },
-}
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function NotFoundPage() {
-  const { language } = useAppStore()
-  const lang = language === 'ar' ? 'ar' : 'en'
-  const tx = t[lang]
+  const { t } = useTranslation()
+  const tx = t.notFound
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">

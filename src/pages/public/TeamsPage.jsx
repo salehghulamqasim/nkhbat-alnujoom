@@ -8,40 +8,10 @@ import LoadingState from '../../components/common/LoadingState'
 import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery } from '../../hooks/useQueries'
-import { useAppStore } from '../../stores/useAppStore'
-import { haptic } from '../../hooks/useHaptics'
-
-const t = {
-  ar: {
-    title: 'الفرق المشاركة',
-    search: 'بحث عن فريق...',
-    all: 'الكل',
-    group: 'المجموعة',
-    awaitingDraw: 'بانتظار القرعة',
-    emptyTitle: 'لا توجد فرق مسجلة',
-    emptyMsg: 'سيتم عرض الفرق المشاركة هنا بعد تسجيلها',
-    noResultsTitle: 'لم يتم العثور على نتائج',
-    noResultsMsg: 'جرب تغيير معايير البحث أو التصفية',
-    loading: 'جاري تحميل الفرق...',
-    error: 'تعذر تحميل الفرق',
-  },
-  en: {
-    title: 'Participating Teams',
-    search: 'Search for a team...',
-    all: 'All',
-    group: 'Group',
-    awaitingDraw: 'Awaiting Draw',
-    emptyTitle: 'No teams registered',
-    emptyMsg: 'Participating teams will appear here after registration',
-    noResultsTitle: 'No results found',
-    noResultsMsg: 'Try changing your search or filter criteria',
-    loading: 'Loading teams...',
-    error: 'Failed to load teams',
-  },
-}
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function TeamsPage() {
-  const lang = useAppStore((s) => s.language)
+  const { t, lang } = useTranslation()
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const { data: teams = [], isLoading, isError, refetch } = useTeamsQuery()
@@ -54,24 +24,24 @@ export default function TeamsPage() {
     })
   }, [teams, filter, searchQuery])
 
-  if (isLoading) return <LoadingState message={t[lang].loading} />
+  if (isLoading) return <LoadingState message={t.teams.loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
-        <ErrorState message={t[lang].error} onRetry={refetch} />
+        <ErrorState message={t.teams.error} onRetry={refetch} />
       </div>
     )
   }
 
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t.teams.title}</h1>
 
       <div className="flex gap-2">
         <div className="relative flex-1">
           <input
             type="text"
-            placeholder={t[lang].search}
+            placeholder={t.teams.search}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-bg-surface border border-border rounded-xl py-3 pr-10 pl-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary placeholder:text-text-secondary"
@@ -87,7 +57,7 @@ export default function TeamsPage() {
           }}
           className="bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary appearance-none"
         >
-          <option value="all">{t[lang].all}</option>
+          <option value="all">{t.teams.all}</option>
           <option value="A">{lang === 'ar' ? 'المجموعة أ' : 'Group A'}</option>
           <option value="B">{lang === 'ar' ? 'المجموعة ب' : 'Group B'}</option>
           <option value="C">{lang === 'ar' ? 'المجموعة ج' : 'Group C'}</option>
@@ -95,9 +65,9 @@ export default function TeamsPage() {
       </div>
 
       {teams.length === 0 ? (
-        <EmptyState title={t[lang].emptyTitle} message={t[lang].emptyMsg} />
+        <EmptyState title={t.teams.emptyTitle} message={t.teams.emptyMsg} />
       ) : filteredTeams.length === 0 ? (
-        <EmptyState title={t[lang].noResultsTitle} message={t[lang].noResultsMsg} />
+        <EmptyState title={t.teams.noResultsTitle} message={t.teams.noResultsMsg} />
       ) : (
         <motion.div
           className="grid grid-cols-2 gap-4"
@@ -122,7 +92,7 @@ export default function TeamsPage() {
                   <div className="text-center">
                     <h3 className="font-bold text-text-primary">{team.name}</h3>
                     <span className="text-[10px] text-text-secondary">
-                      {team.group ? (lang === 'ar' ? `المجموعة ${team.group === 'A' ? 'أ' : team.group === 'B' ? 'ب' : team.group === 'C' ? 'ج' : team.group}` : `Group ${team.group}`) : t[lang].awaitingDraw}
+                      {team.group ? (lang === 'ar' ? `المجموعة ${t.common.arGroups[team.group] || team.group}` : `Group ${team.group}`) : t.teams.awaitingDraw}
                     </span>
                   </div>
                 </DarkCard>

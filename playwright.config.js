@@ -30,7 +30,7 @@ export default defineConfig({
 
   // Run Vite dev server automatically before starting tests
   webServer: {
-    command: 'npx vite',
+    command: 'npm run dev:local',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 15000,

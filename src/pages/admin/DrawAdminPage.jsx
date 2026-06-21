@@ -8,7 +8,7 @@ import {
   MAX_TEAMS,
   isDrawComplete,
 } from '../../stores/useTeamsStore'
-import { useI18n } from '../../i18n/useI18n'
+import DeleteConfirmModal from './components/DeleteConfirmModal'
 
 const GROUPS = ['A', 'B', 'C']
 
@@ -62,11 +62,10 @@ export default function DrawAdminPage() {
   const drawLocked = useTeamsStore((state) => state.drawLocked)
   const assignGroups = useTeamsStore((state) => state.assignGroups)
   const clearGroups = useTeamsStore((state) => state.clearGroups)
-  const { t, isAr } = useI18n()
 
   const [isDrawing, setIsDrawing] = useState(false)
   const [previewGroups, setPreviewGroups] = useState(null)
-  const [drawError, setDrawError] = useState(null)
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false)
 
   const groupRefs = useRef({ A: null, B: null, C: null })
   const containerRef = useRef(null)
@@ -208,9 +207,18 @@ export default function DrawAdminPage() {
         </div>
 
         {drawComplete && (
-          <div className="flex items-center gap-2 text-sm text-accent bg-accent/10 border border-accent/30 px-4 py-2 rounded-xl">
-            <Lock size={16} />
-            <span>{t('draw.drawComplete')}</span>
+          <div className="flex flex-wrap gap-2 items-center">
+            <div className="flex items-center gap-2 text-sm text-accent bg-accent/10 border border-accent/30 px-4 py-2 rounded-xl">
+              <Lock size={16} />
+              <span>القرعة مكتملة</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setConfirmResetOpen(true)}
+              className="flex items-center gap-2 text-sm text-danger bg-danger/10 border border-danger/30 px-4 py-2 rounded-xl hover:bg-danger/20 transition-colors"
+            >
+              <span>إعادة تعيين القرعة</span>
+            </button>
           </div>
         )}
       </div>
@@ -301,6 +309,16 @@ export default function DrawAdminPage() {
           ))}
         </div>
       )}
+
+      <DeleteConfirmModal
+        isOpen={confirmResetOpen}
+        onClose={() => setConfirmResetOpen(false)}
+        onConfirm={async () => {
+          await clearGroups()
+        }}
+        title="إعادة تعيين القرعة"
+        message="هل أنت متأكد من إعادة تعيين القرعة وإزالة جميع الفرق من المجموعات؟ لا يمكن التراجع عن هذا الإجراء."
+      />
     </div>
   )
 }
