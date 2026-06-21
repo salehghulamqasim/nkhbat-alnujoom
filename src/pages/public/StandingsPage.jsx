@@ -6,35 +6,12 @@ import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { calculateStandings } from '../../utils/standings'
-import { useAppStore } from '../../stores/useAppStore'
+import { useTranslation } from '../../hooks/useTranslation'
 
 const GROUPS = ['A', 'B', 'C']
 
-const t = {
-  ar: {
-    title: 'ترتيب المجموعات',
-    group: 'المجموعة',
-    loading: 'جاري تحميل الترتيب...',
-    error: 'تعذر تحميل جدول الترتيب',
-    emptyTitle: 'لا توجد فرق في هذه المجموعة',
-    emptyMessage: 'أكمل القرعة لعرض ترتيب المجموعات',
-    directQualify: 'تأهل مباشر',
-    bestThird: 'أفضل ثوالث',
-  },
-  en: {
-    title: 'Group Standings',
-    group: 'Group',
-    loading: 'Loading standings...',
-    error: 'Failed to load standings',
-    emptyTitle: 'No teams in this group',
-    emptyMessage: 'Complete the draw to see group standings',
-    directQualify: 'Direct Qualify',
-    bestThird: 'Best Third-placed',
-  },
-}
-
 export default function StandingsPage() {
-  const lang = useAppStore((s) => s.language)
+  const { t, lang } = useTranslation()
   const [activeGroup, setActiveGroup] = useState('A')
   const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
   const { data: matches = [], isLoading: matchesLoading, isError: matchesError, refetch: refetchMatches } = useMatchesQuery()
@@ -47,12 +24,12 @@ export default function StandingsPage() {
   const isLoading = teamsLoading || matchesLoading
   const isError = teamsError || matchesError
 
-  if (isLoading) return <LoadingState message={t[lang].loading} />
+  if (isLoading) return <LoadingState message={t.standings.loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
         <ErrorState
-          message={t[lang].error}
+          message={t.standings.error}
           onRetry={() => {
             refetchTeams()
             refetchMatches()
@@ -69,7 +46,7 @@ export default function StandingsPage() {
 
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t.standings.title}</h1>
 
       <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative z-0">
         {GROUPS.map((group) => (
@@ -93,8 +70,8 @@ export default function StandingsPage() {
 
       {standings.length === 0 ? (
         <EmptyState
-          title={t[lang].emptyTitle}
-          message={t[lang].emptyMessage}
+          title={t.standings.emptyTitle}
+          message={t.standings.emptyMessage}
         />
       ) : (
         <>
@@ -110,11 +87,11 @@ export default function StandingsPage() {
           <div className="flex gap-4 text-[10px] text-text-secondary justify-center px-4 mt-4">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-success" />
-              {t[lang].directQualify}
+              {t.standings.directQualify}
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-warning" />
-              {t[lang].bestThird}
+              {t.standings.bestThird}
             </div>
           </div>
         </>

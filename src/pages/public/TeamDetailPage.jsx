@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import DarkCard from '../../components/common/DarkCard'
 import TeamLogo from '../../components/common/TeamLogo'
@@ -12,8 +11,10 @@ import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { calculateStandings, getTeamStandingRank } from '../../utils/standings'
 import { getPlayerGoals } from '../../utils/scorers'
 import { enrichMatch } from '../../utils/matchHelpers'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function TeamDetailPage() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const [activeTab, setActiveTab] = useState('players')
   const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
@@ -51,12 +52,12 @@ export default function TeamDetailPage() {
   const isLoading = teamsLoading || matchesLoading
   const isError = teamsError || matchesError
 
-  if (isLoading) return <LoadingState message="جاري تحميل بيانات الفريق..." />
+  if (isLoading) return <LoadingState message={t.teamDetails.loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
         <ErrorState
-          message="تعذر تحميل بيانات الفريق"
+          message={t.teamDetails.error}
           onRetry={() => {
             refetchTeams()
             refetchMatches()
@@ -69,7 +70,7 @@ export default function TeamDetailPage() {
   if (!team) {
     return (
       <div className="px-4 py-6">
-        <EmptyState title="الفريق غير موجود" message="لم يتم العثور على هذا الفريق" />
+        <EmptyState title={t.teamDetails.notFoundTitle} message={t.teamDetails.notFoundMessage} />
       </div>
     )
   }
@@ -79,33 +80,26 @@ export default function TeamDetailPage() {
       <div className="bg-bg-card border-b border-border pt-4 pb-6 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-accent/10 to-transparent opacity-50" />
 
-        <Link
-          to="/teams"
-          className="relative z-10 flex items-center text-sm text-text-secondary hover:text-text-primary mb-4 w-fit"
-        >
-          <ChevronRight size={16} className="rtl:-scale-x-100" /> عودة للفرق
-        </Link>
-
         <div className="relative z-10 flex flex-col items-center">
           <TeamLogo logo={team.logo} name={team.name} size="xl" className="border-2 border-accent mb-3 shadow-[0_0_15px_rgba(212,175,55,0.35)]" />
           <h1 className="text-2xl font-bold mb-1">{team.name}</h1>
           <div className="flex items-center gap-2 text-sm text-text-secondary flex-wrap justify-center">
             {team.group && (
               <span className="bg-bg-surface px-2 py-0.5 rounded">
-                المجموعة {team.group === 'A' ? 'أ' : team.group === 'B' ? 'ب' : team.group === 'C' ? 'ج' : team.group}
-                {rank && ` — المركز ${rank}`}
+                {t.teamDetails.group(team.group)}
+                {rank && t.teamDetails.rank(rank)}
               </span>
             )}
-            <span>مدرب: {team.manager || <span className="text-text-secondary/50">غير محدد</span>}</span>
+            <span>{t.teamDetails.manager} {team.manager || <span className="text-text-secondary/50">{t.teamDetails.notSpecified}</span>}</span>
           </div>
 
           {standingsStats && (
             <div className="grid grid-cols-4 gap-2 mt-4 w-full max-w-sm">
               {[
-                { label: 'نقاط', value: standingsStats.pts },
-                { label: 'لعب', value: standingsStats.played },
-                { label: 'فوز', value: standingsStats.won },
-                { label: 'خسارة', value: standingsStats.lost },
+                { label: t.teamDetails.pts, value: standingsStats.pts },
+                { label: t.teamDetails.played, value: standingsStats.played },
+                { label: t.teamDetails.won, value: standingsStats.won },
+                { label: t.teamDetails.lost, value: standingsStats.lost },
               ].map((stat) => (
                 <DarkCard key={stat.label} className="p-2 text-center">
                   <p className="text-lg font-bold text-accent">{stat.value}</p>
@@ -119,8 +113,8 @@ export default function TeamDetailPage() {
 
       <div className="flex border-b border-border mb-6">
         {[
-          { id: 'players', label: 'اللاعبون' },
-          { id: 'matches', label: 'المباريات' },
+          { id: 'players', label: t.teamDetails.players },
+          { id: 'matches', label: t.teamDetails.matches },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -138,7 +132,7 @@ export default function TeamDetailPage() {
         {activeTab === 'players' && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-3">
             {playersWithGoals.length === 0 ? (
-              <EmptyState title="لا يوجد لاعبون" message="لم يتم تسجيل لاعبين لهذا الفريق" />
+              <EmptyState title={t.teamDetails.noPlayersTitle} message={t.teamDetails.noPlayersMessage} />
             ) : (
               playersWithGoals.map((player, index) => (
                 <DarkCard key={player.id || index} className="p-3 flex items-center justify-between">
@@ -152,7 +146,7 @@ export default function TeamDetailPage() {
                   </div>
                   {player.goals > 0 && (
                     <div className="text-xs font-bold text-accent bg-accent/10 px-2 py-1 rounded">
-                      {player.goals} {player.goals === 1 ? 'هدف' : 'أهداف'}
+                      {player.goals} {player.goals === 1 ? t.teamDetails.goal : t.teamDetails.goals}
                     </div>
                   )}
                 </DarkCard>
@@ -164,7 +158,7 @@ export default function TeamDetailPage() {
         {activeTab === 'matches' && (
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-3">
             {teamMatches.length === 0 ? (
-              <EmptyState title="لا توجد مباريات" message="لم يتم جدولة مباريات لهذا الفريق بعد" />
+              <EmptyState title={t.teamDetails.noMatchesTitle} message={t.teamDetails.noMatchesMessage} />
             ) : (
               teamMatches.map((match) => <MatchRow key={match.id} match={match} />)
             )}

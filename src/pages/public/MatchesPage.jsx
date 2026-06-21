@@ -7,47 +7,20 @@ import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { enrichMatch, getMatchDisplayStatus, groupMatchesByDate } from '../../utils/matchHelpers'
-import { useAppStore } from '../../stores/useAppStore'
-
-const t = {
-  ar: {
-    title: 'المباريات',
-    all: 'الكل',
-    upcoming: 'القادمة',
-    live: 'مباشر',
-    completed: 'منتهية',
-    loading: 'جاري تحميل المباريات...',
-    error: 'تعذر تحميل المباريات',
-    noMatches: 'لا توجد مباريات',
-    noMatchesDesc: 'لا توجد مباريات في هذا التصنيف',
-    unknownDate: 'غير محدد',
-  },
-  en: {
-    title: 'Matches',
-    all: 'All',
-    upcoming: 'Upcoming',
-    live: 'Live',
-    completed: 'Finished',
-    loading: 'Loading matches...',
-    error: 'Failed to load matches',
-    noMatches: 'No matches found',
-    noMatchesDesc: 'No matches in this category',
-    unknownDate: 'Unknown',
-  },
-}
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function MatchesPage() {
   const navigate = useNavigate()
-  const lang = useAppStore((s) => s.language)
+  const { t, lang } = useTranslation()
   const [filter, setFilter] = useState('all')
   const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
   const { data: matches = [], isLoading: matchesLoading, isError: matchesError, refetch: refetchMatches } = useMatchesQuery()
 
   const filters = [
-    { id: 'all', label: t[lang].all },
-    { id: 'upcoming', label: t[lang].upcoming },
-    { id: 'live', label: t[lang].live },
-    { id: 'completed', label: t[lang].completed },
+    { id: 'all', label: t.matches.all },
+    { id: 'upcoming', label: t.matches.upcoming },
+    { id: 'live', label: t.matches.live },
+    { id: 'completed', label: t.matches.completed },
   ]
 
   const enrichedMatches = useMemo(
@@ -69,12 +42,12 @@ export default function MatchesPage() {
   const isLoading = teamsLoading || matchesLoading
   const isError = teamsError || matchesError
 
-  if (isLoading) return <LoadingState message={t[lang].loading} />
+  if (isLoading) return <LoadingState message={t.matches.loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
         <ErrorState
-          message={t[lang].error}
+          message={t.matches.error}
           onRetry={() => {
             refetchTeams()
             refetchMatches()
@@ -91,7 +64,7 @@ export default function MatchesPage() {
 
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t.matches.title}</h1>
 
       <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative z-0">
         {filters.map((f) => (
@@ -114,7 +87,7 @@ export default function MatchesPage() {
       </div>
 
       {filteredMatches.length === 0 ? (
-        <EmptyState title={t[lang].noMatches} message={t[lang].noMatchesDesc} />
+        <EmptyState title={t.matches.noMatches} message={t.matches.noMatchesDesc} />
       ) : (
         <motion.div
           className="space-y-6"
@@ -125,7 +98,7 @@ export default function MatchesPage() {
           {grouped.map(([date, dateMatches]) => (
             <div key={date}>
               <h3 className="text-sm font-bold text-accent mb-3 px-1">
-                {date === 'unknown' ? t[lang].unknownDate : date}
+                {date === 'unknown' ? t.matches.unknownDate : date}
               </h3>
               <div className="space-y-3">
                 {dateMatches.map((match) => (

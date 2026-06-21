@@ -7,27 +7,10 @@ import ErrorState from '../../components/common/ErrorState'
 import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { calculateTopScorers } from '../../utils/scorers'
-import { useAppStore } from '../../stores/useAppStore'
-
-const t = {
-  ar: {
-    loading: 'جاري تحميل الهدافين...',
-    error: 'تعذر تحميل قائمة الهدافين',
-    emptyTitle: 'لا يوجد هدافون بعد',
-    emptyMessage: 'ستظهر قائمة الهدافين بعد تسجيل نتائج المباريات',
-    goal: 'هدف',
-  },
-  en: {
-    loading: 'Loading scorers...',
-    error: 'Failed to load scorers',
-    emptyTitle: 'No top scorers yet',
-    emptyMessage: 'Top scorers will appear after match results are recorded',
-    goal: 'goal',
-  }
-}
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function TopScorersPage() {
-  const lang = useAppStore((s) => s.language)
+  const { t } = useTranslation()
   const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
   const { data: matches = [], isLoading: matchesLoading, isError: matchesError, refetch: refetchMatches } = useMatchesQuery()
 
@@ -38,12 +21,12 @@ export default function TopScorersPage() {
   const isLoading = teamsLoading || matchesLoading
   const isError = teamsError || matchesError
 
-  if (isLoading) return <LoadingState message={t[lang].loading} />
+  if (isLoading) return <LoadingState message={t.topScorers.loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
         <ErrorState
-          message={t[lang].error}
+          message={t.topScorers.error}
           onRetry={() => {
             refetchTeams()
             refetchMatches()
@@ -56,7 +39,7 @@ export default function TopScorersPage() {
   if (scorers.length === 0) {
     return (
       <div className="px-4 py-6">
-        <EmptyState title={t[lang].emptyTitle} message={t[lang].emptyMessage} />
+        <EmptyState title={t.topScorers.emptyTitle} message={t.topScorers.emptyMessage} />
       </div>
     )
   }
@@ -123,7 +106,7 @@ export default function TopScorersPage() {
               </div>
               <div className="w-10 h-10 flex flex-col items-center justify-center bg-bg-surface rounded-xl border border-border">
                 <span className="font-bold text-accent leading-none">{scorer.goals}</span>
-                <span className="text-[8px] text-text-secondary mt-0.5">{t[lang].goal}</span>
+                <span className="text-[8px] text-text-secondary mt-0.5">{t.topScorers.goal}</span>
               </div>
             </DarkCard>
           </motion.div>
