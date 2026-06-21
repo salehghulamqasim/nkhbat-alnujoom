@@ -15,21 +15,21 @@ test.describe('Top Scorers Team Name E2E Test', () => {
   test('should display team name alongside top scorer on top-scorers page', async ({ page }) => {
     // 1. Log in as Admin
     await page.goto('/admin/login')
-    await expect(page.getByRole('heading', { name: 'Admin Panel' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'لوحة التحكم' })).toBeVisible()
     
     const pinInput = page.locator('input[type="password"]')
     await pinInput.fill('1234')
-    await page.getByRole('button', { name: 'Login' }).click()
+    await page.getByRole('button', { name: 'دخول' }).click()
 
     // Verify successful login
-    await expect(page.getByText('Star Elite Cup tournament control panel')).toBeVisible()
+    await expect(page.getByText('لوحة تحكم بطولة نخبة النجوم')).toBeVisible()
 
     // 2. Navigate to Matches Admin Page to find or generate matches
     await page.goto('/admin/matches')
-    await expect(page.getByText('Match Management')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'إدارة المباريات' })).toBeVisible()
 
     // Click Auto-Generate Schedule if visible to populate matches
-    const autoGenBtn = page.getByRole('button', { name: 'Auto-Generate Schedule' })
+    const autoGenBtn = page.getByRole('button', { name: 'إنشاء الجدول تلقائياً' })
     if (await autoGenBtn.count() > 0 && await autoGenBtn.isVisible()) {
       console.log('Auto-Generate Schedule button is visible. Clicking it...')
       await autoGenBtn.click()
@@ -44,7 +44,7 @@ test.describe('Top Scorers Team Name E2E Test', () => {
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i)
       const statusText = await card.locator('span').first().textContent()
-      if (statusText.includes('Scheduled')) {
+      if (statusText.includes('مجدولة')) {
         targetCard = card
         break
       }
@@ -55,11 +55,11 @@ test.describe('Top Scorers Team Name E2E Test', () => {
     }
 
     // 4. Click "Record Result"
-    const recordResultBtn = targetCard.getByRole('button', { name: 'Record Result' })
+    const recordResultBtn = targetCard.getByRole('button', { name: 'تسجيل النتيجة' })
     await recordResultBtn.click()
 
     // Result modal should open
-    await expect(page.getByRole('heading', { name: 'Record Result' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'تسجيل النتيجة' })).toBeVisible()
 
     // Fill in the scores (score A = 1, score B = 0)
     const scoreInputs = page.locator('form input[type="number"]')
@@ -68,8 +68,8 @@ test.describe('Top Scorers Team Name E2E Test', () => {
     await scoreInputs.last().fill('0')
 
     // 5. Add a goal scorer
-    // Click "إضافة" (Add) under "الهدافون" (Scorers)
-    const addScorersBtn = page.locator('button:has-text("إضافة")').first()
+    // Click "إضافة" (Add) under "الهدافون" (Scorers) inside the form modal
+    const addScorersBtn = page.locator('form button:has-text("إضافة")').first()
     await addScorersBtn.click()
 
     // Choose the team
@@ -95,7 +95,7 @@ test.describe('Top Scorers Team Name E2E Test', () => {
     await page.locator('button[type="submit"]').click()
 
     // Wait for modal to close
-    await expect(page.getByRole('heading', { name: 'Record Result' })).not.toBeVisible()
+    await expect(page.getByRole('heading', { name: 'تسجيل النتيجة' })).not.toBeVisible()
 
     // 6. Navigate to the top scorers page and verify player and team name are displayed
     await page.goto('/top-scorers')

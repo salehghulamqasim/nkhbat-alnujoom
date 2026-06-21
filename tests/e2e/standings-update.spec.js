@@ -15,7 +15,7 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
   test('should automatically update standings table after match result is recorded', async ({ page }) => {
     // 1. Go to public standings page first to capture team group assignments
     await page.goto('/standings')
-    await expect(page.getByText('Group Standings')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Group Standings' })).toBeVisible()
 
     // Query and log the groups of all teams from the standings page so we can match them
     const teamGroups = {}
@@ -38,21 +38,21 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
 
     // 2. Log in as Admin
     await page.goto('/admin/login')
-    await expect(page.getByRole('heading', { name: 'Admin Panel' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'لوحة التحكم' })).toBeVisible()
     
     const pinInput = page.locator('input[type="password"]')
     await pinInput.fill('1234')
-    await page.getByRole('button', { name: 'Login' }).click()
+    await page.getByRole('button', { name: 'دخول' }).click()
 
     // Verify successful login
-    await expect(page.getByText('Star Elite Cup tournament control panel')).toBeVisible()
+    await expect(page.getByText('لوحة تحكم بطولة نخبة النجوم')).toBeVisible()
 
     // 3. Navigate to Matches Admin Page to find a scheduled match where both teams belong to the same group
     await page.goto('/admin/matches')
-    await expect(page.getByText('Match Management')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'إدارة المباريات' })).toBeVisible()
 
     // Click Auto-Generate Schedule if visible
-    const autoGenBtn = page.getByRole('button', { name: 'Auto-Generate Schedule' })
+    const autoGenBtn = page.getByRole('button', { name: 'إنشاء الجدول تلقائياً' })
     if (await autoGenBtn.count() > 0 && await autoGenBtn.isVisible()) {
       console.log('Auto-Generate Schedule button is visible. Clicking it...')
       await autoGenBtn.click()
@@ -70,7 +70,7 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
     for (let i = 0; i < count; i++) {
       const card = cards.nth(i)
       const statusText = await card.locator('span').first().textContent()
-      if (statusText.includes('Scheduled')) {
+      if (statusText.includes('مجدولة')) {
         const pElements = card.locator('p')
         const t1 = await pElements.nth(0).textContent()
         const t2 = await pElements.nth(1).textContent()
@@ -99,7 +99,7 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
 
     // 4. Go to public standings page to capture initial stats for these teams
     await page.goto('/standings')
-    await expect(page.getByText('Group Standings')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Group Standings' })).toBeVisible()
 
     // Click on the appropriate group tab
     const groupTabBtn = page.getByRole('button', { name: `Group ${matchGroup}` })
@@ -120,9 +120,8 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
             won: Number(cells[3]?.textContent.trim() || '0'),
             drawn: Number(cells[4]?.textContent.trim() || '0'),
             lost: Number(cells[5]?.textContent.trim() || '0'),
-            gf: Number(cells[6]?.textContent.trim() || '0'),
-            ga: Number(cells[7]?.textContent.trim() || '0'),
-            pts: Number(cells[9]?.textContent.trim() || '0'),
+            gd: Number(cells[6]?.textContent.trim().replace('+', '') || '0'),
+            pts: Number(cells[7]?.textContent.trim() || '0'),
           }
         }
       })
@@ -138,7 +137,7 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
 
     // 5. Return to Matches Admin Page to record result
     await page.goto('/admin/matches')
-    await expect(page.getByText('Match Management')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'إدارة المباريات' })).toBeVisible()
 
     // Re-locate the specific target card by team names
     const matchCard = page.locator('.glass-card').filter({
@@ -150,11 +149,11 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
     await expect(matchCard).toBeVisible()
 
     // Click "Record Result" on that card
-    const recordResultBtn = matchCard.getByRole('button', { name: 'Record Result' })
+    const recordResultBtn = matchCard.getByRole('button', { name: 'تسجيل النتيجة' })
     await recordResultBtn.click()
 
     // Result modal should open
-    await expect(page.getByRole('heading', { name: 'Record Result' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'تسجيل النتيجة' })).toBeVisible()
 
     // Fill score A = 4, score B = 2
     const scoreInputs = page.locator('form input[type="number"]')
@@ -164,16 +163,16 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
     await scoreInputs.last().fill('2')
 
     // Click "Save Result" to submit
-    await page.getByRole('button', { name: 'Save Result' }).click()
+    await page.getByRole('button', { name: 'حفظ النتيجة' }).click()
 
     // Wait for modal to close and match status to become "Completed"
-    await expect(page.getByRole('heading', { name: 'Record Result' })).not.toBeVisible()
-    await expect(matchCard.locator('span', { hasText: 'Completed' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'تسجيل النتيجة' })).not.toBeVisible()
+    await expect(matchCard.locator('span', { hasText: 'منتهية' })).toBeVisible()
     await expect(matchCard.locator('span', { hasText: '4 - 2' })).toBeVisible()
 
     // 6. Navigate back to standings to verify auto-update
     await page.goto('/standings')
-    await expect(page.getByText('Group Standings')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Group Standings' })).toBeVisible()
 
     // Click on the appropriate group tab
     const groupTabBtnAfter = page.getByRole('button', { name: `Group ${matchGroup}` })
@@ -194,9 +193,8 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
             won: Number(cells[3]?.textContent.trim() || '0'),
             drawn: Number(cells[4]?.textContent.trim() || '0'),
             lost: Number(cells[5]?.textContent.trim() || '0'),
-            gf: Number(cells[6]?.textContent.trim() || '0'),
-            ga: Number(cells[7]?.textContent.trim() || '0'),
-            pts: Number(cells[9]?.textContent.trim() || '0'),
+            gd: Number(cells[6]?.textContent.trim().replace('+', '') || '0'),
+            pts: Number(cells[7]?.textContent.trim() || '0'),
           }
         }
       })
@@ -217,14 +215,12 @@ test.describe('Standings Auto-Update Reproduction Test', () => {
 
     expect(t1Updated.played).toBe(t1Initial.played + 1)
     expect(t1Updated.won).toBe(t1Initial.won + 1)
-    expect(t1Updated.gf).toBe(t1Initial.gf + 4)
-    expect(t1Updated.ga).toBe(t1Initial.ga + 2)
+    expect(t1Updated.gd).toBe(t1Initial.gd + 2)
     expect(t1Updated.pts).toBe(t1Initial.pts + 3)
 
     expect(t2Updated.played).toBe(t2Initial.played + 1)
     expect(t2Updated.lost).toBe(t2Initial.lost + 1)
-    expect(t2Updated.gf).toBe(t2Initial.gf + 2)
-    expect(t2Updated.ga).toBe(t2Initial.ga + 4)
+    expect(t2Updated.gd).toBe(t2Initial.gd - 2)
     expect(t2Updated.pts).toBe(t2Initial.pts)
   })
 })

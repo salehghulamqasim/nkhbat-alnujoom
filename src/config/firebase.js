@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
-import { getDatabase } from 'firebase/database'
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
+import { getDatabase, connectDatabaseEmulator } from 'firebase/database'
 
 const firebaseConfig = {
   apiKey: "AIzaSyCfC2gWBc_CNV0vmTUrqPUE-pkO4Q92tHM",
@@ -16,5 +16,10 @@ const app = initializeApp(firebaseConfig)
 
 export const db = getFirestore(app)
 export const rtdb = getDatabase(app)
+
+if (import.meta.env.VITE_USE_EMULATORS === 'true') {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080)
+  connectDatabaseEmulator(rtdb, '127.0.0.1', 9000)
+}
 
 export default app
