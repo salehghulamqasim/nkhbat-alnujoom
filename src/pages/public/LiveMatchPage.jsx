@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, MapPin, Clock, Calendar, Radio } from 'lucide-react'
+import { MapPin, Clock, Calendar, Radio } from 'lucide-react'
 import TeamLogo from '../../components/common/TeamLogo'
 import DarkCard from '../../components/common/DarkCard'
 import LoadingState from '../../components/common/LoadingState'
@@ -70,15 +70,6 @@ export default function LiveMatchPage() {
 
   return (
     <div className="px-4 py-6 space-y-6">
-      <button
-        type="button"
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm text-text-secondary hover:text-accent transition-colors"
-      >
-        <ArrowRight size={16} />
-        <span>{t.liveMatch.back}</span>
-      </button>
-
       <div className="text-center space-y-2">
         {status === 'live' ? (
           <span className="inline-flex items-center gap-2 text-live font-bold text-sm">
