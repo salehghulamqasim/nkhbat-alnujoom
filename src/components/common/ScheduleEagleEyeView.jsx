@@ -423,7 +423,8 @@ export default function ScheduleEagleEyeView({
                         <span className={`text-sm font-bold ${isLive ? 'text-amber-400' : 'text-accent'}`}>
                           {score}
                         </span>
-                      </td>
+                      ) : null}
+                    </td>
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2 justify-end" dir={isAr ? 'rtl' : 'ltr'}>
                           {!isAr && tA?.logo ? (
@@ -470,11 +471,10 @@ export default function ScheduleEagleEyeView({
                         {!isAr && tB?.logo ? (
                           <img src={tB.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 flex-shrink-0" />
                         ) : null}
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 text-center text-xs text-zinc-400 truncate max-w-[100px]">
-                      {match.venue || '—'}
-                    </td>
+                        </td>
+                        <td className="px-3 py-3 text-center text-xs text-zinc-400 truncate max-w-[100px]">
+                        {match.venue || '—'}
+                        </td>
                     <td className="px-3 py-3 text-center">
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${badge.bg} ${badge.text}`}>
                         {isLive && <Zap size={8} className="animate-pulse" />}

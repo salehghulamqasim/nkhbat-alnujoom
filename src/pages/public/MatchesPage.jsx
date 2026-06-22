@@ -42,11 +42,6 @@ export default function MatchesPage() {
   const { data: matches = [], isLoading, isError, refetch } = useMatchesQuery()
   const [filter, setFilter] = useState('all')
 
-  const isAr = lang === 'ar'
-  const indicatorStyle = isAr
-    ? { right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, left: 'auto' }
-    : { left: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, right: 'auto' }
-
   const filteredMatches = matches.filter((m) => {
     if (filter === 'all') return true
     return m.status === filter
