@@ -8,6 +8,7 @@ import { useTeamsQuery, useMatchesQuery } from '../../hooks/useQueries'
 import { calculateStandings } from '../../utils/standings'
 import { useAppStore } from '../../stores/useAppStore'
 import { haptic } from '../../hooks/useHaptics'
+import { useTranslation } from '../../hooks/useTranslation'
 
 const GROUPS = ['A', 'B', 'C']
 
