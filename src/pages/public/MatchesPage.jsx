@@ -66,7 +66,7 @@ export default function MatchesPage() {
 
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">{t.matches.title}</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
 
       <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative" dir={isAr ? 'rtl' : 'ltr'}>
         {filters.map((f) => (
@@ -90,7 +90,7 @@ export default function MatchesPage() {
       </div>
 
       {filteredMatches.length === 0 ? (
-        <EmptyState title={t.matches.noMatches} message={t.matches.noMatchesDesc} />
+        <EmptyState title={t[lang].noMatches} message={t[lang].noMatchesDesc} />
       ) : (
         <motion.div
           initial={{ opacity: 0 }}

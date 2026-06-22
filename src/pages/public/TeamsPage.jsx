@@ -10,6 +10,7 @@ import EmptyState from '../../components/common/EmptyState'
 import { useTeamsQuery } from '../../hooks/useQueries'
 import { useAppStore } from '../../stores/useAppStore'
 import { haptic } from '../../hooks/useHaptics'
+import { useTranslation } from '../../hooks/useTranslation'
 
 const t = {
   ar: {
@@ -41,7 +42,7 @@ const t = {
 }
 
 export default function TeamsPage() {
-  const { t, lang } = useTranslation()
+  const { lang } = useTranslation()
   const [filter, setFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const { data: teams = [], isLoading, isError, refetch } = useTeamsQuery()
@@ -54,24 +55,24 @@ export default function TeamsPage() {
     })
   }, [teams, filter, searchQuery])
 
-  if (isLoading) return <LoadingState message={t.teams.loading} />
+  if (isLoading) return <LoadingState message={t[lang].loading} />
   if (isError) {
     return (
       <div className="px-4 py-6">
-        <ErrorState message={t.teams.error} onRetry={refetch} />
+        <ErrorState message={t[lang].error} onRetry={refetch} />
       </div>
     )
   }
 
   return (
     <div className="px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-center mb-6">{t.teams.title}</h1>
+      <h1 className="text-2xl font-bold text-center mb-6">{t[lang].title}</h1>
 
       <div className="flex gap-2">
         <div className="relative flex-1">
           <input
             type="text"
-            placeholder={t.teams.search}
+            placeholder={t[lang].search}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-bg-surface border border-border rounded-xl py-3 pr-10 pl-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary placeholder:text-text-secondary"
@@ -95,9 +96,9 @@ export default function TeamsPage() {
       </div>
 
       {teams.length === 0 ? (
-        <EmptyState title={t.teams.emptyTitle} message={t.teams.emptyMsg} />
+        <EmptyState title={t[lang].emptyTitle} message={t[lang].emptyMsg} />
       ) : filteredTeams.length === 0 ? (
-        <EmptyState title={t.teams.noResultsTitle} message={t.teams.noResultsMsg} />
+        <EmptyState title={t[lang].noResultsTitle} message={t[lang].noResultsMsg} />
       ) : (
         <motion.div
           className="grid grid-cols-2 gap-4"
