@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import DarkCard from '../../components/common/DarkCard'
 import { useAppStore } from '../../stores/useAppStore'
 import { haptic } from '../../hooks/useHaptics'
+import { useTranslation } from '../../hooks/useTranslation'
 
 export default function MorePage() {
   const { theme, toggleTheme, toggleLanguage } = useAppStore()
