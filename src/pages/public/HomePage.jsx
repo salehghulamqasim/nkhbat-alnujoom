@@ -104,7 +104,7 @@ export default function HomePage() {
           aria-label={language === 'ar' ? 'الإعدادات' : 'Settings'}
         >
           <Settings size={18} strokeWidth={1.75} />
-        </Link>
+        </button>
 
         <div className="flex items-center gap-2 pointer-events-auto">
           <button

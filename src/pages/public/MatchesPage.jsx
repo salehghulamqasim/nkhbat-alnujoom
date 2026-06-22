@@ -64,11 +64,6 @@ export default function MatchesPage() {
     )
   }
 
-  const isAr = lang === 'ar'
-  const indicatorStyle = isAr
-    ? { right: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, left: 'auto' }
-    : { left: `calc(${filters.findIndex((f) => f.id === filter) * 25}% + 0.25rem)`, right: 'auto' }
-
   return (
     <div className="px-4 py-6 space-y-6">
       <h1 className="text-2xl font-bold text-center mb-6">{t.matches.title}</h1>
