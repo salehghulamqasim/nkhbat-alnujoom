@@ -91,8 +91,12 @@ export default function ScheduleEagleEyeView({
 
   const getScore = useCallback((match) => {
     if (!match?.result) return null
-    return `${match.result.scoreA || 0} - ${match.result.scoreB || 0}`
-  }, [])
+    const { scoreA, scoreB } = match.result
+    // In RTL (Arabic) the table columns are visually reversed, so flip the score to match.
+    return isAr
+      ? `${scoreB || 0} - ${scoreA || 0}`
+      : `${scoreA || 0} - ${scoreB || 0}`
+  }, [isAr])
 
   const filterOptions = [
     { key: 'all', labelAr: 'الكل', labelEn: 'All' },
@@ -437,7 +441,7 @@ export default function ScheduleEagleEyeView({
                     </td>
                     <td className="px-3 py-2.5 text-center">
                       {score ? (
-                        <span className={`text-sm font-bold tabular-nums ${isLive ? 'text-amber-400' : 'text-zinc-100'}`}>
+                        <span dir="ltr" className={`inline-block text-sm font-bold tabular-nums ${isLive ? 'text-amber-400' : 'text-zinc-100'}`}>
                           {score}
                         </span>
                       ) : (
@@ -520,7 +524,7 @@ export default function ScheduleEagleEyeView({
                       </div>
                       <div className="flex-shrink-0 text-center">
                         {sc ? (
-                          <span className="text-2xl font-extrabold text-accent">{sc}</span>
+                          <span dir="ltr" className="inline-block text-2xl font-extrabold text-accent">{sc}</span>
                         ) : (
                           <span className="text-xs text-zinc-500 uppercase font-medium">VS</span>
                         )}

@@ -151,7 +151,9 @@ export default function LiveMatchPage() {
                 className="text-4xl font-bold text-accent tracking-widest"
                 dir="ltr"
               >
-                {scoreA ?? 0} - {scoreB ?? 0}
+                {lang === 'ar'
+                  ? `${scoreB ?? 0} - ${scoreA ?? 0}`
+                  : `${scoreA ?? 0} - ${scoreB ?? 0}`}
               </motion.span>
             )}
           </div>

@@ -26,21 +26,26 @@ const t = {
 
 export default function MatchRow({ match, teamA, teamB, onClick }) {
   const lang = useAppStore((s) => s.language)
+  const isAr = lang === 'ar'
   const status = getMatchDisplayStatus(match)
   const dateLabel = formatMatchDate(match.date, lang)
   const { liveData, loading: liveLoading } = useLiveMatch(status === 'live' ? match.id : null)
+
+  // In RTL (Arabic) the flex row is visually reversed: teamB is on the left, teamA on the right.
+  // So the score string must also be reversed to match what the user sees visually.
+  const getScore = (sA, sB) => isAr ? `${sB} - ${sA}` : `${sA} - ${sB}`
 
   const centerContent =
     status === 'live'
       ? liveLoading
         ? '...'
         : liveData
-          ? `${liveData.scoreA} - ${liveData.scoreB}`
+          ? getScore(liveData.scoreA, liveData.scoreB)
           : match.result
-            ? `${match.result.scoreA} - ${match.result.scoreB}`
-            : '0 - 0'
+            ? getScore(match.result.scoreA, match.result.scoreB)
+            : getScore(0, 0)
       : status === 'completed' && match.result
-        ? `${match.result.scoreA} - ${match.result.scoreB}`
+        ? getScore(match.result.scoreA, match.result.scoreB)
         : match.time
 
   return (

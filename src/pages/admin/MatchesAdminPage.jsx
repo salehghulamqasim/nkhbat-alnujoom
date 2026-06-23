@@ -41,6 +41,7 @@ function AdminMatchCard({
   onRestore,
   onDelete,
   t,
+  isAr,
 }) {
   const statusLabels = {
     scheduled: { text: t('matches.status.scheduled'), className: 'text-text-secondary bg-bg-surface' },
@@ -81,7 +82,9 @@ function AdminMatchCard({
         <div className="flex flex-col items-center shrink-0 px-2">
           {match.status === 'live' || (match.status === 'completed' && match.result) ? (
             <span className="text-xl md:text-2xl font-bold text-accent" dir="ltr">
-              {match.result?.scoreA ?? 0} - {match.result?.scoreB ?? 0}
+              {isAr
+                ? `${match.result?.scoreB ?? 0} - ${match.result?.scoreA ?? 0}`
+                : `${match.result?.scoreA ?? 0} - ${match.result?.scoreB ?? 0}`}
             </span>
           ) : (
             <span className="text-lg font-bold text-text-secondary">{t('matches.vs')}</span>
@@ -376,6 +379,7 @@ export default function MatchesAdminPage() {
                       }}
                       onDelete={setDeletingMatch}
                       t={t}
+                      isAr={isAr}
                     />
                   </motion.div>
                 ))}

@@ -45,9 +45,9 @@ export default function TeamsPage() {
             placeholder={t.teams.search}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-bg-surface border border-border rounded-xl py-3 pr-10 pl-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary placeholder:text-text-secondary"
+            className="w-full bg-bg-surface border border-border rounded-xl py-3 pe-10 ps-4 text-sm focus:outline-none focus:border-accent transition-colors text-text-primary placeholder:text-text-secondary"
           />
-          <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary" />
+          <Search size={18} className="absolute end-3 top-1/2 -translate-y-1/2 text-text-secondary" />
         </div>
 
         <select
