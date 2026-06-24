@@ -428,7 +428,7 @@ export default function ScheduleEagleEyeView({
                     </td>
                     <td className="px-3 py-2.5">
                       <div className="grid grid-cols-[1fr_auto] items-center gap-2 w-[130px] sm:w-[140px] ml-auto" dir={isAr ? 'rtl' : 'ltr'}>
-                        <span className="text-xs font-medium truncate text-zinc-200 text-start">
+                        <span className="text-xs font-medium truncate text-zinc-200 text-end">
                           {tA?.name || match.teamA || '—'}
                         </span>
                         {tA?.logo ? (
@@ -450,7 +450,7 @@ export default function ScheduleEagleEyeView({
                         {tB?.logo ? (
                           <img src={tB.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 shrink-0" />
                         ) : <div className="w-5 h-5 shrink-0" />}
-                        <span className="text-xs font-medium truncate text-zinc-200 text-end">
+                        <span className="text-xs font-medium truncate text-zinc-200 text-start">
                           {tB?.name || match.teamB || '—'}
                         </span>
                       </div>
