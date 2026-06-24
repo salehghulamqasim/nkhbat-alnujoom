@@ -1,5 +1,5 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Home, Swords, Table2, Users, Calendar } from 'lucide-react'
+import { NavLink, useLocation } from 'react-router-dom'
+import { Home, Swords, Table2, Users } from 'lucide-react'
 import { useAppStore } from '../../stores/useAppStore'
 import { haptic } from '../../hooks/useHaptics'
 
@@ -12,10 +12,8 @@ const navItems = [
 
 export default function BottomNav() {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
   const { language } = useAppStore()
   const isAr = language === 'ar'
-  const isScheduleActive = pathname === '/schedule'
 
   if (pathname.startsWith('/admin')) return null
 
@@ -46,24 +44,6 @@ export default function BottomNav() {
           )
         })}
       </div>
-
-      {/* FAB — floats above the bar, no notch needed */}
-      <button
-        onClick={() => {
-          haptic.medium()
-          navigate('/schedule')
-        }}
-        className={`absolute left-1/2 -translate-x-1/2 z-30 w-13 h-13 rounded-full flex items-center justify-center
-          shadow-2xl transition-all duration-200 active:scale-90 hover:scale-110
-          ${isScheduleActive
-            ? 'bg-accent text-black shadow-[0_4px_15px_rgba(184,155,94,0.4)]'
-            : 'bg-bg-surface text-text-primary border border-border hover:bg-accent/10 hover:text-accent hover:border-accent/30 shadow-md shadow-black/5'
-          }`}
-        aria-label={isAr ? 'جدول' : 'Schedule'}
-        style={{ bottom: 'calc(4rem - 20px)' }}
-      >
-        <Calendar size={24} strokeWidth={2.5} />
-      </button>
     </nav>
   )
 }
