@@ -26,10 +26,10 @@ const fallbackClasses = {
 }
 
 const patterns = {
-  light: 10,
-  medium: 20,
-  heavy: 40,
-  intense: [30, 15, 15, 15, 30],
+  light: 20,
+  medium: 37,
+  heavy: 50,
+  intense: [40, 20, 20, 20, 40],
 }
 
 function triggerPulse(level) {

@@ -58,7 +58,11 @@ export default function HomePage() {
     () =>
       enrichedMatches
         .filter((m) => m.status === 'scheduled')
-        .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
+        .sort((a, b) => {
+          const aStr = `${a.date || '9999-99-99'}${a.time || '99:99'}`
+          const bStr = `${b.date || '9999-99-99'}${b.time || '99:99'}`
+          return aStr.localeCompare(bStr)
+        })
         .slice(0, 3),
     [enrichedMatches]
   )
@@ -67,7 +71,11 @@ export default function HomePage() {
     () =>
       enrichedMatches
         .filter((m) => m.status === 'completed')
-        .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`))
+      .sort((a, b) => {
+        const aStr = `${a.date || '9999-99-99'}${a.time || '99:99'}`
+        const bStr = `${b.date || '9999-99-99'}${b.time || '99:99'}`
+        return aStr.localeCompare(bStr)
+      })
         .slice(0, 3),
     [enrichedMatches]
   )
@@ -137,8 +145,9 @@ export default function HomePage() {
       <div className="relative w-screen left-1/2 right-1/2 -mx-[50vw] h-[320px] sm:h-[380px] md:h-[480px] overflow-hidden select-none bg-black -mt-4 sm:-mt-6">
         {/* Background Image */}
         <img
-          src="/premium-trophy-bg.png"
+          src="/premium-trophy-bg.webp"
           alt="Premium Trophy"
+          fetchpriority="high"
           className={`absolute inset-0 w-full h-full object-cover z-0 ${isRtl ? 'object-left scale-x-[-1]' : 'object-right'}`}
         />
 

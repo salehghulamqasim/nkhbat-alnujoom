@@ -16,7 +16,7 @@ import { enrichMatch } from '../../utils/matchHelpers'
 import { useTranslation } from '../../hooks/useTranslation'
 
 export default function TeamDetailPage() {
-  const { t } = useTranslation()
+  const { t, lang } = useTranslation()
   const { id } = useParams()
   const [activeTab, setActiveTab] = useState('players')
   const { data: teams = [], isLoading: teamsLoading, isError: teamsError, refetch: refetchTeams } = useTeamsQuery()
@@ -40,7 +40,11 @@ export default function TeamDetailPage() {
     return matches
       .filter((m) => m.teamA === team.id || m.teamB === team.id)
       .map((m) => enrichMatch(m, teams))
-      .sort((a, b) => `${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`))
+      .sort((a, b) => {
+        const aStr = `${a.date || '9999-99-99'}${a.time || '99:99'}`
+        const bStr = `${b.date || '9999-99-99'}${b.time || '99:99'}`
+        return aStr.localeCompare(bStr)
+      })
   }, [team, matches, teams])
 
   const playersWithGoals = useMemo(() => {
@@ -85,9 +89,9 @@ export default function TeamDetailPage() {
         <Link
           to="/teams"
           onClick={() => haptic.light()}
-          className="relative z-10 flex items-center text-sm text-text-secondary hover:text-text-primary mb-4 w-fit"
+          className="relative z-10 flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary mb-4 w-fit"
         >
-          <ChevronRight size={16} className="rtl:-scale-x-100" /> عودة للفرق
+          <ChevronRight size={16} className="rtl:-scale-x-100" /> {lang === 'ar' ? 'عودة للفرق' : 'Back to Teams'}
         </Link>
 
         <div className="relative z-10 flex flex-col items-center">
@@ -96,8 +100,8 @@ export default function TeamDetailPage() {
           <div className="flex items-center gap-2 text-sm text-text-secondary flex-wrap justify-center">
             {team.group && (
               <span className="bg-bg-surface px-2 py-0.5 rounded">
-                المجموعة {team.group === 'A' ? 'أ' : team.group === 'B' ? 'ب' : team.group === 'C' ? 'ج' : team.group}
-                {rank && ` — المركز ${rank}`}
+                {t.teamDetails.group(team.group)}
+                {rank && t.teamDetails.rank(rank)}
               </span>
             )}
             <span>{t.teamDetails.manager} {team.manager || <span className="text-text-secondary/50">{t.teamDetails.notSpecified}</span>}</span>

@@ -11,8 +11,8 @@ export function formatMatchDate(dateStr, lang = 'ar') {
   const isAr = lang === 'ar'
   if (matchDay.getTime() === today.getTime()) return isAr ? 'اليوم' : 'Today'
   if (matchDay.getTime() === tomorrow.getTime()) return isAr ? 'غداً' : 'Tomorrow'
-  const locale = isAr ? 'ar-SA' : 'en-US'
-  return date.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' })
+  const locale = isAr ? 'ar-EG' : 'en-US'
+  return date.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', calendar: 'gregory' })
 }
 
 export function getMatchDisplayStatus(match) {

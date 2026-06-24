@@ -60,6 +60,10 @@ export default function MatchesPage() {
     if (filter === 'live') return m.status === 'live'
     if (filter === 'completed') return m.status === 'completed'
     return true
+  }).sort((a, b) => {
+    const aStr = `${a.date || '9999-99-99'}${a.time || '99:99'}`
+    const bStr = `${b.date || '9999-99-99'}${b.time || '99:99'}`
+    return aStr.localeCompare(bStr)
   })
 
   if (isLoading) return <LoadingState message={strings.loading} />
