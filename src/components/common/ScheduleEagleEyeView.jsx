@@ -427,16 +427,13 @@ export default function ScheduleEagleEyeView({
                       </span>
                     </td>
                     <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-2 justify-end" dir={isAr ? 'rtl' : 'ltr'}>
-                        {isAr && tA?.logo ? (
-                          <img src={tA.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 shrink-0" />
-                        ) : null}
-                        <span className="text-xs font-medium truncate max-w-[110px] text-zinc-200">
+                      <div className="grid grid-cols-[1fr_auto] items-center gap-2 w-[130px] sm:w-[140px] ml-auto" dir={isAr ? 'rtl' : 'ltr'}>
+                        <span className="text-xs font-medium truncate text-zinc-200 text-start">
                           {tA?.name || match.teamA || '—'}
                         </span>
-                        {!isAr && tA?.logo ? (
+                        {tA?.logo ? (
                           <img src={tA.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 shrink-0" />
-                        ) : null}
+                        ) : <div className="w-5 h-5 shrink-0" />}
                       </div>
                     </td>
                     <td className="px-3 py-2.5 text-center">
@@ -449,16 +446,13 @@ export default function ScheduleEagleEyeView({
                       )}
                     </td>
                     <td className="px-3 py-2.5">
-                      <div className="flex items-center gap-2" dir={isAr ? 'rtl' : 'ltr'}>
-                        {isAr && tB?.logo ? (
+                      <div className="grid grid-cols-[auto_1fr] items-center gap-2 w-[130px] sm:w-[140px] mr-auto" dir={isAr ? 'rtl' : 'ltr'}>
+                        {tB?.logo ? (
                           <img src={tB.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 shrink-0" />
-                        ) : null}
-                        <span className="text-xs font-medium truncate max-w-[110px] text-zinc-200">
+                        ) : <div className="w-5 h-5 shrink-0" />}
+                        <span className="text-xs font-medium truncate text-zinc-200 text-end">
                           {tB?.name || match.teamB || '—'}
                         </span>
-                        {!isAr && tB?.logo ? (
-                          <img src={tB.logo} alt="" className="w-5 h-5 rounded-full object-cover border border-zinc-700/50 shrink-0" />
-                        ) : null}
                       </div>
                     </td>
                     <td className="px-3 py-2.5 text-center text-xs text-zinc-400 truncate max-w-[100px]">
