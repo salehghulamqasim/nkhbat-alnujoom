@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import GA4Tracker from './components/GA4Tracker'
 import AppLayout from './components/layout/AppLayout'
 import AdminLayout from './pages/admin/AdminLayout'
 import HomePage from './pages/public/HomePage'
@@ -44,6 +45,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <GA4Tracker />
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
