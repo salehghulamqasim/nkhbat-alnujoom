@@ -144,7 +144,9 @@ export const en = {
     title: 'Schedule',
     subtitle: 'Complete match schedule',
     loading: 'Loading schedule...',
-    error: 'Failed to load schedule'
+    error: 'Failed to load schedule',
+    tableView: 'Match Table',
+    bracketView: 'Road to Final'
   },
   standingsTable: {
     rank: '#',

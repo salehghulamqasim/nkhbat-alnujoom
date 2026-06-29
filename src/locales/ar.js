@@ -150,7 +150,9 @@ export const ar = {
     title: 'جدول',
     subtitle: 'جدول المباريات الشامل',
     loading: 'جاري تحميل الجدول...',
-    error: 'تعذر تحميل الجدول'
+    error: 'تعذر تحميل الجدول',
+    tableView: 'جدول المباريات',
+    bracketView: 'الطريق إلى النهائي'
   },
   standingsTable: {
     rank: '#',

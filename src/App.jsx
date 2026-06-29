@@ -21,9 +21,15 @@ import MatchesAdminPage from './pages/admin/MatchesAdminPage'
 import ScheduleEagleEyeAdminPage from './pages/admin/ScheduleEagleEyePage'
 import KnockoutAdminPage from './pages/admin/KnockoutAdminPage'
 import { useAppStore } from './stores/useAppStore'
+import { useKnockoutStore } from './stores/useKnockoutStore'
 
 function App() {
   const { theme, language } = useAppStore()
+
+  useEffect(() => {
+    useKnockoutStore.getState().listenToFirestore()
+    return () => useKnockoutStore.getState().cleanup()
+  }, [])
 
   useEffect(() => {
     const root = document.documentElement

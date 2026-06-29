@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trophy, CheckCircle, Lock, AlertCircle, RefreshCw, Plus, ArrowLeft } from 'lucide-react'
@@ -32,6 +32,11 @@ export default function KnockoutAdminPage() {
   const koStore = useKnockoutStore()
   const teamsStore = useTeamsStore()
   const matchesStore = useMatchesStore()
+
+  useEffect(() => {
+    koStore.listenToFirestore()
+    return () => koStore.cleanup()
+  }, [])
 
   const allTeams = teamsStore.teams || []
   const groupMatches = matchesStore.matches || []

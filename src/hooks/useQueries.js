@@ -25,6 +25,7 @@ export function useTeamsQuery() {
 
 export function useMatchesQuery() {
   const koMatches = useKnockoutStore((s) => s.knockoutMatches)
+  const step = useKnockoutStore((s) => s.step)
   const query = useQuery({
     queryKey: queryKeys.matches,
     queryFn: matchesService.fetchMatches,
@@ -34,8 +35,8 @@ export function useMatchesQuery() {
   })
 
   const mergedData = useMemo(() => {
-    return query.data ? [...query.data, ...(koMatches || [])] : query.data
-  }, [query.data, koMatches])
+    return query.data ? [...query.data, ...(step >= 3 ? (koMatches || []) : [])] : query.data
+  }, [query.data, koMatches, step])
 
   return {
     ...query,

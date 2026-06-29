@@ -2,6 +2,7 @@ import { resolveTeamColor, getTeamInitial } from '../../utils/teamColors'
 
 export default function TeamLogo({ logo, name, color, size = 'md', className = '' }) {
   const sizes = {
+    xs: 'w-5 h-5 text-[9px]',
     sm: 'w-8 h-8 text-xs',
     md: 'w-12 h-12 text-xl',
     lg: 'w-16 h-16 text-3xl',

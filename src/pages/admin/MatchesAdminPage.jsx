@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -262,6 +262,11 @@ export default function MatchesAdminPage() {
   const restoreMatch = useMatchesStore((state) => state.restoreMatch)
   const { t, isAr } = useI18n()
   const koStore = useKnockoutStore()
+
+  useEffect(() => {
+    koStore.listenToFirestore()
+    return () => koStore.cleanup()
+  }, [])
 
   const [formOpen, setFormOpen] = useState(false)
   const [resultMatch, setResultMatch] = useState(null)

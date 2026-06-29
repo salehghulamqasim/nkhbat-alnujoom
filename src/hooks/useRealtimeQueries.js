@@ -46,6 +46,7 @@ export function useRealtimeMatchesQuery() {
   const [isError, setIsError] = useState(false)
 
   const koMatches = useKnockoutStore((s) => s.knockoutMatches)
+  const step = useKnockoutStore((s) => s.step)
 
   useEffect(() => {
     setIsLoading(true)
@@ -73,7 +74,7 @@ export function useRealtimeMatchesQuery() {
     return () => unsub()
   }, [])
 
-  const data = useMemo(() => [...firebaseMatches, ...(koMatches || [])], [firebaseMatches, koMatches])
+  const data = useMemo(() => [...firebaseMatches, ...(step >= 3 ? (koMatches || []) : [])], [firebaseMatches, koMatches, step])
 
   return { data, isLoading, isError, refetch: () => {} }
 }

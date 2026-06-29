@@ -27,11 +27,10 @@ export const db = getFirestore(app)
 export const rtdb = getDatabase(app)
 
 // Connect to emulators locally during development & testing
-const isDev = import.meta.env.DEV || (typeof window !== 'undefined' && window.location.hostname === 'localhost')
-if (isDev) {
-  // Commented out to allow connecting to live production data while testing locally
-  // connectFirestoreEmulator(db, '127.0.0.1', 8080)
-  // connectDatabaseEmulator(rtdb, '127.0.0.1', 9000)
+const useEmulators = import.meta.env.VITE_USE_EMULATORS === 'true'
+if (useEmulators) {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080)
+  connectDatabaseEmulator(rtdb, '127.0.0.1', 9000)
 }
 
 export default app
