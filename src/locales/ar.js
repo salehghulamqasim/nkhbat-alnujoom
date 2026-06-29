@@ -1,0 +1,165 @@
+export const ar = {
+  common: {
+    loading: 'جاري التحميل...',
+    error: 'تعذر التحميل',
+    back: 'رجوع',
+    all: 'الكل',
+    group: 'المجموعة',
+    pts: 'نقاط',
+    played: 'لعب',
+    won: 'فوز',
+    lost: 'خسارة',
+    goal: 'هدف',
+    goals: 'أهداف',
+    upcoming: 'قادمة',
+    live: 'مباشر',
+    completed: 'منتهية',
+    postponed: 'مؤجلة',
+    arGroups: { A: 'أ', B: 'ب', C: 'ج' }
+  },
+  home: {
+    title: 'بطولة نخبة النجوم',
+    subtitle: 'بطولة',
+    groupsTable: 'ترتيب المجموعات',
+    matchesSchedule: 'جدول المباريات',
+    upcomingMatches: 'المباريات القادمة',
+    latestResults: 'آخر النتائج',
+    topScorers: 'الهدافون',
+    viewAll: 'عرض الكل',
+    noUpcoming: 'لا توجد مباريات قادمة',
+    noUpcomingDesc: 'سيتم عرض المباريات المجدولة هنا',
+    noResults: 'لا توجد نتائج بعد',
+    noResultsDesc: 'ستظهر نتائج المباريات المنتهية هنا',
+    noScorers: 'لا يوجد هدافون بعد',
+    noScorersDesc: 'ستظهر قائمة الهدافين بعد تسجيل النتائج',
+    team: 'فريق',
+    match: 'مباراة',
+    goal: 'هدف',
+    limit: 'حد أقصى',
+    loading: 'جاري تحميل البطولة...',
+    error: 'تعذر تحميل بيانات البطولة. تأكد من إعداد Firebase.'
+  },
+  matches: {
+    title: 'المباريات',
+    all: 'الكل',
+    upcoming: 'القادمة',
+    live: 'مباشر',
+    completed: 'منتهية',
+    loading: 'جاري تحميل المباريات...',
+    error: 'تعذر تحميل المباريات',
+    noMatches: 'لا توجد مباريات',
+    noMatchesDesc: 'لا توجد مباريات في هذا التصنيف',
+    unknownDate: 'غير محدد'
+  },
+  standings: {
+    title: 'ترتيب المجموعات',
+    group: 'المجموعة',
+    loading: 'جاري تحميل الترتيب...',
+    error: 'تعذر تحميل جدول الترتيب',
+    emptyTitle: 'لا توجد فرق في هذه المجموعة',
+    emptyMessage: 'أكمل القرعة لعرض ترتيب المجموعات',
+    directQualify: 'تأهل مباشر',
+    bestThird: 'أفضل ثوالث'
+  },
+  teams: {
+    title: 'الفرق المشاركة',
+    search: 'بحث عن فريق...',
+    all: 'الكل',
+    group: 'المجموعة',
+    awaitingDraw: 'بانتظار القرعة',
+    emptyTitle: 'لا توجد فرق مسجلة',
+    emptyMsg: 'سيتم عرض الفرق المشاركة هنا بعد تسجيلها',
+    noResultsTitle: 'لم يتم العثور على نتائج',
+    noResultsMsg: 'جرب تغيير معايير البحث أو التصفية',
+    loading: 'جاري تحميل الفرق...',
+    error: 'تعذر تحميل الفرق'
+  },
+  teamDetails: {
+    loading: 'جاري تحميل بيانات الفريق...',
+    error: 'تعذر تحميل بيانات الفريق',
+    notFoundTitle: 'الفريق غير موجود',
+    notFoundMessage: 'لم يتم العثور على هذا الفريق',
+    group: (g) => {
+      const arGroups = { A: 'أ', B: 'ب', C: 'ج' }
+      return `المجموعة ${arGroups[g] || g}`
+    },
+    rank: (r) => ` — المركز ${r}`,
+    manager: 'مدرب:',
+    notSpecified: 'غير محدد',
+    pts: 'نقاط',
+    played: 'لعب',
+    won: 'فوز',
+    lost: 'خسارة',
+    players: 'اللاعبون',
+    matches: 'المباريات',
+    noPlayersTitle: 'لا يوجد لاعبون',
+    noPlayersMessage: 'لم يتم تسجيل لاعبين لهذا الفريق',
+    goal: 'هدف',
+    goals: 'أهداف',
+    noMatchesTitle: 'لا توجد مباريات',
+    noMatchesMessage: 'لم يتم جدولة مباريات لهذا الفريق بعد'
+  },
+  topScorers: {
+    loading: 'جاري تحميل الهدافين...',
+    error: 'تعذر تحميل قائمة الهدافين',
+    emptyTitle: 'لا يوجد هدافون بعد',
+    emptyMessage: 'ستظهر قائمة الهدافين بعد تسجيل نتائج المباريات',
+    goal: 'هدف'
+  },
+  liveMatch: {
+    back: 'رجوع',
+    live: 'مباشر',
+    completed: 'منتهية',
+    upcoming: 'قادمة',
+    group: (g) => {
+      const arGroups = { A: 'أ', B: 'ب', C: 'ج' }
+      return `المجموعة ${arGroups[g] || g}`
+    },
+    loading: 'جاري تحميل المباراة...',
+    errorLive: 'تعذر الاتصال بالبث المباشر',
+    errorMatch: 'تعذر تحميل بيانات المباراة',
+    notFoundTitle: 'المباراة غير موجودة',
+    notFoundMessage: 'لم يتم العثور على هذه مباراة',
+    events: 'أحداث المباراة',
+    notStarted: 'المباراة لم تبدأ بعد',
+    viewAllMatches: 'عرض جميع المباريات'
+  },
+  more: {
+    title: 'الإعدادات',
+    subtitle: 'تخصيص المظهر وتفضيلات التطبيق',
+    preferences: 'تفضيلات التطبيق',
+    theme: 'المظهر',
+    themeDark: 'داكن',
+    themeLight: 'فاتح',
+    themeDesc: 'تبديل بين الوضع الداكن والفاتح',
+    language: 'اللغة',
+    languageDesc: 'تغيير لغة واجهة التطبيق',
+    admin: 'لوحة التحكم',
+    adminDesc: 'إدارة البطولة والنتائج والفرق',
+    appName: 'بطولة نخبة النجوم',
+    version: 'الإصدار 2026'
+  },
+  notFound: {
+    title: 'الصفحة غير موجودة',
+    subtitle: 'عذراً، الصفحة التي تبحث عنها غير موجودة',
+    desc: 'قد يكون الرابط غير صحيح أو تم نقل الصفحة إلى رابط آخر',
+    home: 'العودة للرئيسية',
+    back: 'رجوع'
+  },
+  schedule: {
+    title: 'جدول',
+    subtitle: 'جدول المباريات الشامل',
+    loading: 'جاري تحميل الجدول...',
+    error: 'تعذر تحميل الجدول'
+  },
+  standingsTable: {
+    rank: '#',
+    team: 'الفريق',
+    played: 'لعب',
+    won: 'ف',
+    drawn: 'ت',
+    lost: 'خ',
+    gd: '±',
+    pts: 'نقاط'
+  }
+}

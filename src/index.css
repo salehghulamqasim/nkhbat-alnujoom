@@ -1,0 +1,201 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+@import "@fontsource/cairo/400.css";
+@import "@fontsource/cairo/700.css";
+
+@theme {
+  --font-sans: 'Cairo', sans-serif;
+
+  /* Semantic color tokens — resolve via CSS vars */
+  --color-bg-primary: var(--theme-bg-primary);
+  --color-bg-card: var(--theme-bg-card);
+  --color-bg-surface: var(--theme-bg-surface);
+  --color-bg-nav: var(--theme-bg-nav);
+
+  /* Muted, premium gold palette — resolve via CSS vars */
+  --color-accent: var(--theme-accent);
+  --color-accent-light: var(--theme-accent-light);
+  --color-accent-hover: var(--theme-accent-hover);
+
+  --color-text-primary: var(--theme-text-primary);
+  --color-text-secondary: var(--theme-text-secondary);
+
+  --color-border: var(--theme-border);
+
+  --color-success: #34A853;
+  --color-danger: #EA4335;
+  --color-warning: #FBBC04;
+  --color-live: #EA4335;
+}
+
+@layer base {
+  :root {
+    /* ─── Light Mode: Sunlight-Optimized Clean Warm Ivory ─── */
+    --theme-bg-primary:        #FAF8F4;
+    --theme-bg-card:           #FFFFFF;
+    --theme-bg-surface:        #F3EDE4;
+    --theme-bg-nav:            #FFFFFF;
+    --theme-text-primary:      #1C1712;
+    --theme-text-secondary:    #5C5043; /* Darkened for outdoor/sunlight contrast */
+    --theme-border:            #DDD2C2; /* Darkened for outdoor/sunlight border definition */
+    
+    /* Dynamic gold accents optimized for light background and sunlight */
+    --theme-accent:            #8E6E30; /* 4.75:1 contrast ratio against pure white background */
+    --theme-accent-light:      #A58343;
+    --theme-accent-hover:      #755B25;
+    
+    color-scheme: light;
+  }
+
+  :root.dark {
+    /* ─── Dark Mode: Premium Glowing Gold ─── */
+    --theme-bg-primary:        #0E0E0E;
+    --theme-bg-card:           #1A1A1A;
+    --theme-bg-surface:        #242424;
+    --theme-bg-nav:            #111111;
+    --theme-text-primary:      #E8EAED;
+    --theme-text-secondary:    #9AA0A6;
+    --theme-border:            #2D2D2D;
+    
+    /* Glowing Golds */
+    --theme-accent:            #B89B5E;
+    --theme-accent-light:      #D4B96A;
+    --theme-accent-hover:      #A68B4B;
+    
+    color-scheme: dark;
+  }
+
+  /* ─── Targeted theme transitions for UI components ─── */
+  .theme-transition body,
+  .theme-transition header,
+  .theme-transition nav,
+  .theme-transition main,
+  .theme-transition button,
+  .theme-transition input,
+  .theme-transition select,
+  .theme-transition a,
+  .theme-transition .glass,
+  .theme-transition .glass-card,
+  .theme-transition h1,
+  .theme-transition h2,
+  .theme-transition h3,
+  .theme-transition h4,
+  .theme-transition p,
+  .theme-transition span,
+  .theme-transition td,
+  .theme-transition th {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow, opacity;
+    transition-duration: 350ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Exempt transforms/positional animations so they stay instant */
+  [style*="transform"],
+  .no-theme-transition {
+    transition-property: none;
+  }
+
+  html, body {
+    @apply bg-bg-primary text-text-primary font-sans antialiased min-h-screen selection:bg-accent/20;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-bg-surface rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent/40;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-bg-nav/95 backdrop-blur-xl border-b border-border;
+  }
+
+  .glass-card {
+    @apply bg-bg-card border border-border rounded-2xl shadow-sm;
+  }
+
+  :root:not(.dark) .glass-card {
+    box-shadow: 0 1px 2px rgba(28, 23, 18, 0.04), 0 4px 16px rgba(28, 23, 18, 0.06);
+  }
+
+  :root:not(.dark) .glass {
+    box-shadow: 0 1px 8px rgba(28, 23, 18, 0.05);
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(234, 67, 53, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(234, 67, 53, 0);
+    }
+  }
+
+  .animate-pulse-ring {
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Mobile safe area bottom */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @keyframes haptic-shake-light {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-0.5px); }
+    75% { transform: translateX(0.5px); }
+  }
+
+  @keyframes haptic-shake-medium {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-1px); }
+    40% { transform: translateX(1px); }
+    60% { transform: translateX(-0.5px); }
+    80% { transform: translateX(0.5px); }
+  }
+
+  @keyframes haptic-shake-heavy {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-2px); }
+    30% { transform: translateX(2px); }
+    45% { transform: translateX(-1.5px); }
+    60% { transform: translateX(1.5px); }
+    75% { transform: translateX(-1px); }
+    90% { transform: translateX(1px); }
+  }
+
+  @keyframes haptic-shake-intense {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(0.998) translateX(-1px); }
+    50% { transform: scale(1.002) translateX(1px); }
+    75% { transform: scale(0.999); }
+  }
+
+  .haptic-pulse-light {
+    animation: haptic-shake-light 120ms ease-out;
+  }
+
+  .haptic-pulse-medium {
+    animation: haptic-shake-medium 140ms ease-out;
+  }
+
+  .haptic-pulse-heavy {
+    animation: haptic-shake-heavy 160ms ease-out;
+  }
+
+  .haptic-pulse-intense {
+    animation: haptic-shake-intense 180ms ease-out;
+  }
+}
