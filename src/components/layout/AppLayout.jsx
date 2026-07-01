@@ -1,37 +1,28 @@
 import { Outlet, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import Header from './Header'
 import BottomNav from './BottomNav'
 import QuickAccessFAB from './QuickAccessFAB'
 
-const pageVariants = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: 'easeIn' } },
-}
-
 export default function AppLayout() {
-  const { pathname } = useLocation()
+  const location = useLocation()
+  const { pathname } = location
   
   const isHome = pathname === '/'
   const mainTabs = ['/', '/matches', '/standings', '/teams']
   const showHeader = !isHome && !mainTabs.includes(pathname)
   const paddingTop = showHeader ? 'pt-16' : ''
 
+  // Using 100dvh for mobile-friendly full height lock
+  // Using overflow-hidden on the parent, overflow-y-auto on the main content
   return (
-    <div className={`min-h-screen bg-bg-primary text-text-primary pb-20 transition-colors duration-300 ${paddingTop}`}>
+    <div className="h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-primary text-text-primary transition-colors duration-300">
       {showHeader && <Header />}
       
-      <main className={`w-full min-h-[calc(100vh-8rem)] relative ${isHome ? '' : 'max-w-md mx-auto'}`}>
-        <motion.div
-          key={pathname}
-          variants={pageVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-        >
-          <Outlet />
-        </motion.div>
+      <main 
+        className={`flex-1 overflow-y-auto overflow-x-hidden relative w-full ${paddingTop} ${isHome ? '' : 'max-w-md mx-auto'}`}
+        style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <Outlet />
       </main>
       
       <QuickAccessFAB />
@@ -39,4 +30,3 @@ export default function AppLayout() {
     </div>
   )
 }
-

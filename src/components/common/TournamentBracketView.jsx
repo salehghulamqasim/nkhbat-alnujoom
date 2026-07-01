@@ -5,6 +5,7 @@ import { useAppStore } from '../../stores/useAppStore'
 import { useKnockoutStore } from '../../stores/useKnockoutStore'
 import { haptic } from '../../hooks/useHaptics'
 import TeamLogo from './TeamLogo'
+import DownloadButton from './DownloadButton'
 
 export default function TournamentBracketView({ teams = [], isAdmin = false }) {
   const lang = useAppStore((s) => s.language)
@@ -277,8 +278,6 @@ export default function TournamentBracketView({ teams = [], isAdmin = false }) {
 
   const captureAndDownload = async (format = 'png') => {
     if (!bracketRef.current) return
-    haptic.medium()
-    setCapturing(true)
     try {
       const { toPng } = await import('html-to-image')
       const target = bracketRef.current
@@ -332,13 +331,9 @@ export default function TournamentBracketView({ teams = [], isAdmin = false }) {
         pdf.addImage(imgData, 'JPEG', 0, 0, canvasWidth, canvasHeight)
         pdf.save(`road-to-final-${dateStr}.pdf`)
       }
-      haptic.intense()
     } catch (err) {
       console.error('[Bracket] download failed:', err)
-      alert(isAr ? 'فشل التحميل - استخدم لقطة الشاشة' : 'Download failed - use screenshot')
-    } finally {
-      setCapturing(false)
-      setShowDownloadMenu(false)
+      throw err
     }
   }
 
@@ -441,46 +436,7 @@ export default function TournamentBracketView({ teams = [], isAdmin = false }) {
       {/* Download toolbar */}
       {hasBracket && (
         <div className="w-full flex justify-end mb-3">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                haptic.light()
-                setShowDownloadMenu(!showDownloadMenu)
-              }}
-              disabled={capturing}
-              className="px-3 py-2 bg-accent text-black font-semibold rounded-xl hover:bg-accent-hover transition-all flex items-center gap-1.5 text-xs disabled:opacity-50"
-            >
-              <Download size={14} />
-              {isAr ? 'تحميل' : 'Download'}
-              <ChevronDown size={12} />
-            </button>
-            {showDownloadMenu && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowDownloadMenu(false)} />
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute top-full end-0 mt-2 w-40 bg-bg-card border border-border rounded-xl py-1.5 shadow-xl z-20"
-                >
-                  <button
-                    type="button"
-                    onClick={() => captureAndDownload('png')}
-                    className="w-full px-4 py-2 text-xs text-text-primary hover:bg-bg-surface flex items-center gap-2 cursor-pointer text-start"
-                  >
-                    <Download size={12} /> PNG
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => captureAndDownload('pdf')}
-                    className="w-full px-4 py-2 text-xs text-text-primary hover:bg-bg-surface flex items-center gap-2 cursor-pointer text-start"
-                  >
-                    <FileText size={12} /> PDF
-                  </button>
-                </motion.div>
-              </>
-            )}
-          </div>
+          <DownloadButton onDownload={captureAndDownload} isAr={isAr} />
         </div>
       )}
 

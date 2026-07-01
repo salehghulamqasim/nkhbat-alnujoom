@@ -22,6 +22,7 @@ import ScheduleEagleEyeAdminPage from './pages/admin/ScheduleEagleEyePage'
 import KnockoutAdminPage from './pages/admin/KnockoutAdminPage'
 import { useAppStore } from './stores/useAppStore'
 import { useKnockoutStore } from './stores/useKnockoutStore'
+import { Toaster } from 'react-hot-toast'
 
 function App() {
   const { theme, language } = useAppStore()
@@ -81,6 +82,7 @@ function App() {
           <Route path="/admin/knockout" element={<KnockoutAdminPage />} />
         </Route>
       </Routes>
+      <Toaster position="top-center" reverseOrder={false} />
     </ErrorBoundary>
   )
 }

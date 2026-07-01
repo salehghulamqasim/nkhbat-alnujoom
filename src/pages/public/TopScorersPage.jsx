@@ -104,6 +104,22 @@ export default function TopScorersPage() {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: idx * 0.15 }}
             >
+              {/* ── Ambient Crown Glow (rank #1 only) ── */}
+              {isFirst && (
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    inset: '-20px -30px',
+                    zIndex: -1,
+                    pointerEvents: 'none',
+                    background:
+                      'radial-gradient(ellipse 80% 60% at 50% 70%, rgba(212,175,55,0.28) 0%, rgba(212,175,55,0.10) 40%, transparent 75%)',
+                    filter: 'blur(28px)',
+                  }}
+                />
+              )}
+
               <div className={`absolute ${isFirst ? '-top-16' : '-top-14'} z-10`}>
                 <PlayerAvatar
                   name={scorer.name}
@@ -116,17 +132,36 @@ export default function TopScorersPage() {
               <div
                 className={`w-full ${PODIUM_HEIGHTS[rank]} rounded-t-2xl flex flex-col items-center justify-end pb-3 px-1 mt-14 bg-gradient-to-t from-bg-surface to-bg-surface/60 border-t-2 relative overflow-hidden ${
                   isFirst
-                    ? 'border-accent/60 shadow-[0_0_32px_rgba(184,155,94,0.12)] dark:shadow-[0_0_36px_rgba(255,255,255,0.06)]'
+                    ? 'border-[#d4af37]/60 shadow-[0_0_40px_rgba(212,175,55,0.14)]'
                     : 'border-border'
                 }`}
               >
+                {/* Gold shimmer line at top of rank-1 column */}
+                {isFirst && (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '2px',
+                      background:
+                        'linear-gradient(90deg, transparent, rgba(212,175,55,0.7) 50%, transparent)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                )}
                 <span className={`${isFirst ? 'text-sm' : 'text-xs'} font-bold text-center line-clamp-1 w-full`}>
                   {scorer.name}
                 </span>
                 <span className="text-[10px] text-text-secondary text-center line-clamp-1 w-full mt-0.5">
                   {scorer.team}
                 </span>
-                <span className={`${isFirst ? 'text-2xl' : 'text-xl'} font-bold ${PODIUM_RANKS[rank]} mt-1`}>
+                <span
+                  className={`${isFirst ? 'text-2xl' : 'text-xl'} font-bold mt-1 ${!isFirst ? PODIUM_RANKS[rank] : ''}`}
+                  style={isFirst ? { color: '#d4af37' } : undefined}
+                >
                   {scorer.goals}
                 </span>
                 <span className="text-[9px] text-text-secondary">

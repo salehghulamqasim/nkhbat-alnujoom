@@ -4,39 +4,54 @@ import { X } from 'lucide-react'
 import { haptic } from '../../../hooks/useHaptics'
 import { useTeamsStore } from '../../../stores/useTeamsStore'
 import { useI18n } from '../../../i18n/useI18n'
+import SelectBottomSheet from '../../../components/common/SelectBottomSheet'
 
 const GROUPS = ['A', 'B', 'C']
 const ROUNDS = [
   { value: 'QF', labelAr: 'دور الـ 8 (ربع النهائي)', labelEn: 'Round 8 (Quarter Final)' },
   { value: 'SF', labelAr: 'دور الـ 4 (نصف النهائي)', labelEn: 'Round 4 (Semi Final)' },
-  { value: 'F',  labelAr: 'النهائي',      labelEn: 'Final' },
+  { value: 'F',  labelAr: 'النهائي',                  labelEn: 'Final' },
 ]
+
+// Which bottom sheet is open at any moment?
+const SHEET_NONE      = null
+const SHEET_TYPE      = 'type'
+const SHEET_GROUP     = 'group'
+const SHEET_ROUND     = 'round'
+const SHEET_TEAM_A    = 'teamA'
+const SHEET_TEAM_B    = 'teamB'
 
 export default function MatchFormModal({ isOpen, onClose, onSubmitGroup, onSubmitKnockout }) {
   const teams = useTeamsStore((state) => state.teams)
   const { t, isAr } = useI18n()
 
-  const [matchType, setMatchType] = useState('group') // 'group' or 'knockout'
+  const [matchType, setMatchType]   = useState('group')
+  const [openSheet, setOpenSheet]   = useState(SHEET_NONE)
 
   const [form, setForm] = useState({
-    group: 'A',
-    round: 'QF',
-    teamA: '',
-    teamB: '',
-    date: '',
-    time: '',
-    venue: '',
+    group:  'A',
+    round:  'QF',
+    teamA:  '',
+    teamB:  '',
+    date:   '',
+    time:   '',
+    venue:  '',
   })
   const [errors, setErrors] = useState({})
 
-  const availableTeams = matchType === 'group' 
-    ? teams.filter((t) => t.group === form.group)
+  const availableTeams = matchType === 'group'
+    ? teams.filter((tm) => tm.group === form.group)
     : teams
 
   useEffect(() => {
     if (isOpen) {
       setMatchType('group')
-      setForm({ group: 'A', round: 'QF', teamA: '', teamB: '', date: '', time: '', venue: isAr ? 'ملاعب فيا' : 'Via Stadium' })
+      setOpenSheet(SHEET_NONE)
+      setForm({
+        group: 'A', round: 'QF', teamA: '', teamB: '',
+        date: '', time: '',
+        venue: isAr ? 'ملاعب فيا' : 'Via Stadium',
+      })
       setErrors({})
     }
   }, [isOpen])
@@ -50,8 +65,8 @@ export default function MatchFormModal({ isOpen, onClose, onSubmitGroup, onSubmi
     if (!form.teamA) nextErrors.teamA = t('matches.team1Required')
     if (!form.teamB) nextErrors.teamB = t('matches.team2Required')
     if (form.teamA && form.teamA === form.teamB) nextErrors.teamB = t('matches.sameTeamError')
-    if (!form.date) nextErrors.date = t('matches.dateRequired')
-    if (!form.time) nextErrors.time = t('matches.timeRequired')
+    if (!form.date)  nextErrors.date  = t('matches.dateRequired')
+    if (!form.time)  nextErrors.time  = t('matches.timeRequired')
     if (!form.venue.trim()) nextErrors.venue = t('matches.venueRequired')
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
@@ -60,26 +75,53 @@ export default function MatchFormModal({ isOpen, onClose, onSubmitGroup, onSubmi
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!validate()) return
-
     haptic.intense()
     if (matchType === 'group') {
-      if (onSubmitGroup) onSubmitGroup({ group: form.group, teamA: form.teamA, teamB: form.teamB, date: form.date, time: form.time, venue: form.venue })
+      onSubmitGroup?.({ group: form.group, teamA: form.teamA, teamB: form.teamB, date: form.date, time: form.time, venue: form.venue })
     } else {
-      if (onSubmitKnockout) onSubmitKnockout({ round: form.round, teamA: form.teamA, teamB: form.teamB, date: form.date, time: form.time, venue: form.venue })
+      onSubmitKnockout?.({ round: form.round, teamA: form.teamA, teamB: form.teamB, date: form.date, time: form.time, venue: form.venue })
     }
     onClose()
   }
+
+  // ---------- Option arrays ----------
+  const matchTypeOptions = [
+    { value: 'group',    label: isAr ? 'مرحلة المجموعات'       : 'Group Stage' },
+    { value: 'knockout', label: isAr ? 'مرحلة خروج المغلوب'    : 'Knockout Stage' },
+  ]
+  const groupOptions = GROUPS.map((g) => ({
+    value: g,
+    label: `${isAr ? 'المجموعة' : 'Group'} ${g}`,
+  }))
+  const roundOptions = ROUNDS.map((r) => ({
+    value: r.value,
+    label: isAr ? r.labelAr : r.labelEn,
+  }))
+  const teamOptions = availableTeams.map((tm) => ({
+    value: tm.id,
+    label: tm.group ? `${tm.name} (${tm.group})` : tm.name,
+  }))
+  const teamBOptions = availableTeams
+    .filter((tm) => tm.id !== form.teamA)
+    .map((tm) => ({
+      value: tm.id,
+      label: tm.group ? `${tm.name} (${tm.group})` : tm.name,
+    }))
+
+  const selectedTeamALabel = teamOptions.find((o) => o.value === form.teamA)?.label
+  const selectedTeamBLabel = teamBOptions.find((o) => o.value === form.teamB)?.label
 
   return (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+          {/* Main backdrop – only close modal when no sheet is open */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={onClose}
+            onClick={() => { if (openSheet === SHEET_NONE) onClose() }}
           />
 
           <motion.div
@@ -88,6 +130,7 @@ export default function MatchFormModal({ isOpen, onClose, onSubmitGroup, onSubmi
             exit={{ opacity: 0, y: 40 }}
             className="relative w-full max-w-lg max-h-[92vh] overflow-y-auto glass-card rounded-t-2xl md:rounded-2xl shadow-2xl"
           >
+            {/* Header */}
             <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-border bg-bg-card/95 backdrop-blur-md">
               <h2 className="text-lg font-bold">{t('matches.addMatchTitle')}</h2>
               <button
@@ -99,96 +142,87 @@ export default function MatchFormModal({ isOpen, onClose, onSubmitGroup, onSubmi
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 space-y-4 pb-8">
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">{isAr ? 'نوع المباراة' : 'Match Type'}</label>
-                <select
-                  value={matchType}
-                  onChange={(e) => {
-                    setMatchType(e.target.value)
-                    setForm((prev) => ({ ...prev, teamA: '', teamB: '' }))
-                  }}
-                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
-                >
-                  <option value="group">{isAr ? 'مرحلة المجموعات' : 'Group Stage'}</option>
-                  <option value="knockout">{isAr ? 'مرحلة خروج المغلوب' : 'Knockout Stage'}</option>
-                </select>
-              </div>
+            <form onSubmit={handleSubmit} className="p-4 space-y-4 pb-8" dir={isAr ? 'rtl' : 'ltr'}>
 
+              {/* ── Match Type ── */}
+              <SelectBottomSheet
+                label={isAr ? 'نوع المباراة' : 'Match Type'}
+                value={matchType}
+                onChange={(v) => {
+                  setMatchType(v)
+                  setForm((prev) => ({ ...prev, teamA: '', teamB: '' }))
+                }}
+                options={matchTypeOptions}
+                isOpen={openSheet === SHEET_TYPE}
+                onOpen={() => setOpenSheet(SHEET_TYPE)}
+                onClose={() => setOpenSheet(SHEET_NONE)}
+                isAr={isAr}
+              />
+
+              {/* ── Group / Round ── */}
               {matchType === 'group' ? (
-                <div>
-                  <label className="block text-sm text-text-secondary mb-2">{t('matches.group')}</label>
-                  <select
+                <>
+                  <SelectBottomSheet
+                    label={t('matches.group')}
                     value={form.group}
-                    onChange={(e) => setForm((prev) => ({ ...prev, group: e.target.value }))}
-                    className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
-                  >
-                    {GROUPS.map((g) => (
-                      <option key={g} value={g}>
-                        {t('matches.group')} {g}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => setForm((prev) => ({ ...prev, group: v }))}
+                    options={groupOptions}
+                    isOpen={openSheet === SHEET_GROUP}
+                    onOpen={() => setOpenSheet(SHEET_GROUP)}
+                    onClose={() => setOpenSheet(SHEET_NONE)}
+                    isAr={isAr}
+                  />
                   {availableTeams.length < 2 && (
-                    <p className="text-xs text-warning mt-1">{t('matches.needDrawFirst')}</p>
+                    <p className="text-xs text-warning -mt-2">{t('matches.needDrawFirst')}</p>
                   )}
-                </div>
+                </>
               ) : (
-                <div>
-                  <label className="block text-sm text-text-secondary mb-2">{isAr ? 'الدور' : 'Round'}</label>
-                  <select
-                    value={form.round}
-                    onChange={(e) => setForm((prev) => ({ ...prev, round: e.target.value }))}
-                    className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
-                  >
-                    {ROUNDS.map((r) => (
-                      <option key={r.value} value={r.value}>
-                        {isAr ? r.labelAr : r.labelEn}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <SelectBottomSheet
+                  label={isAr ? 'الدور' : 'Round'}
+                  value={form.round}
+                  onChange={(v) => setForm((prev) => ({ ...prev, round: v }))}
+                  options={roundOptions}
+                  isOpen={openSheet === SHEET_ROUND}
+                  onOpen={() => setOpenSheet(SHEET_ROUND)}
+                  onClose={() => setOpenSheet(SHEET_NONE)}
+                  isAr={isAr}
+                />
               )}
 
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">{t('matches.team1')}</label>
-                <select
-                  value={form.teamA}
-                  onChange={(e) => setForm((prev) => ({ ...prev, teamA: e.target.value }))}
-                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
-                >
-                  <option value="">{t('matches.selectTeam')}</option>
-                  {availableTeams.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} {t.group ? `(${t.group})` : ''}
-                    </option>
-                  ))}
-                </select>
-                {errors.teamA && <p className="text-xs text-danger mt-1">{errors.teamA}</p>}
-              </div>
+              {/* ── Team A ── */}
+              <SelectBottomSheet
+                label={t('matches.team1')}
+                value={form.teamA}
+                onChange={(v) => setForm((prev) => ({ ...prev, teamA: v }))}
+                options={teamOptions}
+                placeholder={t('matches.selectTeam')}
+                isOpen={openSheet === SHEET_TEAM_A}
+                onOpen={() => setOpenSheet(SHEET_TEAM_A)}
+                onClose={() => setOpenSheet(SHEET_NONE)}
+                isAr={isAr}
+              />
+              {errors.teamA && <p className="text-xs text-danger -mt-2">{errors.teamA}</p>}
 
-              <div>
-                <label className="block text-sm text-text-secondary mb-2">{t('matches.team2')}</label>
-                <select
-                  value={form.teamB}
-                  onChange={(e) => setForm((prev) => ({ ...prev, teamB: e.target.value }))}
-                  className="w-full bg-bg-surface border border-border rounded-xl py-3 px-4 text-sm focus:outline-none focus:border-accent transition-colors"
-                >
-                  <option value="">{t('matches.selectTeam')}</option>
-                  {availableTeams
-                    .filter((t) => t.id !== form.teamA)
-                    .map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} {t.group ? `(${t.group})` : ''}
-                      </option>
-                    ))}
-                </select>
-                {errors.teamB && <p className="text-xs text-danger mt-1">{errors.teamB}</p>}
-              </div>
+              {/* ── Team B ── */}
+              <SelectBottomSheet
+                label={t('matches.team2')}
+                value={form.teamB}
+                onChange={(v) => setForm((prev) => ({ ...prev, teamB: v }))}
+                options={teamBOptions}
+                placeholder={t('matches.selectTeam')}
+                isOpen={openSheet === SHEET_TEAM_B}
+                onOpen={() => setOpenSheet(SHEET_TEAM_B)}
+                onClose={() => setOpenSheet(SHEET_NONE)}
+                isAr={isAr}
+              />
+              {errors.teamB && <p className="text-xs text-danger -mt-2">{errors.teamB}</p>}
 
+              {/* ── Date & Time ── */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">{t('matches.date')}</label>
+                  <label className="block text-sm text-text-secondary mb-2">
+                    {t('matches.date')}
+                  </label>
                   <input
                     type="date"
                     value={form.date}
@@ -199,7 +233,9 @@ export default function MatchFormModal({ isOpen, onClose, onSubmitGroup, onSubmi
                   {errors.date && <p className="text-xs text-danger mt-1">{errors.date}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">{t('matches.time')}</label>
+                  <label className="block text-sm text-text-secondary mb-2">
+                    {t('matches.time')}
+                  </label>
                   <input
                     type="time"
                     value={form.time}
@@ -211,8 +247,11 @@ export default function MatchFormModal({ isOpen, onClose, onSubmitGroup, onSubmi
                 </div>
               </div>
 
+              {/* ── Venue ── */}
               <div>
-                <label className="block text-sm text-text-secondary mb-2">{t('matches.venue')}</label>
+                <label className="block text-sm text-text-secondary mb-2">
+                  {t('matches.venue')}
+                </label>
                 <input
                   type="text"
                   value={form.venue}
@@ -223,6 +262,7 @@ export default function MatchFormModal({ isOpen, onClose, onSubmitGroup, onSubmi
                 {errors.venue && <p className="text-xs text-danger mt-1">{errors.venue}</p>}
               </div>
 
+              {/* ── Submit ── */}
               <button
                 type="submit"
                 disabled={matchType === 'group' && availableTeams.length < 2}

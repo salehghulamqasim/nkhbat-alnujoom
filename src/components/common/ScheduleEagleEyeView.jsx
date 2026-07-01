@@ -19,6 +19,7 @@ import { useTeamsStore } from '../../stores/useTeamsStore'
 import { useMatchesStore } from '../../stores/useMatchesStore'
 import { useAppStore } from '../../stores/useAppStore'
 import { haptic } from '../../hooks/useHaptics'
+import DownloadButton from './DownloadButton'
 
 const GROUPS = ['A', 'B', 'C']
 const GROUP_LABELS = { A: 'المجموعة أ', B: 'المجموعة ب', C: 'المجموعة ج' }
@@ -113,7 +114,6 @@ export default function ScheduleEagleEyeView({
 
   const captureAndDownload = async (format = 'png') => {
     if (!containerRef.current) return
-    setCapturing(true)
     try {
       const { toPng } = await import('html-to-image')
       const target = containerRef.current
@@ -198,9 +198,7 @@ export default function ScheduleEagleEyeView({
       }
     } catch (err) {
       console.error('All capture methods failed:', err)
-      alert(isAr ? 'فشل التحميل - استخدم لقطة الشاشة' : 'Download failed - use screenshot')
-    } finally {
-      setCapturing(false)
+      throw err
     }
   }
 
@@ -294,46 +292,7 @@ export default function ScheduleEagleEyeView({
             <Share2 size={14} />
             {isAr ? 'مشاركة' : 'Share'}
           </button>
-          <div className="relative">
-            <button
-              onClick={() => {
-                haptic.medium()
-                setShowDownloadMenu(!showDownloadMenu)
-              }}
-              disabled={capturing}
-              className="px-3 py-2 bg-accent text-white dark:text-black schedule-download-btn font-semibold rounded-xl hover:bg-accent-hover transition-all flex items-center gap-1.5 text-xs"
-            >
-              <Download size={14} />
-              {isAr ? 'تحميل' : 'Download'}
-              <ChevronDown size={12} />
-            </button>
-            {showDownloadMenu && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  onClick={() => setShowDownloadMenu(false)}
-                />
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute top-full end-0 mt-2 w-40 bg-bg-card border border-border rounded-xl py-1.5 shadow-xl z-20"
-                >
-                  <button
-                    onClick={() => { captureAndDownload('png'); setShowDownloadMenu(false) }}
-                    className="w-full px-4 py-2 text-xs text-text-primary hover:bg-bg-surface flex items-center gap-2 cursor-pointer text-start"
-                  >
-                    <Download size={12} /> PNG
-                  </button>
-                  <button
-                    onClick={() => { captureAndDownload('pdf'); setShowDownloadMenu(false) }}
-                    className="w-full px-4 py-2 text-xs text-text-primary hover:bg-bg-surface flex items-center gap-2 cursor-pointer text-start"
-                  >
-                    <FileText size={12} /> PDF
-                  </button>
-                </motion.div>
-              </>
-            )}
-          </div>
+          <DownloadButton onDownload={captureAndDownload} isAr={isAr} />
         </div>
       </div>
 

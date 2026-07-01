@@ -6,6 +6,7 @@ import ContactFooter from '../../components/common/ContactFooter'
 import { useAppStore } from '../../stores/useAppStore'
 import { haptic } from '../../hooks/useHaptics'
 import { useTranslation } from '../../hooks/useTranslation'
+import { APP_VERSION } from '../../version'
 
 export default function MorePage() {
   const { theme, toggleTheme, toggleLanguage } = useAppStore()
@@ -116,7 +117,13 @@ export default function MorePage() {
             <Trophy size={24} className="text-accent" />
           </div>
           <p className="font-bold text-text-primary text-sm">{tx.appName}</p>
-          <p className="text-xs text-text-secondary">{tx.version}</p>
+          {/* Developer version stamp — quiet, minimal, not decorative */}
+          <p
+            className="text-[11px] tabular-nums"
+            style={{ color: 'var(--theme-text-secondary, #6b7280)', letterSpacing: '0.04em' }}
+          >
+            {APP_VERSION}
+          </p>
         </div>
       </motion.div>
     </div>

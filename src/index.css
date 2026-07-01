@@ -21,6 +21,8 @@
   --color-text-secondary: var(--theme-text-secondary);
 
   --color-border: var(--theme-border);
+  --color-glass-panel: var(--theme-glass-panel);
+  --color-glass-border: var(--theme-glass-border);
 
   --color-success: #34A853;
   --color-danger: #EA4335;
@@ -38,6 +40,8 @@
     --theme-text-primary:      #1C1712;
     --theme-text-secondary:    #5C5043; /* Darkened for outdoor/sunlight contrast */
     --theme-border:            #DDD2C2; /* Darkened for outdoor/sunlight border definition */
+    --theme-glass-panel:       rgba(255, 255, 255, 0.65);
+    --theme-glass-border:      rgba(0, 0, 0, 0.06);
     
     /* Dynamic gold accents optimized for light background and sunlight */
     --theme-accent:            #8E6E30; /* 4.75:1 contrast ratio against pure white background */
@@ -56,6 +60,8 @@
     --theme-text-primary:      #E8EAED;
     --theme-text-secondary:    #9AA0A6;
     --theme-border:            #2D2D2D;
+    --theme-glass-panel:       rgba(20, 20, 20, 0.6);
+    --theme-glass-border:      rgba(255, 255, 255, 0.08);
     
     /* Glowing Golds */
     --theme-accent:            #B89B5E;
@@ -364,5 +370,83 @@
   /* Segmented control active tab text color in light mode */
   :root:not(.dark) .schedule-seg-active {
     color: #fff;
+  }
+
+  /* Morphing Loading Button & Toast customization */
+  .download-btn-glass {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    height: 36px;
+    border-radius: 12px;
+    border: 1px solid var(--theme-border);
+    background-color: var(--theme-bg-surface);
+    color: var(--theme-text-primary);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-weight: 500;
+  }
+
+  /* Glassmorphism accent border in dark mode */
+  :root.dark .download-btn-glass {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  :root.dark .download-btn-glass:hover {
+    background-color: rgba(255, 255, 255, 0.07);
+    border-color: var(--theme-accent);
+    color: var(--theme-accent);
+  }
+
+  /* Hover and active states */
+  .download-btn-glass:hover:not(:disabled) {
+    background-color: var(--theme-bg-primary);
+    border-color: var(--theme-accent);
+    color: var(--theme-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .download-btn-glass:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+
+  .download-btn-glass:disabled {
+    cursor: not-allowed;
+    opacity: 0.85;
+    background-color: var(--theme-bg-surface);
+  }
+
+  /* Minimal spinner */
+  .download-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--theme-border);
+    border-top-color: var(--theme-accent);
+    border-radius: 50%;
+    animation: download-spin 0.75s linear infinite;
+  }
+
+  @keyframes download-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Adaptive glass components */
+  .bg-glass-panel {
+    background-color: var(--theme-glass-panel);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  
+  .border-glass-border {
+    border-color: var(--theme-glass-border);
   }
 }

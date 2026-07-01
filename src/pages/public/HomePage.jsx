@@ -30,6 +30,10 @@ export default function HomePage() {
   const { language, toggleLanguage } = useAppStore()
   const koMatches = useKnockoutStore((s) => s.knockoutMatches)
   const koChampion = useKnockoutStore((s) => s.champion)
+  const knockoutStep = useKnockoutStore((s) => s.step)
+
+  // Only show bracket if knockout stage has started (step >= 3 and has matches)
+  const showKnockoutBracket = knockoutStep >= 3 && koMatches.length > 0
 
   const isRtl = lang === 'ar'
   const containerRef = useRef(null)
@@ -343,8 +347,8 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Knockout Bracket */}
-        {koMatches.length > 0 && (
+        {/* Knockout Bracket - only show if knockout stage has started */}
+        {showKnockoutBracket && (
           <section>
             <div className="flex items-center justify-between mb-4 px-1">
               <h2 className="text-base font-bold flex items-center gap-2">

@@ -72,8 +72,8 @@ export default function AdminLayout() {
 
   return (
     <AdminDataSync>
-      <div className="min-h-screen bg-bg-primary flex flex-col transition-colors duration-300">
-        <header className="h-14 md:h-16 bg-bg-primary border-b border-border px-3 md:px-4 flex items-center justify-between sticky top-0 z-50 gap-2">
+      <div className="h-[100dvh] w-full overflow-hidden flex flex-col bg-bg-primary transition-colors duration-300">
+        <header className="h-14 md:h-16 shrink-0 bg-bg-primary border-b border-border px-3 md:px-4 flex items-center justify-between z-50 gap-2">
           <div className="flex items-center gap-2 md:gap-3 min-w-0">
             <Link
               to="/"
@@ -116,10 +116,10 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <div className="flex-1 flex flex-col md:flex-row w-full max-w-7xl mx-auto">
+        <div className="flex-1 flex flex-col md:flex-row w-full max-w-7xl mx-auto overflow-hidden">
           <AdminBottomNav />
 
-          <aside className="hidden md:block md:w-56 md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] md:border-e md:border-border md:pb-4 shrink-0">
+          <aside className="hidden md:block md:w-56 md:h-full md:border-e md:border-border md:pb-4 shrink-0 overflow-y-auto">
             <nav className="md:pt-6 md:px-3">
               <ul className="flex flex-col gap-0.5">
                 {navItems.map((item) => {
@@ -146,7 +146,7 @@ export default function AdminLayout() {
             </nav>
           </aside>
 
-          <main className="flex-1 p-3 md:p-4 pb-24 md:pb-8 overflow-y-scroll">
+          <main className="flex-1 overflow-y-auto p-3 md:p-4 pb-24 md:pb-8 relative">
             {teamsLoading || matchesLoading ? (
               <LoadingState message={loadingMsg} />
             ) : initFailed ? (
@@ -158,7 +158,7 @@ export default function AdminLayout() {
                 }}
               />
             ) : (
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-4xl mx-auto h-full">
                 <AdminErrorBanner />
                 <Outlet />
               </div>

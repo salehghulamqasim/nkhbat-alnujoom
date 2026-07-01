@@ -81,36 +81,9 @@ export default function MatchesPage() {
     return compareMatchesByDateTime(a, b, 'desc')
   })
 
-  if (isLoading) {
-    return (
-      <div className="px-4 py-6 space-y-6">
-        <h1 className="text-2xl font-bold text-center mb-6">{strings.title}</h1>
-        <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative" dir={isAr ? 'rtl' : 'ltr'}>
-          <div className="flex-1 py-2 text-sm font-semibold rounded-lg bg-bg-surface/50" />
-          <div className="flex-1 py-2 text-sm font-semibold rounded-lg bg-bg-surface/50" />
-          <div className="flex-1 py-2 text-sm font-semibold rounded-lg bg-bg-surface/50" />
-          <div className="flex-1 py-2 text-sm font-semibold rounded-lg bg-bg-surface/50" />
-        </div>
-        <div className="space-y-1">
-          <MatchRowSkeleton />
-          <MatchRowSkeleton />
-          <MatchRowSkeleton />
-          <MatchRowSkeleton />
-          <MatchRowSkeleton />
-        </div>
-      </div>
-    )
-  }
-  if (isError) {
-    return (
-      <div className="px-4 py-6">
-        <ErrorState message={strings.error} onRetry={refetch} />
-      </div>
-    )
-  }
-
+  // Silent loading state handled inside the fixed page layout baseline
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="px-4 py-6 space-y-6 min-h-[calc(100vh-12rem)] relative">
       <h1 className="text-2xl font-bold text-center mb-6">{strings.title}</h1>
 
       <div className="flex bg-bg-surface rounded-xl p-1 mb-6 relative z-0" dir={isAr ? 'rtl' : 'ltr'}>
@@ -138,30 +111,39 @@ export default function MatchesPage() {
         />
       </div>
 
-      {filteredMatches.length === 0 ? (
+      {isLoading ? (
+        // Stable skeleton baseline to prevent layout jumps or screen-blocking spinners
+        <div className="space-y-1">
+          <MatchRowSkeleton />
+          <MatchRowSkeleton />
+          <MatchRowSkeleton />
+          <MatchRowSkeleton />
+          <MatchRowSkeleton />
+        </div>
+      ) : isError ? (
+        <ErrorState message={strings.error} onRetry={refetch} />
+      ) : filteredMatches.length === 0 ? (
         <EmptyState title={strings.noMatches} message={strings.noMatchesDesc} />
       ) : (
+        // Localized content fade-in to prevent page shifts and router blinking
         <motion.div
+          key="matches-list"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          transition={{ duration: 0.22, ease: 'easeOut' }}
           className="space-y-1"
         >
           {filteredMatches.map((match) => (
-            <motion.div
+            <MatchRow
               key={match.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <MatchRow
-                match={match}
-                teamA={teams.find(t => t.id === match.teamA)}
-                teamB={teams.find(t => t.id === match.teamB)}
-                onClick={() => {
-                  haptic.light()
-                  navigate(`/matches/${match.id}`)
-                }}
-              />
-            </motion.div>
+              match={match}
+              teamA={teams.find(t => t.id === match.teamA)}
+              teamB={teams.find(t => t.id === match.teamB)}
+              onClick={() => {
+                haptic.light()
+                navigate(`/matches/${match.id}`)
+              }}
+            />
           ))}
         </motion.div>
       )}
