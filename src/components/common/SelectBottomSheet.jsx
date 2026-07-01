@@ -93,12 +93,8 @@ export default function SelectBottomSheet({
               dragConstraints={{ top: 0 }}
               dragElastic={0.12}
               onDragEnd={handleDragEnd}
-              className="fixed inset-x-0 bottom-0 z-[70] rounded-t-[22px] overflow-hidden shadow-2xl"
+              className="fixed inset-x-0 bottom-0 z-[70] rounded-t-[22px] overflow-hidden shadow-2xl bg-bg-surface border-t border-border"
               style={{
-                background: 'var(--theme-glass-panel)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderTop: '1px solid var(--theme-glass-border)',
                 paddingBottom: 'env(safe-area-inset-bottom, 16px)',
               }}
             >

@@ -444,102 +444,128 @@ export default function ScheduleEagleEyeView({
         {filterGroup !== 'all' ? ` — ${isAr ? GROUP_LABELS[filterGroup] : GROUP_LABELS_EN[filterGroup]}` : ''}
       </div>
 
-      {/* Match Detail Modal */}
+      {/* Match Detail Modal - Bottom Sheet */}
       <AnimatePresence>
         {selectedMatch && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => setSelectedMatch(null)}
-          >
+          <>
             <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              className="w-full max-w-sm bg-bg-card border border-border rounded-2xl p-5 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]"
+              onClick={() => setSelectedMatch(null)}
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.12}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 80 || info.velocity.y > 400) setSelectedMatch(null)
+              }}
+              className="fixed inset-x-0 bottom-0 z-[70] rounded-t-[22px] overflow-hidden shadow-2xl bg-bg-surface border-t border-border"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
             >
-              <button onClick={() => setSelectedMatch(null)} className="float-right p-1 hover:bg-bg-surface rounded-full transition-colors">
-                <X size={16} className="text-text-secondary" />
-              </button>
-              {(() => {
-                const m = selectedMatch
-                const tA = teamsById[m.teamA]
-                const tB = teamsById[m.teamB]
-                const s = getMatchStatus(m)
-                const sc = getScore(m)
-                const st = STATUS_BADGE[s]
-                const isL = s === 'live'
-                return (
-                  <>
-                    <div className="flex items-center gap-3 py-4">
-                      <div className="flex-1 text-center">
-                        <div className="w-12 h-12 mx-auto rounded-full bg-bg-surface border border-border flex items-center justify-center overflow-hidden">
-                          {tA?.logo ? <img src={tA.logo} alt="" className="w-full h-full object-cover" /> : <span className="text-lg font-bold text-text-secondary">{tA?.name?.charAt(0) || '?'}</span>}
+              <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing select-none">
+                <div className="w-9 h-1.5 rounded-full bg-text-secondary/20" />
+              </div>
+              <div className="p-5">
+                <button onClick={() => setSelectedMatch(null)} className="absolute top-4 right-4 p-1 hover:bg-bg-card rounded-full transition-colors">
+                  <X size={16} className="text-text-secondary" />
+                </button>
+                {(() => {
+                  const m = selectedMatch
+                  const tA = teamsById[m.teamA]
+                  const tB = teamsById[m.teamB]
+                  const s = getMatchStatus(m)
+                  const sc = getScore(m)
+                  const st = STATUS_BADGE[s]
+                  const isL = s === 'live'
+                  return (
+                    <>
+                      <div className="flex items-center gap-3 py-4">
+                        <div className="flex-1 text-center">
+                          <div className="w-12 h-12 mx-auto rounded-full bg-bg-card border border-border flex items-center justify-center overflow-hidden">
+                            {tA?.logo ? <img src={tA.logo} alt="" className="w-full h-full object-cover" /> : <span className="text-lg font-bold text-text-secondary">{tA?.name?.charAt(0) || '?'}</span>}
+                          </div>
+                          <p className="text-sm font-bold mt-2">{tA?.name || m.teamA}</p>
                         </div>
-                        <p className="text-sm font-bold mt-2">{tA?.name || m.teamA}</p>
-                      </div>
-                      <div className="flex-shrink-0 text-center">
-                        {sc ? (
-                          <span dir="ltr" className="inline-block text-2xl font-extrabold text-accent">{sc}</span>
-                        ) : (
-                          <span className="text-xs text-text-secondary uppercase font-medium">VS</span>
-                        )}
-                        <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.bg} ${st.text}`}>
-                          {isL && <Zap size={10} className="animate-pulse" />}
-                          {isAr ? st.label : st.labelEn}
+                        <div className="flex-shrink-0 text-center">
+                          {sc ? (
+                            <span dir="ltr" className="inline-block text-2xl font-extrabold text-accent">{sc}</span>
+                          ) : (
+                            <span className="text-xs text-text-secondary uppercase font-medium">VS</span>
+                          )}
+                          <div className={`mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.bg} ${st.text}`}>
+                            {isL && <Zap size={10} className="animate-pulse" />}
+                            {isAr ? st.label : st.labelEn}
+                          </div>
+                        </div>
+                        <div className="flex-1 text-center">
+                          <div className="w-12 h-12 mx-auto rounded-full bg-bg-card border border-border flex items-center justify-center overflow-hidden">
+                            {tB?.logo ? <img src={tB.logo} alt="" className="w-full h-full object-cover" /> : <span className="text-lg font-bold text-text-secondary">{tB?.name?.charAt(0) || '?'}</span>}
+                          </div>
+                          <p className="text-sm font-bold mt-2">{tB?.name || m.teamB}</p>
                         </div>
                       </div>
-                      <div className="flex-1 text-center">
-                        <div className="w-12 h-12 mx-auto rounded-full bg-bg-surface border border-border flex items-center justify-center overflow-hidden">
-                          {tB?.logo ? <img src={tB.logo} alt="" className="w-full h-full object-cover" /> : <span className="text-lg font-bold text-text-secondary">{tB?.name?.charAt(0) || '?'}</span>}
-                        </div>
-                        <p className="text-sm font-bold mt-2">{tB?.name || m.teamB}</p>
+                      <div className="space-y-2 text-xs text-text-secondary border-t border-border pt-4 mt-2">
+                        {m.date && <div className="flex items-center gap-2"><Calendar size={12} className="text-text-secondary" /><span>{m.date}{m.time ? ` | ${m.time}` : ''}</span></div>}
+                        {m.venue && <div className="flex items-center gap-2"><MapPin size={12} className="text-text-secondary" /><span>{m.venue}</span></div>}
+                        {m.group && <div className="flex items-center gap-2"><span className="w-5 h-5 rounded bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center">{m.group}</span><span>{isAr ? GROUP_LABELS[m.group] : GROUP_LABELS_EN[m.group]}</span></div>}
                       </div>
-                    </div>
-                    <div className="space-y-2 text-xs text-text-secondary border-t border-border pt-4 mt-2">
-                      {m.date && <div className="flex items-center gap-2"><Calendar size={12} className="text-text-secondary" /><span>{m.date}{m.time ? ` | ${m.time}` : ''}</span></div>}
-                      {m.venue && <div className="flex items-center gap-2"><MapPin size={12} className="text-text-secondary" /><span>{m.venue}</span></div>}
-                      {m.group && <div className="flex items-center gap-2"><span className="w-5 h-5 rounded bg-accent/10 text-accent text-[10px] font-bold flex items-center justify-center">{m.group}</span><span>{isAr ? GROUP_LABELS[m.group] : GROUP_LABELS_EN[m.group]}</span></div>}
-                    </div>
-                  </>
-                )
-              })()}
+                    </>
+                  )
+                })()}
+              </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Share link fallback modal */}
+      {/* Share link fallback modal - Bottom Sheet */}
       <AnimatePresence>
         {shareModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShareModal(false)}
-          >
+          <>
             <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              className="w-full max-w-sm bg-bg-card border border-border rounded-2xl p-5 shadow-2xl text-center"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-[2px]"
+              onClick={() => setShareModal(false)}
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.12}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 80 || info.velocity.y > 400) setShareModal(false)
+              }}
+              className="fixed inset-x-0 bottom-0 z-[70] rounded-t-[22px] overflow-hidden shadow-2xl bg-bg-surface border-t border-border"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
             >
-              <ExternalLink size={24} className="mx-auto text-accent mb-3" />
-              <p className="text-sm font-medium mb-1">{isAr ? 'رابط المشاركة' : 'Share Link'}</p>
-              <p className="text-xs text-text-secondary mb-4 break-all">{window.location.href}</p>
-              <button
-                onClick={() => { navigator.clipboard.writeText(window.location.href).then(() => setShareModal(false)) }}
-                className="px-4 py-2 bg-accent text-black rounded-xl text-sm font-semibold"
-              >
-                {isAr ? 'نسخ الرابط' : 'Copy Link'}
-              </button>
+              <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing select-none">
+                <div className="w-9 h-1.5 rounded-full bg-text-secondary/20" />
+              </div>
+              <div className="p-5 text-center">
+                <ExternalLink size={24} className="mx-auto text-accent mb-3" />
+                <p className="text-sm font-medium mb-1">{isAr ? 'رابط المشاركة' : 'Share Link'}</p>
+                <p className="text-xs text-text-secondary mb-4 break-all">{window.location.href}</p>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(window.location.href).then(() => setShareModal(false)) }}
+                  className="px-4 py-2 bg-accent text-black rounded-xl text-sm font-semibold"
+                >
+                  {isAr ? 'نسخ الرابط' : 'Copy Link'}
+                </button>
+              </div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
